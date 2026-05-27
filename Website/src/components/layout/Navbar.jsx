@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   Flame,
-  Calendar,
+  Home,
   Users,
-  ShoppingBag,
-  LayoutDashboard,
+  Mail,
+  Crown,
+  Layers,
   Menu,
   X,
   Bell,
@@ -17,6 +18,9 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+
+  // Mock authentication state (for testing UI)
+  const isAuthenticated = false;
 
   const isHomePage = location.pathname === PATHS.HOME;
 
@@ -38,11 +42,11 @@ export default function Navbar() {
   }, [location.pathname]);
 
   const navItems = [
-    { name: 'Home', path: PATHS.HOME, icon: Flame },
-    { name: 'Dashboard', path: PATHS.DASHBOARD, icon: LayoutDashboard },
-    { name: 'Sessions', path: PATHS.BOOKING, icon: Calendar },
-    { name: 'Memberships', path: PATHS.MEMBERS, icon: Users },
-    { name: 'Shop', path: PATHS.SHOP, icon: ShoppingBag },
+    { name: 'Home', path: PATHS.HOME, icon: Home },
+    { name: 'About Us', path: PATHS.ABOUT, icon: Users },
+    { name: 'Contact', path: PATHS.CONTACT, icon: Mail },
+    { name: 'Premium', path: PATHS.PREMIUM, icon: Crown },
+    { name: 'Collections', path: PATHS.COLLECTIONS, icon: Layers },
   ];
 
   // Logic to determine background styling
@@ -90,25 +94,32 @@ export default function Navbar() {
 
           {/* Right-side actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              to={PATHS.BOOKING}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 hover:-translate-y-0.5 cursor-pointer"
-            >
-              Booking
-            </Link>
-            <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
-              <Bell className="h-5 w-5" />
-            </button>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer">
-              H
-            </div>
+            {isAuthenticated ? (
+              <>
+                <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+                  <Bell className="h-5 w-5" />
+                </button>
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer">
+                  H
+                </div>
+              </>
+            ) : (
+              <Link
+                to={PATHS.LOGIN}
+                className="inline-flex items-center justify-center px-6 py-2 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 hover:-translate-y-0.5 cursor-pointer font-label"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-2">
-            <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
-              <Bell className="h-5 w-5" />
-            </button>
+            {isAuthenticated && (
+              <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+                <Bell className="h-5 w-5" />
+              </button>
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
@@ -138,14 +149,29 @@ export default function Navbar() {
                 {item.name}
               </NavLink>
             ))}
-            <div className="pt-4 px-4">
-              <Link
-                to={PATHS.BOOKING}
-                className="flex justify-center items-center gap-2 w-full py-3 rounded-lg text-base font-bold bg-primary text-[#052e14]"
-              >
-                Booking
-              </Link>
-            </div>
+
+            {!isAuthenticated && (
+              <div className="pt-4 px-2">
+                <Link
+                  to={PATHS.LOGIN}
+                  className="flex justify-center items-center gap-2 w-full py-3 rounded-lg text-base font-bold bg-primary text-[#052e14]"
+                >
+                  Sign In
+                </Link>
+              </div>
+            )}
+            
+            {isAuthenticated && (
+              <div className="pt-4 pb-2 border-t border-white/10 mt-4 px-2 flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-lg border border-white/20">
+                  H
+                </div>
+                <div>
+                  <div className="text-white font-medium">Huy Nguyen</div>
+                  <div className="text-gray-400 text-sm cursor-pointer hover:text-primary transition-colors">View Profile</div>
+                </div>
+              </div>
+            )}
           </nav>
         </div>
       )}

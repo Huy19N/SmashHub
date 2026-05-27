@@ -4,9 +4,14 @@
  */
 export const PATHS = {
   HOME: '/',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  PREMIUM: '/premium',
+  COLLECTIONS: '/collections',
   DASHBOARD: '/dashboard',
-  BOOKING: '/booking',
   MEMBERS: '/members',
   SHOP: '/shop',
+  LOGIN: '/login',
+  REGISTER: '/register',
   NOT_FOUND: '*',
 };

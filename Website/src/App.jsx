@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import { Suspense } from 'react';
 import { router } from './routes';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 /**
  * LoadingScreen
@@ -50,8 +51,10 @@ function LoadingScreen() {
  */
 export default function App() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <RouterProvider router={router} />
-    </Suspense>
+    <ThemeProvider>
+      <Suspense fallback={<LoadingScreen />}>
+        <RouterProvider router={router} />
+      </Suspense>
+    </ThemeProvider>
   );
 }
