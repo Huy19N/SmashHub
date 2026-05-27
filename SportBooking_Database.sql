@@ -129,7 +129,7 @@ CREATE TABLE Schedules (
     ScheduleId UNIQUEIDENTIFIER DEFAULT NEWID(),
     HostTeamId UNIQUEIDENTIFIER NOT NULL,
     Title NVARCHAR(255) NOT NULL,
-    SportId INT NOT NULL,
+    SportId INT NOT NULL, -- Quyết định bộ môn trực tiếp tại lúc tạo lịch
     Location NVARCHAR(255) NOT NULL,
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NOT NULL,
@@ -152,4 +152,96 @@ CREATE TABLE ScheduleParticipants (
     CONSTRAINT FK_ScheduleParticipants_Schedules FOREIGN KEY (ScheduleId) REFERENCES Schedules(ScheduleId) ON DELETE CASCADE,
     CONSTRAINT FK_ScheduleParticipants_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE NO ACTION
 );
+GO
+
+----Data----
+USE SmashClub;
+GO
+
+-- ==========================================
+-- 1. THÊM DỮ LIỆU DANH MỤC (ROLES & SPORTS)
+-- ==========================================
+
+-- Thêm User Roles (Hệ thống)
+INSERT INTO UserRoles (RoleId, RoleName) 
+VALUES 
+    (1, N'Admin'),
+    (2, N'User');
+
+-- Thêm Team Roles (Đội nhóm)
+INSERT INTO TeamRoles (TeamRoleId, RoleName) 
+VALUES 
+    (1, N'Leader'),
+    (2, N'Member');
+
+-- Thêm Bộ môn thể thao
+-- Lưu ý: SportId tự động tăng (IDENTITY 1, 2)
+INSERT INTO Sports (SportName, Description) 
+VALUES 
+    (N'Cầu Lông', N'Sân thảm tiêu chuẩn'),       -- SportId = 1
+    (N'Bóng Bàn', N'Bàn thi đấu quốc tế');      -- SportId = 2
+
+-- Thêm Trình độ cho từng bộ môn
+-- Lưu ý: LevelId tự động tăng (IDENTITY 1, 2, 3...)
+INSERT INTO SportLevels (SportId, LevelName, RankValue) 
+VALUES 
+    (1, N'Cơ bản', 1),     -- Cầu lông (LevelId = 1)
+    (1, N'Nâng cao', 2),   -- Cầu lông (LevelId = 2)
+    (1, N'Tuyển thủ', 3),  -- Cầu lông (LevelId = 3)
+    (2, N'Cơ bản', 1),     -- Bóng bàn (LevelId = 4)
+    (2, N'Nghiệp dư', 2),  -- Bóng bàn (LevelId = 5)
+    (2, N'Tuyển thủ', 3);  -- Bóng bàn (LevelId = 6)
+
+GO
+
+-- ==========================================
+-- 2. THÊM DỮ LIỆU NGƯỜI DÙNG & TEAM (Dùng Biến)
+-- ==========================================
+DECLARE @AdminId UNIQUEIDENTIFIER = NEWID();
+DECLARE @User1Id UNIQUEIDENTIFIER = NEWID();
+DECLARE @User2Id UNIQUEIDENTIFIER = NEWID();
+DECLARE @TeamId UNIQUEIDENTIFIER = NEWID();
+
+-- Thêm Users
+INSERT INTO Users (UserId, RoleId, FullName, Email, Password, PhoneNumber) 
+VALUES 
+    (@AdminId, 1, N'Quản Trị Viên', 'admin@smashclub.com', 'hashed_password_here', '0999999999'),
+    (@User1Id, 2, N'Nguyễn Văn A', 'nguyenvana@gmail.com', 'hashed_password_here', '0912345678'),
+    (@User2Id, 2, N'Trần Thị B', 'tranthib@gmail.com', 'hashed_password_here', '0987654321');
+
+-- Thêm Hồ sơ trình độ cho User 1 (Đúng như ví dụ của bạn)
+INSERT INTO UserSportProfiles (UserId, SportId, LevelId) 
+VALUES 
+    (@User1Id, 1, 1), -- Môn 1 (Cầu lông), Trình độ 1 (Cơ bản)
+    (@User1Id, 2, 6); -- Môn 2 (Bóng bàn), Trình độ 6 (Tuyển thủ)
+
+-- Thêm Hồ sơ trình độ cho User 2
+INSERT INTO UserSportProfiles (UserId, SportId, LevelId) 
+VALUES 
+    (@User2Id, 1, 2); -- Môn 1 (Cầu lông), Trình độ 2 (Nâng cao)
+
+-- Thêm Team mới
+INSERT INTO Teams (TeamId, TeamName, Description) 
+VALUES 
+    (@TeamId, N'Smashers Hanoi', N'CLB giao lưu cầu lông và bóng bàn khu vực Cầu Giấy');
+
+-- Thêm Thành viên vào Team
+INSERT INTO TeamMembers (TeamId, UserId, TeamRoleId, Wins, Losses) 
+VALUES 
+    (@TeamId, @User1Id, 1, 10, 2), -- User 1 là Leader (TeamRoleId = 1)
+    (@TeamId, @User2Id, 2, 5, 5);  -- User 2 là Member (TeamRoleId = 2)
+
+-- Tạo một lịch chơi mẫu cho Team
+DECLARE @ScheduleId UNIQUEIDENTIFIER = NEWID();
+INSERT INTO Schedules (ScheduleId, HostTeamId, Title, SportId, Location, StartTime, EndTime, MaxParticipants, TotalCost, CostNote)
+VALUES 
+    (@ScheduleId, @TeamId, N'Giao lưu cầu lông cuối tuần', 1, N'Sân cầu lông Bách Khoa', 
+     DATEADD(day, 2, GETDATE()), DATEADD(day, 2, DATEADD(hour, 2, GETDATE())), 
+     10, 500000, N'Tiền sân 300k, tiền cầu 200k');
+
+-- Đăng ký và điểm danh cho User 1 vào lịch chơi trên
+INSERT INTO ScheduleParticipants (ScheduleId, UserId, IsAttended)
+VALUES 
+    (@ScheduleId, @User1Id, 1); -- Đã điểm danh (IsAttended = 1)
+
 GO
