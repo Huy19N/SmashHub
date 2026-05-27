@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Base\**" />
-    <EmbeddedResource Remove="Base\**" />
-    <None Remove="Base\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Entites\Entites.csproj" />
   </ItemGroup>
 

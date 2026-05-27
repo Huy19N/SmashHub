@@ -1,4 +1,5 @@
-﻿using Entites.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Repositories.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,83 @@ namespace Repositories.Base
 {
     public class GenericRepository<T> where T : class
     {
-        private readonly SportBookingContext _context;
+        protected readonly SmashClubContext _context;
+        public GenericRepository(SmashClubContext context)
+        {
+            _context = context;
+        }
+
+        public GenericRepository()
+        {
+            _context ??= new SmashClubContext();
+        }
+        public async Task<List<T>> GetAllAsync()
+        {
+            return await _context.Set<T>().ToListAsync();
+        }
+
+        public async Task<int> CreateAsync(T entity)
+        {
+            _context.Add(entity);
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> UpdateAsync(T entity)
+        {
+            _context.ChangeTracker.Clear();
+            var tracker = _context.Attach(entity);
+            tracker.State = EntityState.Modified;
+            return await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> RemoveAsync(T entity)
+        {
+            _context.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<T?> GetByIdAsync(int id)
+        {
+            return await _context.Set<T>().FindAsync(id);
+        }
+
+        public async Task<T?> GetByIdAsync(string code)
+        {
+            return await _context.Set<T>().FindAsync(code);
+        }
+
+        public async Task<T?> GetByIdAsync(Guid code)
+        {
+            return await _context.Set<T>().FindAsync(code);
+        }
+
+        public void PrepareCreate(T entity)
+        {
+            _context.Add(entity);
+        }
+
+        public void PrepareUpdate(T entity)
+        {
+            var tracker = _context.Attach(entity);
+            tracker.State = EntityState.Modified;
+        }
+
+        public void PrepareRemove(T entity)
+        {
+            _context.Remove(entity);
+        }
+
+        public int Save()
+        {
+            return _context.SaveChanges();
+        }
+
+        public async Task<int> SaveAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
+
+
     }
 }
