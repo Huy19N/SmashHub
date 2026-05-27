@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="APIWebApp/APIWebApp.csproj" />
+  <Project Path="Entites/Entites.csproj" />
+  <Project Path="Repositories/Repositories.csproj" />
+  <Project Path="Services/Services.csproj" />
+</Solution>
