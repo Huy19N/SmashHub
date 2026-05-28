@@ -1,0 +1,110 @@
+import { useState } from 'react';
+import { X, Users, Check, AlertCircle } from 'lucide-react';
+import { useUpdateGroup } from '../hooks/useGroups';
+
+export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = false }) {
+  const [teamName, setTeamName] = useState(team?.teamName || '');
+  const [description, setDescription] = useState(team?.description || '');
+  const [validationError, setValidationError] = useState('');
+
+  const { updateGroup, isLoading: updateLoading, error: updateError } = useUpdateGroup();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setValidationError('');
+
+    if (!teamName.trim()) {
+      setValidationError('Tên nhóm không được để trống.');
+      return;
+    }
+    if (teamName.length > 255) {
+      setValidationError('Tên nhóm không được vượt quá 255 ký tự.');
+      return;
+    }
+
+    try {
+      await updateGroup(team.teamId, {
+        teamName: teamName.trim(),
+        description: description.trim(),
+      });
+      onUpdated?.();
+      onClose();
+    } catch {
+      // Error is already set in the hook
+    }
+  };
+
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isDarkMode ? 'dark' : ''}`}>
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      
+      <div className="relative w-full max-w-md animate-fade-in">
+        <div className="rounded-2xl border border-gray-200 dark:border-border-dark bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/50 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-border-dark">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white font-display">
+              Chỉnh sửa nhóm
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {(validationError || updateError) && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm font-label animate-fade-in">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                {validationError || updateError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 font-label">
+                Tên nhóm <span className="text-red-500 dark:text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                placeholder="VD: Badminton Elite..."
+                maxLength={255}
+                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-white/5 backdrop-blur-md border-gray-300 dark:border-border-dark text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-300 font-label"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 font-label">
+                Mô tả
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Mô tả ngắn về nhóm của bạn..."
+                rows={3}
+                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-white/5 backdrop-blur-md border-gray-300 dark:border-border-dark text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-300 resize-none font-label"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={updateLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed font-label cursor-pointer"
+            >
+              {updateLoading ? (
+                <div className="h-5 w-5 rounded-full border-2 border-[#052e14] border-t-transparent animate-spin" />
+              ) : (
+                <>
+                  <Users className="h-4 w-4" />
+                  Cập nhật
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

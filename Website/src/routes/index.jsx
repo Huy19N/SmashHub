@@ -16,6 +16,11 @@ const AuthLayout = lazy(() => import('../features/Auth/components/AuthLayout'));
 const LoginPage = lazy(() => import('../features/Auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('../features/Auth/pages/RegisterPage'));
 
+// Groups Feature (Auth-Gated)
+import ProtectedRoute from '../components/layout/ProtectedRoute';
+const GroupsDashboard = lazy(() => import('../features/groups/pages/GroupsDashboard'));
+const JoinGroupPage = lazy(() => import('../features/groups/pages/JoinGroupPage'));
+
 /**
  * Global Routing Registry
  * Using React Router modern browser router config, establishing nested layouts
@@ -64,6 +69,14 @@ export const router = createBrowserRouter([
         element: <Navigate to={PATHS.HOME} replace />
       }
     ]
+  },
+  {
+    path: PATHS.GROUPS,
+    element: <ProtectedRoute><GroupsDashboard /></ProtectedRoute>
+  },
+  {
+    path: PATHS.GROUP_INVITE,
+    element: <ProtectedRoute><JoinGroupPage /></ProtectedRoute>
   },
   {
     element: <AuthLayout />,

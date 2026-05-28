@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Flame,
   Home,
@@ -10,7 +10,9 @@ import {
   Menu,
   X,
   Bell,
-  ArrowRight
+  ArrowRight,
+  LogOut,
+  UsersRound,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
 import useAuth from '../../features/Auth/hooks/useAuth';
@@ -18,7 +20,10 @@ import useAuth from '../../features/Auth/hooks/useAuth';
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
+  const avatarDropdownRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { user, logout } = useAuth();
   const isAuthenticated = !!user;
@@ -41,7 +46,25 @@ export default function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setAvatarDropdownOpen(false);
   }, [location.pathname]);
+
+  // Close avatar dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(e.target)) {
+        setAvatarDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setAvatarDropdownOpen(false);
+    navigate(PATHS.LOGIN);
+  };
 
   const navItems = [
     { name: 'Home', path: PATHS.HOME, icon: Home },
@@ -101,12 +124,40 @@ export default function Navbar() {
                 <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
                   <Bell className="h-5 w-5" />
                 </button>
-                <div
-                  onClick={logout}
-                  title="Đăng xuất khỏi SmashClub"
-                  className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer hover:scale-105 transition-transform"
-                >
-                  {avatarInitials}
+                {/* Avatar with Dropdown */}
+                <div className="relative" ref={avatarDropdownRef}>
+                  <div
+                    onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
+                    title={user?.name || 'Account'}
+                    className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer hover:scale-105 transition-transform"
+                  >
+                    {avatarInitials}
+                  </div>
+                  {/* Dropdown Menu */}
+                  {avatarDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border-dark bg-[#0d1117]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in z-50">
+                      <div className="px-4 py-3 border-b border-border-dark">
+                        <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
+                        <p className="text-xs text-gray-500 truncate">SmashClub Member</p>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.GROUPS); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                        >
+                          <UsersRound className="h-4 w-4 text-primary" />
+                          Nhóm của tôi
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors font-label cursor-pointer"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -168,19 +219,30 @@ export default function Navbar() {
             )}
 
             {isAuthenticated && (
-              <div className="pt-4 pb-2 border-t border-white/10 mt-4 px-2 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-lg border border-white/20">
-                  {avatarInitials}
-                </div>
-                <div>
-                  <div className="text-white font-medium">{user.name}</div>
-                  <div
-                    onClick={logout}
-                    className="text-red-400 text-sm cursor-pointer hover:text-red-300 transition-colors mt-0.5"
-                  >
-                    Đăng xuất
+              <div className="pt-4 pb-2 border-t border-white/10 mt-4 px-2 space-y-2">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-lg border border-white/20">
+                    {avatarInitials}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">{user.name}</div>
+                    <div className="text-xs text-gray-500">SmashClub Member</div>
                   </div>
                 </div>
+                <button
+                  onClick={() => navigate(PATHS.GROUPS)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                >
+                  <UsersRound className="h-4 w-4 text-primary" />
+                  Nhóm của tôi
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors font-label cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Đăng xuất
+                </button>
               </div>
             )}
           </nav>

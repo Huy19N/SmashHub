@@ -11,6 +11,8 @@ export const PATHS = {
   DASHBOARD: '/dashboard',
   MEMBERS: '/members',
   SHOP: '/shop',
+  GROUPS: '/groups',
+  GROUP_INVITE: '/groups/invite/:token',
   LOGIN: '/login',
   REGISTER: '/register',
   NOT_FOUND: '*',

@@ -11,8 +11,10 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && token !== 'undefined' && token !== 'null') {
             config.headers.Authorization = `Bearer ${token}`;
+        } else {
+            delete config.headers.Authorization;
         }
         console.log(`[Axios] ${config.method?.toUpperCase()} ${config.url}`,
             'Token:', token ? `${token.substring(0, 20)}...` : 'NONE');

@@ -18,6 +18,7 @@ export const useLogout = () => {
       console.error("Logout error", error);
     } finally {
       localStorage.clear();
+      delete api.defaults.headers.common['Authorization'];
       setLoading(false);
     }
   };
@@ -39,9 +40,9 @@ export const useLogin = () => {
       localStorage.setItem('userId', userData.userId);
       localStorage.setItem('roleId', userData.roleId);
       localStorage.setItem('name', userData.userName);
-      localStorage.setItem('token', userData.token);
+      localStorage.setItem('token', userData.accessToken);
       localStorage.setItem('refreshToken', userData.refreshToken);
-      api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${userData.accessToken}`;
 
       return response;
     } catch (error) {
