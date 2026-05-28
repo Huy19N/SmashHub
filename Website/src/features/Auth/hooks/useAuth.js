@@ -63,11 +63,11 @@ export const useRegister = () => {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const register = async (fullname, email, password, phone) => {
+  const register = async (fullName, email, password, phoneNumber) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await registerAPI({ fullname, email, password, phone });
+      const response = await registerAPI({ fullName, email, password, phoneNumber });
       return response;
     } catch (error) {
       let errorMsg = error.response?.data?.message || error.message || "Đã xảy ra lỗi";

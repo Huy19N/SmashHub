@@ -4,6 +4,7 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
 import { useRegister } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -33,7 +34,8 @@ export default function RegisterPage() {
 
     try {
       await register(fullName, email, password, phoneNumber);
-      navigate(PATHS.HOME);
+      navigate(PATHS.LOGIN);
+      toast.success("Đăng ký thành công");
     } catch (err) {
       setLocalError(err.message || 'Đăng ký không thành công.');
     }

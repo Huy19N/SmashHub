@@ -3,22 +3,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
-import useAuth from '../hooks/useAuth';
+import { useLogin } from '../hooks/useAuth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState(null);
 
-  const { login, isLoading, error: authError, user } = useAuth();
+  const { login, isLoading, error: authError } = useLogin();
   const navigate = useNavigate();
 
-  // Automatic redirect if user session is active
   useEffect(() => {
-    if (user) {
+    if (localStorage.getItem('userId')) {
       navigate(PATHS.HOME);
     }
-  }, [user, navigate]);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
