@@ -93,3 +93,25 @@ export const useRegister = () => {
     register,
   };
 };
+
+export default function useAuth() {
+  const userId = localStorage.getItem('userId');
+  const name = localStorage.getItem('name');
+  const roleId = localStorage.getItem('roleId');
+  const token = localStorage.getItem('token');
+
+  const user = userId ? { userId, name, roleId, token } : null;
+
+  const { login, isLoading: isLoginLoading, error: loginError } = useLogin();
+  const { register, isLoading: isRegisterLoading, error: registerError } = useRegister();
+  const { logout, isLoading: isLogoutLoading } = useLogout();
+
+  return {
+    user,
+    login,
+    register,
+    logout,
+    isLoading: isLoginLoading || isRegisterLoading || isLogoutLoading,
+    error: loginError || registerError || null,
+  };
+}
