@@ -1,17 +1,42 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
+import { useRegister } from '../hooks/useAuth';
 
 export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [localError, setLocalError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const { register, isLoading, error: authError } = useRegister();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem('userId')) {
+      navigate(PATHS.HOME);
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 1500);
+    setLocalError(null);
+
+    if (password !== confirmPassword) {
+      setLocalError('Mật khẩu xác nhận không khớp.');
+      return;
+    }
+
+    try {
+      await register(fullName, email, password, phoneNumber);
+      navigate(PATHS.HOME);
+    } catch (err) {
+      setLocalError(err.message || 'Đăng ký không thành công.');
+    }
   };
 
   return (
@@ -22,35 +47,52 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Error Notification callout */}
+        {(localError || authError) && (
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium animate-pulse-slow">
+            {localError || authError}
+          </div>
+        )}
+
         <Input
           label="Email"
-          type="text"
+          type="email"
           placeholder="Nhập email của bạn"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Tên đăng nhập"
-            placeholder="Nhập tên đăng nhập"
+            label="Họ và Tên"
+            placeholder="Nhập họ tên của bạn"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             required
           />
           <Input
             label="Số điện thoại"
             type="tel"
-            placeholder="Nhập số điện thoại của bạn"
+            placeholder="Nhập số điện thoại"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
             required
           />
         </div>
         <Input
           label="Mật khẩu"
           type="password"
-          placeholder="Nhập mật khẩu của bạn"
+          placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
         <Input
           label="Xác nhận mật khẩu"
           type="password"
-          placeholder="Nhập lại mật khẩu của bạn"
+          placeholder="Nhập lại mật khẩu"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
 

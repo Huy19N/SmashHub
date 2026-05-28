@@ -2,7 +2,6 @@ import { RouterProvider } from 'react-router-dom';
 import { Suspense } from 'react';
 import { router } from './routes';
 import { ThemeProvider } from './contexts/ThemeContext';
-
 /**
  * LoadingScreen
  * A high-fidelity, 60fps skeleton screens layout featuring pulsing glow designs.

@@ -1,17 +1,34 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
+import useAuth from '../hooks/useAuth';
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [localError, setLocalError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const { login, isLoading, error: authError, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Automatic redirect if user session is active
+  useEffect(() => {
+    if (user) {
+      navigate(PATHS.HOME);
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 1500);
+    setLocalError(null);
+    try {
+      await login(email, password);
+      navigate(PATHS.HOME);
+    } catch (err) {
+      setLocalError(err.message || 'Đăng nhập không thành công.');
+    }
   };
 
   return (
@@ -22,16 +39,27 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Error Notification Callout */}
+        {(localError || authError) && (
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium animate-pulse-slow">
+            {localError || authError}
+          </div>
+        )}
+
         <Input
           label="Email hoặc Số điện thoại"
-          type="text"
-          placeholder="Nhập email hoặc số điện thoại"
+          type="email"
+          placeholder="Nhập email của bạn"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <Input
           label="Mật khẩu"
           type="password"
           placeholder="Nhập mật khẩu của bạn"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
 
