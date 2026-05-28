@@ -13,14 +13,16 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
+import useAuth from '../../features/Auth/hooks/useAuth';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
-  // Mock authentication state (for testing UI)
-  const isAuthenticated = false;
+  const { user, logout } = useAuth();
+  const isAuthenticated = !!user;
+  const avatarInitials = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   const isHomePage = location.pathname === PATHS.HOME;
 
@@ -99,8 +101,12 @@ export default function Navbar() {
                 <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
                   <Bell className="h-5 w-5" />
                 </button>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer">
-                  H
+                <div
+                  onClick={logout}
+                  title="Đăng xuất khỏi SmashClub"
+                  className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-sm border border-white/20 cursor-pointer hover:scale-105 transition-transform"
+                >
+                  {avatarInitials}
                 </div>
               </>
             ) : (
@@ -160,15 +166,20 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-            
+
             {isAuthenticated && (
               <div className="pt-4 pb-2 border-t border-white/10 mt-4 px-2 flex items-center gap-4">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center font-bold text-bg-dark text-lg border border-white/20">
-                  H
+                  {avatarInitials}
                 </div>
                 <div>
-                  <div className="text-white font-medium">Huy Nguyen</div>
-                  <div className="text-gray-400 text-sm cursor-pointer hover:text-primary transition-colors">View Profile</div>
+                  <div className="text-white font-medium">{user.name}</div>
+                  <div
+                    onClick={logout}
+                    className="text-red-400 text-sm cursor-pointer hover:text-red-300 transition-colors mt-0.5"
+                  >
+                    Đăng xuất
+                  </div>
                 </div>
               </div>
             )}
