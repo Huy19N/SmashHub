@@ -92,6 +92,8 @@ export const useDeleteGroup = () => {
 };
 
 // ─── useTeams ─────────────────────────────────────────────────
+// Fetches only teams where the current logged-in user is a member.
+// Strategy: fetch all teams → fetch members for each → filter by userId.
 
 export const useTeams = () => {
   const [teams, setTeams] = useState([]);
@@ -102,10 +104,52 @@ export const useTeams = () => {
     setLoading(true);
     setError(null);
     try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setTeams([]);
+        return;
+      }
+
+      // 1. Fetch all teams
       const response = await getTeamsAPI(params);
       const data = response?.data ?? response;
-      setTeams(data?.items ?? data ?? []);
-      return data;
+      const allTeams = data?.items ?? data ?? [];
+
+      if (!Array.isArray(allTeams) || allTeams.length === 0) {
+        setTeams([]);
+        return;
+      }
+
+      // 2. For each team, fetch members in parallel and check if user belongs
+      const memberChecks = await Promise.allSettled(
+        allTeams.map(async (team) => {
+          const teamId = team.teamId || team.id;
+          if (!teamId) return { team, isMember: false };
+
+          try {
+            const membersRes = await getTeamMembersAPI(teamId);
+            const members = membersRes?.data ?? membersRes;
+            const memberList = Array.isArray(members) ? members : [];
+
+            // Check if current user is in this team's member list
+            const isMember = memberList.some(
+              (m) => String(m.userId) === String(userId)
+            );
+            return { team, isMember };
+          } catch {
+            // If we can't fetch members, don't include team
+            return { team, isMember: false };
+          }
+        })
+      );
+
+      // 3. Filter to only teams where user is a member
+      const myTeams = memberChecks
+        .filter((r) => r.status === 'fulfilled' && r.value.isMember)
+        .map((r) => r.value.team);
+
+      setTeams(myTeams);
+      return myTeams;
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Không thể tải danh sách nhóm.';
       setError(errorMsg);
