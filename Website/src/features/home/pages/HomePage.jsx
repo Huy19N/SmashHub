@@ -21,7 +21,8 @@ export default function HomePage() {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [showHomepage, setShowHomepage] = useState(false);
 
-  const [heroOpacity, setHeroOpacity] = useState(0);
+  const heroContentRef = useRef(null);
+  const scrollIndicatorRef = useRef(null);
 
   const videoRef = useRef(null);
   const targetTime = useRef(0);
@@ -60,7 +61,7 @@ export default function HomePage() {
           video.pause();
           // Only force frame render if duration is safely parsed to prevent stalling the decoder
           if (!isNaN(video.duration) && video.duration > 0) {
-            video.currentTime = 0.01; 
+            video.currentTime = 0.01;
           }
         }).catch(() => { });
       };
@@ -73,7 +74,7 @@ export default function HomePage() {
           attemptPlay();
           handleVideoCanPlay();
         }, { once: true });
-        
+
         // Ensure we try again if metadata loads late
         video.addEventListener('loadedmetadata', () => {
           if (video.readyState >= 1) attemptPlay();
@@ -90,20 +91,23 @@ export default function HomePage() {
     };
   }, []);
 
-  // 2. High-Performance Hybrid Scroll Syncer
+  // 2. High-Performance Hybrid Scroll Syncer (zero React re-renders during scroll)
   useEffect(() => {
     if (!showHomepage) return;
+
+    // Track last values to avoid redundant DOM writes
+    let lastOpacity = -1;
 
     const updateVideoTimeline = () => {
       const video = videoRef.current;
       if (video && !isNaN(video.duration) && video.duration > 0) {
-        
+
         if (window.scrollY <= 10) {
           // Native playback mode: Keep our ref synced with actual playback
           currentTime.current = video.currentTime;
         } else {
-          // Scrubbing mode
-          const ease = 0.08;
+          // Scrubbing mode — higher easing = more responsive, less lag
+          const ease = 0.15;
           const difference = targetTime.current - currentTime.current;
 
           if (Math.abs(difference) > 0.001) {
@@ -114,10 +118,13 @@ export default function HomePage() {
               currentTime.current = video.duration;
             }
 
-            // Attempt to set currentTime, catch potential DOM exceptions if video is busy
-            try {
-              video.currentTime = currentTime.current;
-            } catch (e) {}
+            // Only seek when the delta is meaningful (avoids flooding the decoder)
+            const seekDelta = Math.abs(video.currentTime - currentTime.current);
+            if (seekDelta > 0.03) {
+              try {
+                video.currentTime = currentTime.current;
+              } catch (e) { }
+            }
           }
         }
       }
@@ -133,21 +140,33 @@ export default function HomePage() {
 
       if (docHeight <= 0) return;
 
-      // Fade-in Hero Logic: Hidden at top (0px), fully visible after 400px scroll
+      // Fade-in Hero Logic via direct DOM manipulation (no React re-render)
       const fadeStart = 100;
       const fadeEnd = 400;
       let opacity = 0;
       if (scrollY > fadeStart) {
         opacity = Math.min((scrollY - fadeStart) / (fadeEnd - fadeStart), 1);
       }
-      setHeroOpacity(opacity);
+
+      // Round to 2 decimal places to reduce redundant writes
+      const roundedOpacity = Math.round(opacity * 100) / 100;
+      if (roundedOpacity !== lastOpacity) {
+        lastOpacity = roundedOpacity;
+        if (heroContentRef.current) {
+          heroContentRef.current.style.opacity = roundedOpacity;
+          heroContentRef.current.style.pointerEvents = roundedOpacity > 0.5 ? 'auto' : 'none';
+        }
+        if (scrollIndicatorRef.current) {
+          scrollIndicatorRef.current.style.opacity = roundedOpacity === 0 ? 1 : 0;
+        }
+      }
 
       // HYBRID VIDEO LOGIC
       if (scrollY <= 10) {
         if (video.paused) {
           const playPromise = video.play();
           if (playPromise !== undefined) {
-            playPromise.catch(() => {});
+            playPromise.catch(() => { });
           }
         }
       } else {
@@ -161,13 +180,13 @@ export default function HomePage() {
     };
 
     window.addEventListener('scroll', handleScrollEvent, { passive: true });
-    
+
     // Dynamically recalculate if the new video loads duration parameters late
     if (videoRef.current) {
       videoRef.current.addEventListener('loadedmetadata', handleScrollEvent);
       videoRef.current.addEventListener('durationchange', handleScrollEvent);
     }
-    
+
     rafId.current = requestAnimationFrame(updateVideoTimeline);
     handleScrollEvent();
 
@@ -260,8 +279,9 @@ export default function HomePage() {
             <div className="sticky top-0 h-screen flex flex-col justify-center px-4 max-w-5xl mx-auto text-left">
               {/* Fade in wrapper so logo is unobstructed initially */}
               <div
-                className="space-y-6 max-w-3xl transition-opacity duration-300 ease-out"
-                style={{ opacity: heroOpacity, pointerEvents: heroOpacity > 0.5 ? 'auto' : 'none' }}
+                ref={heroContentRef}
+                className="space-y-6 max-w-3xl"
+                style={{ opacity: 0, pointerEvents: 'none', transition: 'opacity 0.1s ease-out' }}
               >
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider text-primary bg-primary/10 border border-primary/20 uppercase font-label">
                   <Shield className="h-3.5 w-3.5 text-primary" />
@@ -296,8 +316,9 @@ export default function HomePage() {
 
               {/* Scroll Down Indicator */}
               <div
-                className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-400 animate-pulse font-label transition-opacity duration-300"
-                style={{ opacity: heroOpacity === 0 ? 1 : 0 }}
+                ref={scrollIndicatorRef}
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-400 animate-pulse font-label"
+                style={{ opacity: 1, transition: 'opacity 0.15s ease-out' }}
               >
                 <span className="text-xs font-semibold tracking-widest uppercase text-white drop-shadow-md">Scroll to Discover</span>
                 <ArrowDown className="h-5 w-5 animate-bounce text-primary" />

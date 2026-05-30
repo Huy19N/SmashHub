@@ -60,8 +60,8 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
                 ) : user?.data?.fullName && (
                   <>
                     <span className="text-[10px] text-gray-400 dark:text-gray-500">•</span>
-                    <p className="text-[10px] text-emerald-950 dark:text-primary/70 font-semibold truncate font-label">
-                      {user.data.fullName}
+                    <p className="text-[10px]  text-emerald-950 dark:text-primary/70 font-semibold truncate font-label">
+                      User: {user.data.fullName}
                     </p>
                   </>
                 )}
