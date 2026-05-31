@@ -12,9 +12,8 @@ export default function RegisterPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [localError, setLocalError] = useState(null);
 
-  const { register, isLoading, error: authError } = useRegister();
+  const { register, isLoading } = useRegister();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,19 +24,19 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError(null);
 
     if (password !== confirmPassword) {
-      setLocalError('Mật khẩu xác nhận không khớp.');
+      toast.error('Mật khẩu xác nhận không khớp.');
       return;
     }
 
     try {
       await register(fullName, email, password, phoneNumber);
+      toast.success("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
       navigate(PATHS.LOGIN);
-      toast.success("Đăng ký thành công");
     } catch (err) {
-      setLocalError(err.message || 'Đăng ký không thành công.');
+      const errMsg = err.message || 'Đăng ký không thành công.';
+      toast.error(errMsg);
     }
   };
 
@@ -49,13 +48,6 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Error Notification callout */}
-        {(localError || authError) && (
-          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium animate-pulse-slow">
-            {localError || authError}
-          </div>
-        )}
-
         <Input
           label="Email"
           type="email"

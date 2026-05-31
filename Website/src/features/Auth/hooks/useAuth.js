@@ -66,8 +66,21 @@ export const useLogin = () => {
 
       return response;
     } catch (error) {
-      setError(error.message);
-      throw error.message;
+      let errorMsg = "Đăng nhập không thành công.";
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 401 || status === 400) {
+          errorMsg = "Sai mật khẩu hoặc tài khoản.";
+        } else {
+          errorMsg = error.response.data?.message || `Lỗi hệ thống (${status}). Vui lòng thử lại sau.`;
+        }
+      } else if (error.message === "Network Error" || error.code === "ERR_NETWORK") {
+        errorMsg = "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!";
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -91,7 +104,7 @@ export const useRegister = () => {
       const response = await registerAPI({ fullName, email, password, phoneNumber });
       return response;
     } catch (error) {
-      let errorMsg = error.response?.data?.message || error.message || "Đã xảy ra lỗi";
+      let errorMsg = error.response?.data?.message || error.message || "Đăng ký không thành công.";
 
       if (error.response?.data?.errors) {
         const errors = error.response.data.errors;
@@ -101,8 +114,14 @@ export const useRegister = () => {
         }
       }
 
+      if (errorMsg.includes("already exists") || errorMsg.includes("duplicate") || errorMsg.includes("đã tồn tại")) {
+        errorMsg = "Email hoặc Số điện thoại đã được đăng ký sử dụng.";
+      } else if (error.message === "Network Error" || error.code === "ERR_NETWORK") {
+        errorMsg = "Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!";
+      }
+
       setError(errorMsg);
-      throw errorMsg;
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }

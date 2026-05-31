@@ -131,10 +131,11 @@ export const useTeams = () => {
             const members = membersRes?.data ?? membersRes;
             const memberList = Array.isArray(members) ? members : [];
 
-            // Check if current user is in this team's member list
-            const isMember = memberList.some(
-              (m) => String(m.userId) === String(userId)
-            );
+            // Check if current user is in this team's member list (robust property mapping)
+            const isMember = memberList.some((m) => {
+              const memberUserId = m?.userId ?? m?.id ?? m?.user?.id ?? m?.user?.userId;
+              return memberUserId && userId && String(memberUserId) === String(userId);
+            });
             return { team, isMember };
           } catch {
             // If we can't fetch members, don't include team

@@ -23,7 +23,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const { user, isLoading } = useGetUserId();
 
   const sidebarItems = [
-    { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'Dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'teams', label: 'Quản lý Nhóm', icon: Users, path: '/groups' },
     { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays, path: '/sessions' },
     { id: 'finance', label: 'Tài chính', icon: DollarSign, path: '/finance' },
@@ -56,7 +56,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
                   Quản lý Nhóm
                 </p>
                 {isLoading ? (
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold animate-pulse">Loading...</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold animate-pulse">Đang tải...</p>
                 ) : user?.data?.fullName && (
                   <>
                     <span className="text-[10px] text-gray-400 dark:text-gray-500">•</span>
@@ -116,7 +116,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
             Theme
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded bg-gray-200/60 dark:bg-white/10 text-gray-600 dark:text-gray-400">
-            {isDarkMode ? 'Dark' : 'Light'}
+            {isDarkMode ? 'Tối' : 'Sáng'}
           </span>
         </button>
 

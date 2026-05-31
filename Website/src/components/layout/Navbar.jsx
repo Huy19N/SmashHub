@@ -67,11 +67,11 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { name: 'Home', path: PATHS.HOME, icon: Home },
-    { name: 'About Us', path: PATHS.ABOUT, icon: Users },
-    { name: 'Contact', path: PATHS.CONTACT, icon: Mail },
-    { name: 'Premium', path: PATHS.PREMIUM, icon: Crown },
-    { name: 'Collections', path: PATHS.COLLECTIONS, icon: Layers },
+    { name: 'Trang chủ', path: PATHS.HOME, icon: Home },
+    { name: 'Giới thiệu', path: PATHS.ABOUT, icon: Users },
+    { name: 'Liên hệ', path: PATHS.CONTACT, icon: Mail },
+    { name: 'Cao cấp', path: PATHS.PREMIUM, icon: Crown },
+    { name: 'Bộ sưu tập', path: PATHS.COLLECTIONS, icon: Layers },
   ];
 
   // Logic to determine background styling
@@ -138,7 +138,7 @@ export default function Navbar() {
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border-dark bg-[#0d1117]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in z-50">
                       <div className="px-4 py-3 border-b border-border-dark">
                         <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">SmashClub Member</p>
+                        <p className="text-xs text-gray-500 truncate">Hội viên SmashClub</p>
                       </div>
                       <div className="py-1">
                         <button
@@ -165,7 +165,7 @@ export default function Navbar() {
                 to={PATHS.LOGIN}
                 className="inline-flex items-center justify-center px-6 py-2 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 hover:-translate-y-0.5 cursor-pointer font-label"
               >
-                Sign In
+                Đăng nhập
               </Link>
             )}
           </div>
@@ -213,7 +213,7 @@ export default function Navbar() {
                   to={PATHS.LOGIN}
                   className="flex justify-center items-center gap-2 w-full py-3 rounded-lg text-base font-bold bg-primary text-[#052e14]"
                 >
-                  Sign In
+                  Đăng nhập
                 </Link>
               </div>
             )}
@@ -226,7 +226,7 @@ export default function Navbar() {
                   </div>
                   <div>
                     <div className="text-white font-medium">{user.name}</div>
-                    <div className="text-xs text-gray-500">SmashClub Member</div>
+                    <div className="text-xs text-gray-500">Hội viên SmashClub</div>
                   </div>
                 </div>
                 <button

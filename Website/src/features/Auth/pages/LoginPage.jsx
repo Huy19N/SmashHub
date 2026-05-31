@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
@@ -8,9 +9,8 @@ import { useLogin } from '../hooks/useAuth';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [localError, setLocalError] = useState(null);
 
-  const { login, isLoading, error: authError } = useLogin();
+  const { login, isLoading } = useLogin();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,12 +21,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError(null);
     try {
       await login(email, password);
+      toast.success("Đăng nhập thành công! Chào mừng bạn trở lại.");
       navigate(PATHS.HOME);
     } catch (err) {
-      setLocalError(err.message || 'Đăng nhập không thành công.');
+      const errMsg = err.message || 'Đăng nhập không thành công.';
+      toast.error(errMsg);
     }
   };
 
@@ -38,13 +39,6 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Error Notification Callout */}
-        {(localError || authError) && (
-          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-medium animate-pulse">
-            {localError || authError}
-          </div>
-        )}
-
         <Input
           label="Email hoặc Số điện thoại"
           type="email"

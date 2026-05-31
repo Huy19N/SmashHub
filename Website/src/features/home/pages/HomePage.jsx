@@ -285,16 +285,16 @@ export default function HomePage() {
               >
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider text-primary bg-primary/10 border border-primary/20 uppercase font-label">
                   <Shield className="h-3.5 w-3.5 text-primary" />
-                  State-of-the-Art Arenas
+                  Sân đấu đẳng cấp
                 </span>
 
                 <h1 className="text-5xl sm:text-8xl font-black tracking-tighter leading-none font-display drop-shadow-2xl">
-                  SMASH THE <br />
-                  <span className="text-gradient-primary font-bold italic">LIMITS.</span>
+                  PHÁ VỠ <br />
+                  <span className="text-gradient-primary font-bold italic">GIỚI HẠN.</span>
                 </h1>
 
                 <p className="text-gray-200 text-lg sm:text-2xl font-light leading-relaxed max-w-2xl font-sans drop-shadow-md">
-                  Experience badminton with cinema-grade scroll fluid kinetics. Premium anti-slip wood courts, automated booking, and professional lighting optimized for speed.
+                  Trải nghiệm cầu lông đẳng cấp với hệ thống sân chống trượt cao cấp, đặt sân tự động và hệ thống chiếu sáng chuyên nghiệp tối ưu cho tốc độ.
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-6 font-label">
@@ -302,14 +302,14 @@ export default function HomePage() {
                     to={PATHS.BOOKING}
                     className="px-8 py-4 rounded-lg font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-primary/20 cursor-pointer inline-flex items-center gap-2"
                   >
-                    Reserve A Court
+                    Đặt Sân Ngay
                     <ArrowRight className="h-5 w-5 text-[#052e14]" />
                   </Link>
                   <Link
                     to={PATHS.MEMBERS}
                     className="px-8 py-4 rounded-lg font-bold bg-transparent border border-white/40 hover:border-primary hover:text-primary text-white transition-all duration-300 cursor-pointer inline-block backdrop-blur-sm"
                   >
-                    View Membership Perks
+                    Quyền Lợi Hội Viên
                   </Link>
                 </div>
               </div>
@@ -320,7 +320,7 @@ export default function HomePage() {
                 className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-400 animate-pulse font-label"
                 style={{ opacity: 1, transition: 'opacity 0.15s ease-out' }}
               >
-                <span className="text-xs font-semibold tracking-widest uppercase text-white drop-shadow-md">Scroll to Discover</span>
+                <span className="text-xs font-semibold tracking-widest uppercase text-white drop-shadow-md">Cuộn để khám phá</span>
                 <ArrowDown className="h-5 w-5 animate-bounce text-primary" />
               </div>
             </div>
@@ -331,27 +331,27 @@ export default function HomePage() {
             <div className="sticky top-0 h-screen flex items-center px-4 max-w-5xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full">
                 <div className="space-y-6">
-                  <span className="text-primary font-bold text-sm tracking-widest uppercase font-label drop-shadow-md">01 / The Arena</span>
+                  <span className="text-primary font-bold text-sm tracking-widest uppercase font-label drop-shadow-md">01 / Sân Đấu</span>
                   <h2 className="text-4xl sm:text-5xl font-extrabold font-display leading-tight drop-shadow-lg">
-                    Engineered For <br />
-                    <span className="text-gradient-primary italic">Agility & Speed</span>
+                    Thiết Kế Cho <br />
+                    <span className="text-gradient-primary italic">Tốc Độ & Sức Bật</span>
                   </h2>
                   <p className="text-gray-200 leading-relaxed text-base sm:text-lg font-sans drop-shadow-md">
-                    Every court at SmashClub is equipped with professional anti-shock subfloor cushioning and Olympic standard PVC surfaces. The high-lux vertical LED arrays provide absolute visibility without blinding glares.
+                    Mỗi sân tại SmashClub đều được trang bị hệ thống sàn chống sốc chuyên nghiệp và bề mặt PVC tiêu chuẩn Olympic. Hệ thống đèn LED dọc công suất cao mang đến tầm nhìn hoàn hảo mà không gây chói mắt.
                   </p>
                   <div className="grid grid-cols-2 gap-4 pt-4 font-label">
                     <div className="bg-black/40 backdrop-blur-md p-4 rounded-lg flex items-start gap-3 border border-white/10">
                       <Activity className="h-5 w-5 text-secondary mt-0.5 shrink-0" />
                       <div>
-                        <h4 className="font-bold text-white text-sm">Shock Absorption</h4>
-                        <p className="text-xs text-gray-300">Dual elasticity core subfloor</p>
+                        <h4 className="font-bold text-white text-sm">Chống Sốc</h4>
+                        <p className="text-xs text-gray-300">Sàn lõi đàn hồi kép</p>
                       </div>
                     </div>
                     <div className="bg-black/40 backdrop-blur-md p-4 rounded-lg flex items-start gap-3 border border-white/10">
                       <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <h4 className="font-bold text-white text-sm">Anti-Slip Grip</h4>
-                        <p className="text-xs text-gray-300">Traction level coefficient 0.58</p>
+                        <h4 className="font-bold text-white text-sm">Chống Trượt</h4>
+                        <p className="text-xs text-gray-300">Hệ số bám sàn 0.58</p>
                       </div>
                     </div>
                   </div>
@@ -359,15 +359,15 @@ export default function HomePage() {
 
                 <div className="bg-black/50 backdrop-blur-xl p-8 rounded-2xl border border-white/10 space-y-6 shadow-2xl">
                   <div className="h-1 bg-gradient-to-r from-primary to-secondary rounded-full w-20" />
-                  <h3 className="text-2xl font-bold font-display text-white">Automated Booking</h3>
+                  <h3 className="text-2xl font-bold font-display text-white">Đặt Sân Tự Động</h3>
                   <p className="text-gray-300 text-sm leading-relaxed font-sans">
-                    Lock down your favorite court times in seconds. Our automated calendar checks court usage in real-time, instantly syncs with your digital pass, and allows hassle-free peer challenge invites.
+                    Giữ chỗ sân yêu thích chỉ trong vài giây. Hệ thống lịch tự động kiểm tra tình trạng sân theo thời gian thực, đồng bộ ngay với thẻ hội viên và hỗ trợ mời bạn bè thách đấu dễ dàng.
                   </p>
                   <Link
                     to={PATHS.BOOKING}
                     className="inline-flex items-center gap-2 text-primary font-bold hover:text-primary-dark transition-colors text-sm cursor-pointer font-label"
                   >
-                    Interactive Court Planner
+                    Lịch đặt sân trực quan
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -381,40 +381,40 @@ export default function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full">
                 <div className="bg-black/50 backdrop-blur-xl p-8 rounded-2xl border border-white/10 space-y-6 shadow-2xl order-2 md:order-1">
                   <Trophy className="h-10 w-10 text-primary" />
-                  <h3 className="text-2xl font-bold font-display text-white">Active Tournaments</h3>
+                  <h3 className="text-2xl font-bold font-display text-white">Giải Đấu Sôi Động</h3>
                   <p className="text-gray-300 text-sm leading-relaxed font-sans">
-                    Test your baseline smash against the region's top players. Our ladder system pairs you with compatible skill classes, tracks win-loss ratio, and rewards top club spots with pro equipment.
+                    Thử sức cú smash của bạn trước những tay vợt hàng đầu khu vực. Hệ thống xếp hạng ghép cặp theo trình độ, theo dõi tỷ lệ thắng/thua và trao thưởng trang bị chuyên nghiệp cho các vị trí đầu bảng.
                   </p>
                   <Link
                     to={PATHS.MEMBERS}
                     className="inline-flex items-center gap-2 text-primary font-bold hover:text-primary-dark transition-colors text-sm cursor-pointer font-label"
                   >
-                    Join SmashClub Ladder
+                    Tham gia bảng xếp hạng
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
 
                 <div className="order-1 md:order-2 space-y-6">
-                  <span className="text-primary font-bold text-sm tracking-widest uppercase font-label drop-shadow-md">02 / Community</span>
+                  <span className="text-primary font-bold text-sm tracking-widest uppercase font-label drop-shadow-md">02 / Cộng Đồng</span>
                   <h2 className="text-4xl sm:text-5xl font-extrabold font-display leading-tight drop-shadow-lg">
-                    Climb the Club <br />
-                    <span className="text-gradient-primary italic">Leaderboard</span>
+                    Chinh Phục <br />
+                    <span className="text-gradient-primary italic">Bảng Xếp Hạng</span>
                   </h2>
                   <p className="text-gray-200 leading-relaxed text-base sm:text-lg font-sans drop-shadow-md">
-                    Join leagues, match up with players in your exact rating class, and participate in training camps hosted by national champions. Our member subscriptions provide ultimate access to elite court systems.
+                    Tham gia giải đấu, ghép cặp với đối thủ cùng trình độ và luyện tập cùng các huấn luyện viên quốc gia. Gói hội viên mang đến quyền truy cập cao nhất vào hệ thống sân đấu chuyên nghiệp.
                   </p>
                   <div className="flex gap-6 pt-4 text-left font-label">
                     <div>
                       <h4 className="text-3xl font-black text-gradient-primary font-display drop-shadow-md">1.2K+</h4>
-                      <p className="text-xs text-gray-300 uppercase tracking-wider">Active Members</p>
+                      <p className="text-xs text-gray-300 uppercase tracking-wider">Hội viên</p>
                     </div>
                     <div>
                       <h4 className="text-3xl font-black text-white font-display drop-shadow-md">12</h4>
-                      <p className="text-xs text-gray-300 uppercase tracking-wider">Professional Courts</p>
+                      <p className="text-xs text-gray-300 uppercase tracking-wider">Sân chuyên nghiệp</p>
                     </div>
                     <div>
                       <h4 className="text-3xl font-black text-gradient-primary font-display drop-shadow-md">98%</h4>
-                      <p className="text-xs text-gray-300 uppercase tracking-wider">Success Matches</p>
+                      <p className="text-xs text-gray-300 uppercase tracking-wider">Ghép cặp thành công</p>
                     </div>
                   </div>
                 </div>
@@ -431,14 +431,14 @@ export default function HomePage() {
 
                 <div className="relative space-y-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider text-primary bg-primary/10 border border-primary/20 uppercase font-label">
-                    Take the Leap
+                    Bắt đầu ngay
                   </span>
                   <h2 className="text-3xl sm:text-5xl font-extrabold font-display tracking-tight text-white leading-tight">
-                    Ready to Own <br />
-                    the Court?
+                    Sẵn Sàng <br />
+                    Chinh Phục Sân Đấu?
                   </h2>
                   <p className="text-gray-300 text-sm sm:text-base max-w-lg mx-auto leading-relaxed font-sans">
-                    Join SmashClub today to automate your scheduling, grab professional gear at our Pro Shop, and test your skills on the ladder. Fully indexed for peak speed.
+                    Tham gia SmashClub ngay hôm nay để đặt sân tự động, sắm trang bị chuyên nghiệp tại cửa hàng Pro Shop và thử sức trên bảng xếp hạng.
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-4 pt-4 font-label">
@@ -446,13 +446,13 @@ export default function HomePage() {
                       to={PATHS.BOOKING}
                       className="px-8 py-4 rounded-lg font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-primary/20 cursor-pointer"
                     >
-                      Book Your First Court
+                      Đặt Sân Đầu Tiên
                     </Link>
                     <Link
                       to={PATHS.SHOP}
                       className="px-8 py-4 rounded-lg font-bold bg-[#334155] border border-white/10 hover:bg-slate-600 text-white transition-all duration-300 cursor-pointer"
                     >
-                      Browse Pro Gear
+                      Xem Trang Bị Pro
                     </Link>
                   </div>
                 </div>
@@ -474,12 +474,12 @@ export default function HomePage() {
               </span>
             </div>
             <div className="text-gray-500 text-xs sm:text-sm text-center md:text-left">
-              © {new Date().getFullYear()} SmashClub. All rights reserved. Immersive requestAnimationFrame video engine locked at 60fps.
+              © {new Date().getFullYear()} SmashClub. Mọi quyền được bảo lưu.
             </div>
             <div className="flex gap-6 text-xs sm:text-sm text-gray-400">
-              <a href="#privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-              <a href="#terms" className="hover:text-primary transition-colors">Terms of Service</a>
-              <a href="#support" className="hover:text-primary transition-colors">Support</a>
+              <a href="#privacy" className="hover:text-primary transition-colors">Chính sách bảo mật</a>
+              <a href="#terms" className="hover:text-primary transition-colors">Điều khoản sử dụng</a>
+              <a href="#support" className="hover:text-primary transition-colors">Hỗ trợ</a>
             </div>
           </div>
         </footer>

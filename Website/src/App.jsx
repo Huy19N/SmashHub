@@ -1,5 +1,6 @@
 import { RouterProvider } from 'react-router-dom';
 import { Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { router } from './routes';
 import { ThemeProvider } from './contexts/ThemeContext';
 /**
@@ -51,6 +52,33 @@ function LoadingScreen() {
 export default function App() {
   return (
     <ThemeProvider>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#0d1117',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+            fontFamily: 'system-ui, -apple-system, sans-serif font-label',
+            fontSize: '14px',
+            borderRadius: '12px',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Suspense fallback={<LoadingScreen />}>
         <RouterProvider router={router} />
       </Suspense>
