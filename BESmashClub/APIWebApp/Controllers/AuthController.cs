@@ -46,7 +46,7 @@ public class AuthController : ControllerBase
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
-            var result = await _authService.LoginAsync(request, ipAddress, userAgent);
+            var result = await _authService.LoginAsync(request, ipAddress??"Not Found", userAgent);
             return Ok(ApiResponse<TokenResponse>.SuccessResponse(result, "Đăng nhập thành công."));
         }
         catch (UnauthorizedAccessException ex)
@@ -66,7 +66,7 @@ public class AuthController : ControllerBase
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
-            var result = await _authService.RefreshTokenAsync(request.RefreshToken, ipAddress, userAgent);
+            var result = await _authService.RefreshTokenAsync(request.RefreshToken, ipAddress??"Not Found", userAgent);
             return Ok(ApiResponse<TokenResponse>.SuccessResponse(result, "Token đã được làm mới."));
         }
         catch (UnauthorizedAccessException ex)

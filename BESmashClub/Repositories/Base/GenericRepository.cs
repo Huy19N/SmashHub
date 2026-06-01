@@ -38,7 +38,6 @@ namespace Repositories.Base
             return (int)Math.Ceiling((double)totalCount / pageSize);
         }
 
-
         public async Task<int> CreateAsync(T entity)
         {
             _context.Add(entity);

@@ -7,19 +7,15 @@ namespace Entites.Models;
 
 public partial class UserSportProfile
 {
-    public Guid ProfileId { get; set; }
-
     public Guid UserId { get; set; }
 
     public int SportId { get; set; }
 
-    public int LevelId { get; set; }
+    public int RankValue { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
 
-    public virtual SportLevel Level { get; set; }
-
-    public virtual Sport Sport { get; set; }
+    public virtual SportLevel SportLevel { get; set; }
 
     public virtual User User { get; set; }
 }

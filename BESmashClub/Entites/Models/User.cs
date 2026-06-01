@@ -25,6 +25,10 @@ public partial class User
 
     public bool? IsActive { get; set; }
 
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public virtual ICollection<Facility> Facilities { get; set; } = new List<Facility>();
+
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public virtual UserRole Role { get; set; }
@@ -35,5 +39,9 @@ public partial class User
 
     public virtual ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
 
+    public virtual ICollection<TeamMessage> TeamMessages { get; set; } = new List<TeamMessage>();
+
     public virtual ICollection<UserSportProfile> UserSportProfiles { get; set; } = new List<UserSportProfile>();
+
+    public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }

@@ -5,15 +5,11 @@ using System.Collections.Generic;
 
 namespace Entites.Models;
 
-public partial class Sport
+public partial class CourtStatus
 {
-    public int SportId { get; set; }
+    public int StatusId { get; set; }
 
-    public string SportName { get; set; }
-
-    public string Description { get; set; }
+    public string StatusName { get; set; }
 
     public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
-
-    public virtual ICollection<SportLevel> SportLevels { get; set; } = new List<SportLevel>();
 }

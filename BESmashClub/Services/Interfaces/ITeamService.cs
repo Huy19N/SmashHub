@@ -21,4 +21,9 @@ public interface ITeamService
     Task<InviteInfoResponse> CreateInviteAsync(Guid userId, Guid teamId, CreateInviteRequest request);
     Task<InviteInfoResponse> GetInviteInfoAsync(string inviteToken);
     Task AcceptInviteAsync(Guid userId, string inviteToken);
+
+    // Message
+    Task<TeamMessageResponse> SenđTeamMessageAsync(Guid userId, Guid teamId, String content);
+    Task<TeamMessageResponse> GetTeamMessageAsync(string? search, PaginationParams pagination);
+
 }

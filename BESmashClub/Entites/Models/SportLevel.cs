@@ -7,13 +7,11 @@ namespace Entites.Models;
 
 public partial class SportLevel
 {
-    public int LevelId { get; set; }
-
     public int SportId { get; set; }
 
-    public string LevelName { get; set; }
-
     public int RankValue { get; set; }
+
+    public string LevelName { get; set; }
 
     public virtual Sport Sport { get; set; }
 

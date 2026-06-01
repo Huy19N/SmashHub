@@ -29,7 +29,6 @@ public class SportService : ISportService
         var levels = await _unitOfWork.SportLevels.GetBySportIdAsync(sportId);
         return levels.Select(l => new SportLevelResponse
         {
-            LevelId = l.LevelId,
             SportId = l.SportId,
             LevelName = l.LevelName,
             RankValue = l.RankValue

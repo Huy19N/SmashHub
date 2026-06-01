@@ -1,4 +1,5 @@
 using System.Text;
+using APIWebApp.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,8 @@ using Services.Interfaces;
 using Services.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 // ---- Configuration ----
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -87,6 +90,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+// ---- Signal R -----
+builder.Services.AddSignalR();
 
 // ---- CORS ----
 builder.Services.AddCors(options =>
@@ -95,9 +100,12 @@ builder.Services.AddCors(options =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
+
 
 var app = builder.Build();
 
@@ -116,5 +124,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("hub/chat");
 
 app.Run();

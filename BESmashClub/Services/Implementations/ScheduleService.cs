@@ -22,17 +22,23 @@ public class ScheduleService : IScheduleService
         if (!await _unitOfWork.TeamMembers.IsLeaderAsync(teamId, userId))
             throw new UnauthorizedAccessException("Chỉ Leader mới có quyền tạo lịch chơi.");
 
+        // Validate booking exists
+        var booking = await _unitOfWork.Context.Bookings.FindAsync(request.BookingId);
+        if (booking == null)
+            throw new KeyNotFoundException("Không tìm thấy booking.");
+
+        // Each booking can only have one schedule (yêu cầu #5)
+        if (await _unitOfWork.Schedules.BookingHasScheduleAsync(request.BookingId))
+            throw new InvalidOperationException("Booking này đã có lịch chơi. Mỗi booking chỉ được lên lịch một lần.");
+
         var schedule = new Schedule
         {
             ScheduleId = Guid.NewGuid(),
             HostTeamId = teamId,
+            BookingId = request.BookingId,
             Title = request.Title,
-            SportId = request.SportId,
-            Location = request.Location,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
             MaxParticipants = request.MaxParticipants,
-            TotalCost = request.TotalCost,
+            CostPerPerson = request.CostPerPerson,
             CostNote = request.CostNote,
             CreatedAt = DateTime.Now
         };
@@ -69,20 +75,11 @@ public class ScheduleService : IScheduleService
         if (!string.IsNullOrWhiteSpace(request.Title))
             schedule.Title = request.Title;
 
-        if (!string.IsNullOrWhiteSpace(request.Location))
-            schedule.Location = request.Location;
-
-        if (request.StartTime.HasValue)
-            schedule.StartTime = request.StartTime.Value;
-
-        if (request.EndTime.HasValue)
-            schedule.EndTime = request.EndTime.Value;
-
         if (request.MaxParticipants.HasValue)
             schedule.MaxParticipants = request.MaxParticipants.Value;
 
-        if (request.TotalCost.HasValue)
-            schedule.TotalCost = request.TotalCost.Value;
+        if (request.CostPerPerson.HasValue)
+            schedule.CostPerPerson = request.CostPerPerson.Value;
 
         if (request.CostNote != null)
             schedule.CostNote = request.CostNote;
@@ -199,15 +196,17 @@ public class ScheduleService : IScheduleService
             ScheduleId = schedule.ScheduleId,
             HostTeamId = schedule.HostTeamId,
             HostTeamName = schedule.HostTeam?.TeamName,
+            BookingId = schedule.BookingId,
             Title = schedule.Title,
-            SportId = schedule.SportId,
-            SportName = schedule.Sport?.SportName,
-            Location = schedule.Location,
-            StartTime = schedule.StartTime,
-            EndTime = schedule.EndTime,
+            StartTime = schedule.Booking?.StartTime ?? default,
+            EndTime = schedule.Booking?.EndTime ?? default,
+            BookingTotalCost = schedule.Booking?.TotalCost,
+            CourtName = schedule.Booking?.Court?.CourtName,
+            FacilityName = schedule.Booking?.Court?.Facility?.Name,
+            SportName = schedule.Booking?.Court?.Sport?.SportName,
             MaxParticipants = schedule.MaxParticipants,
             CurrentParticipants = schedule.ScheduleParticipants?.Count ?? 0,
-            TotalCost = schedule.TotalCost,
+            CostPerPerson = schedule.CostPerPerson,
             CostNote = schedule.CostNote,
             CreatedAt = schedule.CreatedAt
         };
