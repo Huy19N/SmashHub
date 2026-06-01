@@ -42,32 +42,39 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
         </button>
 
         {/* Club/Group Profile Section */}
-        <div className="p-5 border-b border-gray-200 dark:border-border-dark/60">
+        <div className="p-5 border-b border-gray-200 dark:border-border-dark/60 flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-primary/10 border border-emerald-500/20 dark:border-primary/20 flex items-center justify-center shrink-0 shadow-sm">
               <Flame className="h-5 w-5 text-emerald-600 dark:text-primary animate-pulse" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-gray-900 dark:text-white font-extrabold text-sm truncate font-display">
+              <h3 className="text-gray-900 dark:text-white font-extrabold text-sm truncate font-display leading-tight">
                 SmashClub
               </h3>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] text-emerald-700 dark:text-primary/70 font-bold uppercase tracking-wider font-label shrink-0">
-                  Quản lý Nhóm
-                </p>
-                {isLoading ? (
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold animate-pulse">Đang tải...</p>
-                ) : user?.data?.fullName && (
-                  <>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500">•</span>
-                    <p className="text-[10px]  text-emerald-950 dark:text-primary/70 font-semibold truncate font-label">
-                      User: {user.data.fullName}
-                    </p>
-                  </>
-                )}
-              </div>
+              <p className="text-[10px] text-emerald-700 dark:text-primary/70 font-bold uppercase tracking-wider font-label mt-0.5">
+                Quản lý Nhóm
+              </p>
             </div>
           </div>
+
+          {/* User Info Badge */}
+          {isLoading ? (
+            <div className="h-10 w-full bg-gray-100 dark:bg-white/5 rounded-xl animate-pulse" />
+          ) : user?.data?.fullName && (
+            <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-white/5 border border-emerald-100/50 dark:border-white/10 shadow-sm transition-colors hover:bg-emerald-50 dark:hover:bg-white/10">
+              <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                <UserCircle className="w-4 h-4 text-emerald-600 dark:text-primary" />
+              </div>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider font-label leading-none mb-1">
+                  Tài Khoản Của:
+                </p>
+                <p className="text-xs text-gray-900 dark:text-white font-bold font-label break-words leading-snug">
+                  {user.data.fullName}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* "+ New Session/Team" Button */}

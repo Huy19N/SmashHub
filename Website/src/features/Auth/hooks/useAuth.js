@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI } from '../api/auth.api.js';
+import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI } from '../api/auth.api.js';
 import api from '../../../config/axios.js';
 
 export const useLogout = () => {
@@ -11,8 +11,8 @@ export const useLogout = () => {
       const userId = localStorage.getItem('userId');
       const refreshToken = localStorage.getItem('refreshToken');
       await logoutAPI({
-        userId: userId ? parseInt(userId) : 0,
-        refeshToken: refreshToken || ""
+        userId: userId || "",
+        refreshToken: refreshToken || ""
       });
     } catch (error) {
       console.error("Logout error", error);
@@ -30,8 +30,8 @@ const parseJwt = (token) => {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
@@ -52,7 +52,7 @@ export const useLogin = () => {
 
       const accessToken = userData.accessToken;
       const decoded = parseJwt(accessToken);
-      
+
       const userId = decoded?.nameid || decoded?.sub || decoded?.userId || userData.userId;
       const roleId = decoded?.role || decoded?.roleId || userData.roleId;
 
@@ -234,5 +234,110 @@ export const useGetUserId = () => {
     user,
     isLoading,
     error,
+  };
+};
+
+// User Profiles 
+
+export const useGetUserProfile = () => {
+  const [userProfile, setUserProfile] = useState(null);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getUserProfileAPI();
+        setUserProfile(response);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  return {
+    userProfile,
+    isLoading,
+    error,
+  };
+};
+
+export const useUpdateUserProfile = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const updateUserProfile = async (sportProfileData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await updateUserProfileAPI(sportProfileData);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    updateUserProfile,
+  };
+};
+
+export const useCreateUserProfile = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const createUserProfile = async (sportProfileData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await createUserProfileAPI(sportProfileData);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    createUserProfile,
+  };
+};
+
+export const useDeleteUserProfile = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const deleteUserProfile = async (sportProfileId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await deleteUserProfileAPI(sportProfileId);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    deleteUserProfile,
   };
 };

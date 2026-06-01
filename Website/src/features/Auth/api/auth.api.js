@@ -16,8 +16,8 @@ export const refreshAccessTokenAPI = async (refreshToken) => {
   return response.data;
 };
 
-export const logoutAPI = async (refreshToken) => {
-  const response = await axios.post('/auth/logout', { refreshToken });
+export const logoutAPI = async (logoutData) => {
+  const response = await axios.post('/auth/logout', logoutData);
   return response.data;
 };
 
@@ -35,5 +35,27 @@ export const updateUserAPI = async (userData) => {
 
 export const getUserIdAPI = async (userId) => {
   const response = await axios.get(`/users/${userId}`);
+  return response.data;
+};
+
+// user profile API
+
+export const getUserProfileAPI = async () => {
+  const response = await axios.get('/users/me/sport-profiles');
+  return response.data;
+};
+
+export const updateUserProfileAPI = async (sportProfileId, sportProfileData) => {
+  const response = await axios.put(`/users/me/sport-profiles/${sportProfileId}`, sportProfileData);
+  return response.data;
+};
+
+export const createUserProfileAPI = async (sportProfileData) => {
+  const response = await axios.post('/users/me/sport-profiles', sportProfileData);
+  return response.data;
+};
+
+export const deleteUserProfileAPI = async (sportProfileId) => {
+  const response = await axios.delete(`/users/me/sport-profiles/${sportProfileId}`);
   return response.data;
 };

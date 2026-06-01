@@ -34,8 +34,8 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
   }, []);
 
   const roleBadge = member.roleName === 'Leader'
-    ? { label: 'Admin', classes: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' }
-    : { label: 'Thành viên', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' };
+    ? { label: 'Admin', classes: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30' }
+    : { label: 'Thành viên', classes: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30' };
 
   const formatDate = (iso) => {
     if (!iso) return 'Chưa xác định';
@@ -67,7 +67,7 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
             <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate font-display group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">
               {member.fullName}
             </h4>
-            <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${roleBadge.classes} font-label`}>
+            <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-md text-xs font-bold border ${roleBadge.classes} font-label`}>
               {roleBadge.label}
             </span>
           </div>
@@ -95,19 +95,33 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
       </div>
 
       {/* Middle: Info */}
-      <div className="mt-3 space-y-1.5">
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <Award className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
-          <span className="font-label">Trình độ: <strong className="text-gray-700 dark:text-gray-200">{skillLabel}</strong></span>
-        </div>
+      <div className="mt-4 space-y-2">
+        {(member.sportName || member.sport) && (
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span className="font-label">Thể thao: <strong className="text-gray-700 dark:text-gray-200">{member.sportName || member.sport}</strong></span>
+          </div>
+        )}
+        {(member.levelName || member.level) ? (
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <Award className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
+            <span className="font-label">Trình độ: <strong className="text-gray-700 dark:text-gray-200">{member.levelName || member.level}</strong></span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <Award className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
+            <span className="font-label">Trình độ (W/L): <strong className="text-gray-700 dark:text-gray-200">{skillLabel}</strong></span>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <Calendar className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
           <span className="font-label">Tham gia: {formatDate(member.joinedAt)}</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <Shield className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
-          <span className="font-label">Thắng/Thua: <strong className="text-gray-700 dark:text-gray-200">{member.wins || 0}W - {member.losses || 0}L</strong></span>
-        </div>
+        {(!member.sportName && !member.sport) && (
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <Shield className="h-3.5 w-3.5 text-emerald-600/70 dark:text-primary/70 shrink-0" />
+            <span className="font-label">Thắng/Thua: <strong className="text-gray-700 dark:text-gray-200">{member.wins || 0}W - {member.losses || 0}L</strong></span>
+          </div>
+        )}
       </div>
 
       {/* Bottom: Action */}
