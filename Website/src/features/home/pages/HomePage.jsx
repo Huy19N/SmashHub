@@ -11,6 +11,7 @@ import {
 import { PATHS } from '../../../routes/paths';
 import SEOManager from '../../../components/seo/SEOManager';
 import videoBg from '../../../assets/video_smash_club.mp4';
+import CollectionsSection from '../components/CollectionsSection';
 
 /**
  * HomePage
@@ -140,12 +141,12 @@ export default function HomePage() {
 
       if (docHeight <= 0) return;
 
-      // Fade-in Hero Logic via direct DOM manipulation (no React re-render)
-      const fadeStart = 100;
-      const fadeEnd = 400;
-      let opacity = 0;
+      // Fade-out Hero Logic via direct DOM manipulation (no React re-render)
+      const fadeStart = 300;
+      const fadeEnd = 900;
+      let opacity = 1;
       if (scrollY > fadeStart) {
-        opacity = Math.min((scrollY - fadeStart) / (fadeEnd - fadeStart), 1);
+        opacity = Math.max(1 - (scrollY - fadeStart) / (fadeEnd - fadeStart), 0);
       }
 
       // Round to 2 decimal places to reduce redundant writes
@@ -157,7 +158,9 @@ export default function HomePage() {
           heroContentRef.current.style.pointerEvents = roundedOpacity > 0.5 ? 'auto' : 'none';
         }
         if (scrollIndicatorRef.current) {
-          scrollIndicatorRef.current.style.opacity = roundedOpacity === 0 ? 1 : 0;
+          // Fade indicator slightly faster than hero text
+          const indicatorOpacity = Math.max(1 - scrollY / 300, 0);
+          scrollIndicatorRef.current.style.opacity = Math.round(indicatorOpacity * 100) / 100;
         }
       }
 
@@ -281,7 +284,7 @@ export default function HomePage() {
               <div
                 ref={heroContentRef}
                 className="space-y-6 max-w-3xl"
-                style={{ opacity: 0, pointerEvents: 'none', transition: 'opacity 0.1s ease-out' }}
+                style={{ opacity: 1, pointerEvents: 'auto', transition: 'opacity 0.1s ease-out' }}
               >
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider text-primary bg-primary/10 border border-primary/20 uppercase font-label">
                   <Shield className="h-3.5 w-3.5 text-primary" />
@@ -294,7 +297,7 @@ export default function HomePage() {
                 </h1>
 
                 <p className="text-gray-200 text-lg sm:text-2xl font-light leading-relaxed max-w-2xl font-sans drop-shadow-md">
-                  Trải nghiệm cầu lông đẳng cấp với hệ thống sân chống trượt cao cấp, đặt sân tự động và hệ thống chiếu sáng chuyên nghiệp tối ưu cho tốc độ.
+                  Trải nghiệm thể thao đẳng cấp với hệ thống sân chất lượng cao, đặt sân tự động và hệ thống chiếu sáng chuyên nghiệp.
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-6 font-label">
@@ -337,7 +340,7 @@ export default function HomePage() {
                     <span className="text-gradient-primary italic">Tốc Độ & Sức Bật</span>
                   </h2>
                   <p className="text-gray-200 leading-relaxed text-base sm:text-lg font-sans drop-shadow-md">
-                    Mỗi sân tại SmashClub đều được trang bị hệ thống sàn chống sốc chuyên nghiệp và bề mặt PVC tiêu chuẩn Olympic. Hệ thống đèn LED dọc công suất cao mang đến tầm nhìn hoàn hảo mà không gây chói mắt.
+                    Mỗi sân tại SmashClub đều được trang bị hệ thống sàn chống sốc chuyên nghiệp và bề mặt PVC tiêu chuẩn. Hệ thống đèn LED dọc công suất cao mang đến tầm nhìn hoàn hảo mà không gây chói mắt.
                   </p>
                   <div className="grid grid-cols-2 gap-4 pt-4 font-label">
                     <div className="bg-black/40 backdrop-blur-md p-4 rounded-lg flex items-start gap-3 border border-white/10">
@@ -461,6 +464,9 @@ export default function HomePage() {
           </section>
 
         </main>
+
+        {/* ---------------- COLLECTIONS SECTION ---------------- */}
+        <CollectionsSection />
 
         {/* ---------------- FOOTER ---------------- */}
         <footer className="relative z-10 border-t border-white/10 bg-[#0b0f19] py-12 font-label">
