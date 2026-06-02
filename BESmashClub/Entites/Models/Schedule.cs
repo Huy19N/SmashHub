@@ -11,27 +11,21 @@ public partial class Schedule
 
     public Guid HostTeamId { get; set; }
 
+    public Guid BookingId { get; set; }
+
     public string Title { get; set; }
-
-    public int SportId { get; set; }
-
-    public string Location { get; set; }
-
-    public DateTime StartTime { get; set; }
-
-    public DateTime EndTime { get; set; }
 
     public int MaxParticipants { get; set; }
 
-    public decimal? TotalCost { get; set; }
+    public decimal? CostPerPerson { get; set; }
 
     public string CostNote { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
+    public virtual Booking Booking { get; set; }
+
     public virtual Team HostTeam { get; set; }
 
     public virtual ICollection<ScheduleParticipant> ScheduleParticipants { get; set; } = new List<ScheduleParticipant>();
-
-    public virtual Sport Sport { get; set; }
 }

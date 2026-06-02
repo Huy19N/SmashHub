@@ -38,7 +38,6 @@ namespace Repositories.Base
             return (int)Math.Ceiling((double)totalCount / pageSize);
         }
 
-
         public async Task<int> CreateAsync(T entity)
         {
             _context.Add(entity);
@@ -55,7 +54,7 @@ namespace Repositories.Base
 
         public async Task<bool> RemoveAsync(T entity)
         {
-            _context.Remove(entity);
+             _context.Remove(entity);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -101,6 +100,20 @@ namespace Repositories.Base
             return await _context.SaveChangesAsync();
         }
 
+        public async Task<bool> IsExists(int id)
+        {
+            return await _context.Set<T>().FindAsync(id) != null;
+        }
 
+
+        public async Task<bool> IsExists(string code)
+        {
+            return await _context.Set<T>().FindAsync(code) != null;
+        }
+
+        public async Task<bool> IsExists(Guid code)
+        {
+            return await _context.Set<T>().FindAsync(code) != null;
+        }
     }
 }

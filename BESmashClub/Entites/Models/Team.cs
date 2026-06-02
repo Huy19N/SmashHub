@@ -22,4 +22,6 @@ public partial class Team
     public virtual ICollection<TeamInvite> TeamInvites { get; set; } = new List<TeamInvite>();
 
     public virtual ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
+
+    public virtual ICollection<TeamMessage> TeamMessages { get; set; } = new List<TeamMessage>();
 }

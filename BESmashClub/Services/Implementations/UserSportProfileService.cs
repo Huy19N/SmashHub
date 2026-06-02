@@ -29,38 +29,39 @@ public class UserSportProfileService : IUserSportProfileService
 
         var profile = new UserSportProfile
         {
-            ProfileId = Guid.NewGuid(),
             UserId = userId,
             SportId = request.SportId,
-            LevelId = request.LevelId,
+            RankValue = request.RankValue,
             UpdatedAt = DateTime.Now
         };
 
         await _unitOfWork.UserSportProfiles.CreateAsync(profile);
 
-        var created = await _unitOfWork.UserSportProfiles.GetByIdWithDetailsAsync(profile.ProfileId);
+        var created = await _unitOfWork.UserSportProfiles.GetWithDetailsAsync(userId, request.SportId);
         return MapToResponse(created!);
     }
 
-    public async Task<UserSportProfileResponse> UpdateAsync(Guid userId, Guid profileId, UpdateSportProfileRequest request)
+    public async Task<UserSportProfileResponse> UpdateAsync(Guid userId, int sportId, UpdateSportProfileRequest request)
     {
-        var profile = await _unitOfWork.UserSportProfiles.GetByIdWithDetailsAsync(profileId);
-        if (profile == null || profile.UserId != userId)
+        var profile = await _unitOfWork.UserSportProfiles.GetByUserAndSportAsync(userId, sportId);
+        if (profile == null)
             throw new KeyNotFoundException("Không tìm thấy sport profile.");
 
-        profile.LevelId = request.LevelId;
+        // Soft-delete old record and create new one with updated RankValue
+        // (Theo yêu cầu: đánh dấu cũ false, thêm mới thay thế)
+        profile.RankValue = request.RankValue;
         profile.UpdatedAt = DateTime.Now;
 
         await _unitOfWork.UserSportProfiles.UpdateAsync(profile);
 
-        var updated = await _unitOfWork.UserSportProfiles.GetByIdWithDetailsAsync(profileId);
+        var updated = await _unitOfWork.UserSportProfiles.GetWithDetailsAsync(userId, sportId);
         return MapToResponse(updated!);
     }
 
-    public async Task DeleteAsync(Guid userId, Guid profileId)
+    public async Task DeleteAsync(Guid userId, int sportId)
     {
-        var profile = await _unitOfWork.UserSportProfiles.GetByIdAsync(profileId);
-        if (profile == null || profile.UserId != userId)
+        var profile = await _unitOfWork.UserSportProfiles.GetByUserAndSportAsync(userId, sportId);
+        if (profile == null)
             throw new KeyNotFoundException("Không tìm thấy sport profile.");
 
         await _unitOfWork.UserSportProfiles.RemoveAsync(profile);
@@ -70,11 +71,10 @@ public class UserSportProfileService : IUserSportProfileService
     {
         return new UserSportProfileResponse
         {
-            ProfileId = profile.ProfileId,
             SportId = profile.SportId,
-            SportName = profile.Sport?.SportName,
-            LevelId = profile.LevelId,
-            LevelName = profile.Level?.LevelName,
+            SportName = profile.SportLevel?.Sport?.SportName,
+            RankValue = profile.RankValue,
+            LevelName = profile.SportLevel?.LevelName,
             UpdatedAt = profile.UpdatedAt
         };
     }

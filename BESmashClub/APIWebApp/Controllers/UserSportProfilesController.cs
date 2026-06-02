@@ -53,12 +53,12 @@ public class UserSportProfilesController : ControllerBase
     /// <summary>
     /// Cập nhật trình độ (ví dụ: từ Cơ bản lên Tuyển thủ).
     /// </summary>
-    [HttpPut("{profileId:guid}")]
-    public async Task<IActionResult> UpdateProfile(Guid profileId, [FromBody] UpdateSportProfileRequest request)
+    [HttpPut("{sportId:int}")]
+    public async Task<IActionResult> UpdateProfile(int sportId, [FromBody] UpdateSportProfileRequest request)
     {
         try
         {
-            var result = await _service.UpdateAsync(GetCurrentUserId(), profileId, request);
+            var result = await _service.UpdateAsync(GetCurrentUserId(), sportId, request);
             return Ok(ApiResponse<UserSportProfileResponse>.SuccessResponse(result, "Cập nhật trình độ thành công."));
         }
         catch (KeyNotFoundException ex)
@@ -70,12 +70,12 @@ public class UserSportProfilesController : ControllerBase
     /// <summary>
     /// Xóa profile của một môn.
     /// </summary>
-    [HttpDelete("{profileId:guid}")]
-    public async Task<IActionResult> DeleteProfile(Guid profileId)
+    [HttpDelete("{sportId:int}")]
+    public async Task<IActionResult> DeleteProfile(int sportId)
     {
         try
         {
-            await _service.DeleteAsync(GetCurrentUserId(), profileId);
+            await _service.DeleteAsync(GetCurrentUserId(), sportId);
             return Ok(ApiResponse.SuccessResponse("Xóa sport profile thành công."));
         }
         catch (KeyNotFoundException ex)

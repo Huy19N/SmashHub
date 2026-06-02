@@ -1,7 +1,9 @@
 using Entites.DTOs.Common;
 using Entites.DTOs.Teams;
 using Entites.Models;
+using Microsoft.AspNetCore.SignalR;
 using Repositories;
+using Services.Hubs;
 using Services.Interfaces;
 
 namespace Services.Implementations;
@@ -9,10 +11,12 @@ namespace Services.Implementations;
 public class TeamService : ITeamService
 {
     private readonly UnitOfWork _unitOfWork;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public TeamService(UnitOfWork unitOfWork)
+    public TeamService(UnitOfWork unitOfWork, IHubContext<ChatHub> hubContext)
     {
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     #region Team CRUD
@@ -250,6 +254,90 @@ public class TeamService : ITeamService
         // Increment usage count
         invite.CurrentUses = (invite.CurrentUses ?? 0) + 1;
         await _unitOfWork.TeamInvites.UpdateAsync(invite);
+    }
+
+    #endregion
+
+    #region Messages
+
+    public async Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, string content)
+    {
+        if (!await _unitOfWork.TeamMembers.IsMemberAsync(teamId, currentUserId))
+            throw new InvalidOperationException("Bạn không phải là thành viên của nhóm này.");
+
+        var message = new TeamMessage
+        {
+            MessageId = Guid.NewGuid(),
+            SenderId = currentUserId,
+            TeamId = teamId,
+            Content = content,
+            SentAt = DateTime.Now,
+            IsDeleted = false
+        };
+
+        await _unitOfWork.TeamMessages.CreateAsync(message);
+
+        // Reload with Sender included
+        var created = await _unitOfWork.TeamMessages.GetMessageWithSenderAsync(message.MessageId);
+
+        var response = new TeamMessageResponse
+        {
+            MessageId = created!.MessageId,
+            TeamId = created.TeamId,
+            SenderId = created.SenderId,
+            SenderName = created.Sender?.FullName,
+            Content = created.Content,
+            SentAt = created.SentAt
+        };
+
+        // Broadcast to the team group via SignalR
+        await _hubContext.Clients.Group(teamId.ToString())
+            .SendAsync("ReceiveTeamMessage", response);
+
+        return response;
+    }
+
+    public async Task<PagedResult<TeamMessageResponse>> GetTeamMessagesAsync(
+        Guid teamId, string? search, PaginationParams pagination)
+    {
+        var (items, totalCount) = await _unitOfWork.TeamMessages
+            .GetMessagesByTeamIdAsync(teamId, search, pagination.PageNumber, pagination.PageSize);
+
+        return new PagedResult<TeamMessageResponse>
+        {
+            Items = items.Select(m => new TeamMessageResponse
+            {
+                MessageId = m.MessageId,
+                TeamId = m.TeamId,
+                SenderId = m.SenderId,
+                SenderName = m.Sender?.FullName,
+                Content = m.Content,
+                SentAt = m.SentAt
+            }).ToList(),
+            TotalCount = totalCount,
+            PageNumber = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task RemoveTeamMessageAsync(Guid currentUserId, Guid messageId)
+    {
+        var message = await _unitOfWork.TeamMessages.GetMessageWithSenderAsync(messageId);
+        if (message == null)
+            throw new KeyNotFoundException("Không tìm thấy tin nhắn.");
+
+        // Only the sender or team leader can delete
+        var isLeader = await _unitOfWork.TeamMembers.IsLeaderAsync(message.TeamId, currentUserId);
+        if (message.SenderId != currentUserId && !isLeader)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa tin nhắn này.");
+
+        // Soft delete
+        message.IsDeleted = true;
+        await _unitOfWork.TeamMessages.UpdateAsync(message);
+
+        // Notify group about deletion
+        await _hubContext.Clients.Group(message.TeamId.ToString())
+            .SendAsync("MessageDeleted", messageId);
     }
 
     #endregion

@@ -5,5 +5,5 @@ namespace Entites.DTOs.Sports;
 public class UpdateSportProfileRequest
 {
     [Required]
-    public int LevelId { get; set; }
+    public int RankValue { get; set; }
 }

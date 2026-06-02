@@ -8,5 +8,5 @@ public class CreateSportProfileRequest
     public int SportId { get; set; }
 
     [Required]
-    public int LevelId { get; set; }
+    public int RankValue { get; set; }
 }
