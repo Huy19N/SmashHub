@@ -96,6 +96,10 @@ public class EmailService : IEmailService
         await _unitOfWork.Users.UpdateAsync(user);
     }
 
+    public async Task<bool> CheckKey(Guid key)
+    {
+        return await _unitOfWork.EmailConfirms.IsExists(key);
+    }
     #region Private Helpers
 
     private async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
