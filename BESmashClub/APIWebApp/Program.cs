@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ---- Configuration ----
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<PayOSSettings>(builder.Configuration.GetSection("PayOSSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
 
 // ---- Database ----
@@ -31,11 +32,13 @@ builder.Services.AddScoped<ISportService, SportService>();
 builder.Services.AddScoped<IUserSportProfileService, UserSportProfileService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFacilityService, FacilityService>();
 builder.Services.AddScoped<ICourtService, CourtService>();
 builder.Services.AddScoped<ICourtCostService, CourtCostService>();
+builder.Services.AddScoped<IStatusService, StatusService>();
 
 // ---- Authentication ----
 builder.Services.AddAuthentication(options =>

@@ -1,0 +1,13 @@
+using System;
+using System.Collections.Generic;
+
+namespace Entites.Models;
+
+public partial class PayoutStatus
+{
+    public int StatusId { get; set; }
+
+    public string StatusName { get; set; }
+
+    public virtual ICollection<Payout> Payouts { get; set; } = new List<Payout>();
+}

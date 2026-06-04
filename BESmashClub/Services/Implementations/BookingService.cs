@@ -9,10 +9,12 @@ namespace Services.Implementations;
 public class BookingService : IBookingService
 {
     private readonly UnitOfWork _unitOfWork;
+    private readonly IPaymentService _paymentService;
 
-    public BookingService(UnitOfWork unitOfWork)
+    public BookingService(UnitOfWork unitOfWork, IPaymentService paymentService)
     {
         _unitOfWork = unitOfWork;
+        _paymentService = paymentService;
     }
 
     public async Task<BookingResponse> CreateBookingAsync(Guid userId, CreateBookingRequest request)
@@ -50,7 +52,12 @@ public class BookingService : IBookingService
 
         await _unitOfWork.Booking.CreateAsync(booking);
 
-        return await GetBookingDetailAsync(booking.BookingId);
+        // Create payment link via PayOS
+        var paymentResult = await _paymentService.CreateBookingPaymentAsync(userId, booking.BookingId);
+
+        var response = await GetBookingDetailAsync(booking.BookingId);
+        response.PaymentUrl = paymentResult.CheckoutUrl;
+        return response;
     }
 
     public async Task<PagedResult<BookingResponse>> GetBookingsByUserAsync(Guid userId, PaginationParams pagination)

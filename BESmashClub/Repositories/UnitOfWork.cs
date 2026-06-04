@@ -22,6 +22,11 @@ public class UnitOfWork : IDisposable
     public FacilityRepository Facilities { get; }
     public CourtRepository Courts { get; }
     public CourtCostRepository CourtCosts { get; }
+    public PaymentRepository Payments { get; }
+    public PayoutRepository Payouts { get; }
+    public FacilityBankAccountRepository FacilityBankAccounts { get; }
+    public SubscriptionPlanRepository SubscriptionPlans { get; }
+    public UserSubscriptionRepository UserSubscriptions { get; }
 
     public UnitOfWork(SmashClubContext context)
     {
@@ -42,6 +47,11 @@ public class UnitOfWork : IDisposable
         Facilities = new FacilityRepository(context);
         Courts = new CourtRepository(context);
         CourtCosts = new CourtCostRepository(context);
+        Payments = new PaymentRepository(context);
+        Payouts = new PayoutRepository(context);
+        FacilityBankAccounts = new FacilityBankAccountRepository(context);
+        SubscriptionPlans = new SubscriptionPlanRepository(context);
+        UserSubscriptions = new UserSubscriptionRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

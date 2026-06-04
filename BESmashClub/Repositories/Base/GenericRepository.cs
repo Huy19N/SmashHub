@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Context;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,8 @@ namespace Repositories.Base
         {
             _context ??= new SmashClubContext();
         }
+
+        public SmashClubContext GetContext() => _context;
         public async Task<List<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();
