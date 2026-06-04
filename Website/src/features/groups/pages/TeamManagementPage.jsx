@@ -318,7 +318,7 @@ export default function TeamManagementPage() {
 
             {activeTab === 'chat' && (
               <div className="animate-fade-in">
-                <TeamChat teamName={team.teamName} memberCount={team.totalMembers} />
+                <TeamChat teamId={teamId} teamName={team.teamName} memberCount={members?.length || team.members?.length || 0} />
               </div>
             )}
 

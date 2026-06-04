@@ -1,5 +1,6 @@
 import { Send } from 'lucide-react';
 import bannerBg from '../../../assets/smashclub_banner.png';
+import founderTeamImg from '../../../assets/founder_team.jpg';
 
 export default function ContactSection() {
   return (
@@ -70,9 +71,13 @@ export default function ContactSection() {
             </form>
           </div>
 
-          {/* Right side: Blank Dark Panel */}
-          <div className="w-full md:w-[40%] bg-[#1a2130] hidden md:block">
-            {/* The screenshot shows this side is just a plain dark color, slightly lighter than the form side */}
+          {/* Right side: Image Panel */}
+          <div className="w-full md:w-[40%] hidden md:block relative bg-[#1a2130]">
+            <img
+              src={founderTeamImg}
+              alt="SmashClub Founder Team"
+              className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
+            />
           </div>
         </div>
       </div>

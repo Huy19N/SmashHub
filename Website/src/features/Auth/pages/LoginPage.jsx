@@ -5,10 +5,12 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
 import { useLogin } from '../hooks/useAuth';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   const { login, isLoading } = useLogin();
   const navigate = useNavigate();
@@ -66,9 +68,13 @@ export default function LoginPage() {
             </div>
             <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Ghi nhớ đăng nhập</span>
           </label>
-          <a href="#" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
+          <button
+            type="button"
+            onClick={() => setIsForgotModalOpen(true)}
+            className="text-sm text-primary hover:text-primary-dark font-medium transition-colors"
+          >
             Quên mật khẩu?
-          </a>
+          </button>
         </div>
 
         <Button type="submit" className="w-full" isLoading={isLoading}>
@@ -84,6 +90,11 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+      />
     </div>
   );
 }

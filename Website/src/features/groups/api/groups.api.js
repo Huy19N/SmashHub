@@ -81,3 +81,23 @@ export const removeTeamMemberAPI = async (teamId, userId) => {
   const response = await api.delete(`/teams/${teamId}/members/${userId}`);
   return response.data;
 };
+
+// ─── Messages ─────────────────────────────────────────────
+
+/** Get All Messages of the team (GET /api/teams/{teamId}/messages) */
+export const getMessagesAPI = async (teamId) => {
+  const response = await api.get(`/teams/${teamId}/messages`);
+  return response.data;
+};
+
+/** Send Message (POST /api/teams/{teamId}/messages) */
+export const sendMessageAPI = async (teamId, message) => {
+  const response = await api.post(`/teams/${teamId}/messages`, message);
+  return response.data;
+};
+
+/** Delete Message (DELETE /api/teams/{teamId}/messages/{messageId}) */
+export const deleteMessageAPI = async (teamId, messageId) => {
+  const response = await api.delete(`/teams/${teamId}/messages/${messageId}`);
+  return response.data;
+};

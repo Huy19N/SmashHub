@@ -34,7 +34,7 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
   }, []);
 
   const roleBadge = member.roleName === 'Leader'
-    ? { label: 'Admin', classes: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30' }
+    ? { label: 'Trưởng nhóm', classes: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30' }
     : { label: 'Thành viên', classes: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30' };
 
   const formatDate = (iso) => {
@@ -51,8 +51,8 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
   const winRate = totalGames > 0 ? Math.round(((member.wins || 0) / totalGames) * 100) : 0;
   const skillLabel = totalGames === 0 ? 'Mới'
     : winRate >= 70 ? 'Giỏi'
-    : winRate >= 40 ? 'Khá'
-    : 'Trung bình';
+      : winRate >= 40 ? 'Khá'
+        : 'Trung bình';
 
   return (
     <div className="rounded-2xl border border-gray-200/80 dark:border-border-dark/60 bg-white dark:bg-card-dark/30 shadow-sm dark:shadow-none hover:border-emerald-500/40 dark:hover:border-primary/20 hover:shadow-md transition-all duration-300 p-5 group flex flex-col justify-between min-h-[220px]">

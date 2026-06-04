@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI } from '../api/auth.api.js';
+import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI, forgotPasswordAPI, resetPasswordAPI, verifyOTPAPI } from '../api/auth.api.js';
 import api, { setAccessToken, getAccessToken } from '../../../config/axios.js';
 
 export const useLogout = () => {
@@ -335,5 +335,82 @@ export const useDeleteUserProfile = () => {
     isLoading,
     error,
     deleteUserProfile,
+  };
+};
+
+// Forgot password
+export const useForgotPassword = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const forgotPassword = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await forgotPasswordAPI(email);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    forgotPassword,
+  };
+};
+
+// Reset password
+export const useResetPassword = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const resetPassword = async (code, email, newPassword) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await resetPasswordAPI({ code, email, newPassword });
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    resetPassword,
+  };
+};
+
+export const useVerifyOTP = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const verifyOTP = async (code) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await verifyOTPAPI(code);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    verifyOTP,
   };
 };

@@ -11,6 +11,9 @@ import {
   deleteTeamAPI,
   getTeamMembersAPI,
   removeTeamMemberAPI,
+  getMessagesAPI,
+  sendMessageAPI,
+  deleteMessageAPI,
 } from '../api/groups.api.js';
 
 /**
@@ -362,4 +365,84 @@ export const useRemoveMember = () => {
   };
 
   return { removeMember, isLoading, error };
+};
+
+// ─── useMessages ──────────────────────────────────────────
+
+export const useGetMessages = (teamId) => {
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchMessages = useCallback(async () => {
+    if (!teamId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getMessagesAPI(teamId);
+      const data = response?.data ?? response;
+      // Backend returns PagedResult { items: [...], totalCount, ... } or a flat array
+      const items = data?.items ?? (Array.isArray(data) ? data : []);
+      setMessages(Array.isArray(items) ? items : []);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể tải tin nhắn.';
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, [teamId]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);
+
+  return { messages, isLoading, error, refetch: fetchMessages };
+};
+
+// ─── useSendMessage ──────────────────────────────────────────
+
+export const useSendMessage = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const sendMessage = async (teamId, message) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await sendMessageAPI(teamId, message);
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể gửi tin nhắn.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { sendMessage, isLoading, error };
+};
+
+// ─── useDeleteMessage ──────────────────────────────────────────
+
+export const useDeleteMessage = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const deleteMessage = async (teamId, messageId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await deleteMessageAPI(teamId, messageId);
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể xóa tin nhắn.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { deleteMessage, isLoading, error };
 };

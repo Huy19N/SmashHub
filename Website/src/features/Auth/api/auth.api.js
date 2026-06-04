@@ -59,3 +59,21 @@ export const deleteUserProfileAPI = async (sportProfileId) => {
   const response = await axios.delete(`/users/me/sport-profiles/${sportProfileId}`);
   return response.data;
 };
+
+// Forgot password API
+export const forgotPasswordAPI = async (email) => {
+  const response = await axios.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+// Reset password API
+export const resetPasswordAPI = async (data) => {
+  const response = await axios.post('/auth/reset-password', data);
+  return response.data;
+};
+
+// Verify OTP API
+export const verifyOTPAPI = async (code) => {
+  const response = await axios.get(`/Email/${code}`);
+  return response.data;
+};
