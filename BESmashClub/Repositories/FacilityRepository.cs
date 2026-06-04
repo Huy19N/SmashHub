@@ -19,6 +19,15 @@ public class FacilityRepository : GenericRepository<Facility>
             .ToListAsync();
     }
 
+    public async Task<List<Facility>> GetAllWithDetailsAsync()
+    {
+        return await _context.Facilities
+            .Include(f => f.Owner)
+            .Include(f => f.Courts)
+            .OrderByDescending(f => f.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<Facility?> GetDetailAsync(int facilityId)
     {
         return await _context.Facilities

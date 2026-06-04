@@ -23,11 +23,12 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const { user, isLoading } = useGetUserId();
 
   const sidebarItems = [
-    { id: 'Dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'Dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
     { id: 'teams', label: 'Quản lý Nhóm', icon: Users, path: '/groups' },
-    { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays, path: '/sessions' },
-    { id: 'finance', label: 'Tài chính', icon: DollarSign, path: '/finance' },
-    { id: 'profile', label: 'Cá nhân', icon: UserCircle, path: '/profile' },
+    { id: 'Bookings', label: 'Đặt sân', icon: CalendarDays, path: '/bookings' },
+    { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays },
+    { id: 'finance', label: 'Tài chính', icon: DollarSign },
+    { id: 'profile', label: 'Cá nhân', icon: UserCircle },
   ];
 
   return (
@@ -95,7 +96,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.path)}
+                onClick={() => item.path && navigate(item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 font-label cursor-pointer ${isActive
                   ? 'text-emerald-800 bg-emerald-50/70 border-l-4 border-emerald-600 dark:text-primary dark:bg-primary/5 dark:border-emerald-500'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'

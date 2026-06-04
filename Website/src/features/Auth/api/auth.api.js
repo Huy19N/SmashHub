@@ -73,7 +73,7 @@ export const resetPasswordAPI = async (data) => {
 };
 
 // Verify OTP API
-export const verifyOTPAPI = async (code) => {
-  const response = await axios.get(`/Email/${code}`);
+export const verifyOTPAPI = async (data) => {
+  const response = await axios.post(`/email/verifycodenodelete`, data);
   return response.data;
 };

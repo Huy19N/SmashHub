@@ -31,6 +31,12 @@ public class FacilityService : IFacilityService
         return await GetFacilityDetailAsync(facility.FacilityId);
     }
 
+    public async Task<List<FacilityResponse>> GetAllFacilitiesAsync()
+    {
+        var facilities = await _unitOfWork.Facilities.GetAllWithDetailsAsync();
+        return facilities.Select(MapToResponse).ToList();
+    }
+
     public async Task<List<FacilityResponse>> GetFacilitiesByOwnerAsync(Guid userId)
     {
         var facilities = await _unitOfWork.Facilities.GetByOwnerIdAsync(userId);

@@ -44,7 +44,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     e.preventDefault();
     if (!code) return toast.error("Vui lòng nhập mã code.");
     try {
-      await verifyOTP(code);
+      await verifyOTP(code, email);
       toast.success("Mã hợp lệ. Vui lòng đặt mật khẩu mới.");
       setStep(3);
     } catch (err) {

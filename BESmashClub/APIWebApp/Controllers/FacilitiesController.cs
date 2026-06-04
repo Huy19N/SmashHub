@@ -42,6 +42,17 @@ public class FacilitiesController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy danh sách tất cả cơ sở (public).
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAllFacilities()
+    {
+        var result = await _facilityService.GetAllFacilitiesAsync();
+        return Ok(ApiResponse<List<FacilityResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
     /// Lấy danh sách cơ sở của user hiện tại (chủ sân).
     /// </summary>
     [HttpGet("my")]

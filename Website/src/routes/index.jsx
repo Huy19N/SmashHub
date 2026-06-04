@@ -18,6 +18,7 @@ import ProtectedRoute from '../components/layout/ProtectedRoute';
 const GroupsDashboard = lazy(() => import('../features/groups/pages/GroupsDashboard'));
 const TeamManagementPage = lazy(() => import('../features/groups/pages/TeamManagementPage'));
 const JoinGroupPage = lazy(() => import('../features/groups/pages/JoinGroupPage'));
+const BookingsPage = lazy(() => import('../features/bookings/pages/BookingsPage'));
 
 /**
  * Global Routing Registry
@@ -67,6 +68,10 @@ export const router = createBrowserRouter([
   {
     path: PATHS.GROUP_INVITE,
     element: <ProtectedRoute><JoinGroupPage /></ProtectedRoute>
+  },
+  {
+    path: '/bookings',
+    element: <ProtectedRoute><BookingsPage /></ProtectedRoute>
   },
   {
     element: <AuthLayout />,

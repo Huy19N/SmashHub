@@ -394,11 +394,11 @@ export const useVerifyOTP = () => {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const verifyOTP = async (code) => {
+  const verifyOTP = async (code, email) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await verifyOTPAPI(code);
+      const response = await verifyOTPAPI({ code, email });
       return response;
     } catch (error) {
       setError(error.message);
