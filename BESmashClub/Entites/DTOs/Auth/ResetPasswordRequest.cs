@@ -5,8 +5,8 @@ namespace Entites.DTOs.Auth;
 public class ResetPasswordRequest
 {
     [Required]
-    public Guid Code { get; set; }
-
+    public string Code { get; set; } = null!;
+    
     [Required]
     [EmailAddress]
     public string Email { get; set; } = null!;

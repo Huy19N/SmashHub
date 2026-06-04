@@ -3,8 +3,8 @@ namespace Services.Interfaces;
 public interface IEmailService
 {
     Task SendEmailConfirmationAsync(string email);
-    Task<bool> VerifyEmailAsync(Guid code, string email);
+    Task<bool> VerifyEmailNoDeleteAsync(string code, string email);
+    Task<bool> VerifyEmailAsync(string code, string email);
     Task SendPasswordResetAsync(string email);
-    Task ResetPasswordAsync(Guid code, string email, string newPassword);
-    Task<bool> CheckKey(Guid key);
+    Task ResetPasswordAsync(string code, string email, string newPassword);
 }

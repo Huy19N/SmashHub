@@ -24,6 +24,7 @@ CREATE TABLE Users (
     RoleId INT NOT NULL,
     FullName NVARCHAR(255) NOT NULL,
     Email NVARCHAR(255) NOT NULL,
+	EmailVerified BIT DEFAULT 0,
     Password VARCHAR(255) NOT NULL, 
     PhoneNumber NVARCHAR(20),
     CreatedAt DATETIME CONSTRAINT DF_Users_CreatedAt DEFAULT GETDATE(),
@@ -228,8 +229,8 @@ CREATE TABLE ScheduleParticipants (
 -- 7. EMAIL MODULE
 -- ==========================================
 CREATE TABLE EmailConfirms(
-    Code UNIQUEIDENTIFIER DEFAULT NEWID(),
-    Email NVARCHAR(255) NOT NULL,
+    Code VARCHAR(5) NOT NULL,
+    Email VARCHAR(255) NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE() NOT NULL,
     ExpiredAt DATETIME NOT NULL,
     CONSTRAINT PK_EmailConfirms PRIMARY KEY (Code, Email)

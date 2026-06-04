@@ -25,7 +25,7 @@ public class EmailService : IEmailService
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
 
-        var code = Guid.NewGuid();
+        var code = Path.GetRandomFileName().Replace(".", "").Substring(0, 5);
         var confirm = new EmailConfirm
         {
             Code = code,
@@ -33,16 +33,16 @@ public class EmailService : IEmailService
             CreatedAt = DateTime.Now,
             ExpiredAt = DateTime.Now.AddMinutes(15)
         };
-
+        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
         await _unitOfWork.EmailConfirms.CreateAsync(confirm);
 
         var subject = "SmashClub - Xác nhận Email";
-        var body = BuildConfirmEmailBody(user.FullName, code);
+        var body = BuildConfirmEmailBody(user.FullName, code, _emailSettings.CodeExpirationMinutes);
 
         await SendEmailAsync(email, subject, body);
     }
 
-    public async Task<bool> VerifyEmailAsync(Guid code, string email)
+    public async Task<bool> VerifyEmailNoDeleteAsync(string code, string email)
     {
         var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
         if (confirm == null)
@@ -54,30 +54,43 @@ public class EmailService : IEmailService
         return true;
     }
 
+    public async Task<bool> VerifyEmailAsync(string code, string email)
+    {
+        var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
+        if (confirm == null)
+            throw new KeyNotFoundException("Mã xác nhận không hợp lệ.");
+
+        if (confirm.ExpiredAt < DateTime.Now)
+            throw new InvalidOperationException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
+        return true;
+    }
+
     public async Task SendPasswordResetAsync(string email)
     {
         var user = await _unitOfWork.Users.GetByEmailAsync(email);
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
 
-        var code = Guid.NewGuid();
+        var code = Path.GetRandomFileName().Replace(".", "").Substring(0, 5);
+
         var confirm = new EmailConfirm
         {
             Code = code,
             Email = email,
             CreatedAt = DateTime.Now,
-            ExpiredAt = DateTime.Now.AddMinutes(15)
+            ExpiredAt = DateTime.Now.AddMinutes(_emailSettings.CodeExpirationMinutes)
         };
-
+        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
         await _unitOfWork.EmailConfirms.CreateAsync(confirm);
 
         var subject = "SmashClub - Đặt lại mật khẩu";
-        var body = BuildResetPasswordBody(user.FullName, code);
+        var body = BuildResetPasswordBody(user.FullName, code, _emailSettings.CodeExpirationMinutes);
 
         await SendEmailAsync(email, subject, body);
     }
 
-    public async Task ResetPasswordAsync(Guid code, string email, string newPassword)
+    public async Task ResetPasswordAsync(string code, string email, string newPassword)
     {
         var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
         if (confirm == null)
@@ -94,11 +107,6 @@ public class EmailService : IEmailService
         user.LastPwdChange = DateTime.Now;
 
         await _unitOfWork.Users.UpdateAsync(user);
-    }
-
-    public async Task<bool> CheckKey(Guid key)
-    {
-        return await _unitOfWork.EmailConfirms.IsExists(key);
     }
     #region Private Helpers
 
@@ -122,7 +130,7 @@ public class EmailService : IEmailService
         await smtpClient.SendMailAsync(mailMessage);
     }
 
-    private static string BuildConfirmEmailBody(string fullName, Guid code)
+    private static string BuildConfirmEmailBody(string fullName, string code, int codeExpirationMinutes)
     {
         return $@"
 <!DOCTYPE html>
@@ -153,7 +161,7 @@ public class EmailService : IEmailService
             <div class='code-box'>
                 <div class='code'>{code}</div>
             </div>
-            <p>Mã này sẽ hết hạn sau <strong>15 phút</strong>.</p>
+            <p>Mã này sẽ hết hạn sau <strong> {codeExpirationMinutes} phút</strong>.</p>
             <p>Nếu bạn không yêu cầu xác nhận này, vui lòng bỏ qua email này.</p>
         </div>
         <div class='footer'>
@@ -164,7 +172,7 @@ public class EmailService : IEmailService
 </html>";
     }
 
-    private static string BuildResetPasswordBody(string fullName, Guid code)
+    private static string BuildResetPasswordBody(string fullName, string code, int codeExpirationMinutes)
     {
         return $@"
 <!DOCTYPE html>
@@ -195,7 +203,7 @@ public class EmailService : IEmailService
             <div class='code-box'>
                 <div class='code'>{code}</div>
             </div>
-            <p>Mã này sẽ hết hạn sau <strong>15 phút</strong>.</p>
+            <p>Mã này sẽ hết hạn sau <strong> {codeExpirationMinutes} phút</strong>.</p>
             <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không thay đổi.</p>
         </div>
         <div class='footer'>

@@ -7,4 +7,5 @@ public class EmailSettings
     public string SenderEmail { get; set; } = null!;
     public string SenderName { get; set; } = "SmashClub";
     public string AppPassword { get; set; } = null!;
+    public int CodeExpirationMinutes { get; set; } = 15;
 }

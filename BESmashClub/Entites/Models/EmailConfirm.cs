@@ -7,7 +7,7 @@ namespace Entites.Models;
 
 public partial class EmailConfirm
 {
-    public Guid Code { get; set; }
+    public string Code { get; set; }
 
     public string Email { get; set; }
 
