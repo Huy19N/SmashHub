@@ -63,7 +63,9 @@ export const useBookings = () => {
             fetchBookings(); // Refresh bookings list
             return response.data;
         } catch (err) {
-            setError(err.message);
+            const msg = err.response?.data?.message || err.message;
+            setError(msg);
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -78,7 +80,9 @@ export const useBookings = () => {
             fetchBookings(); // Refresh bookings list
             return response.data;
         } catch (err) {
-            setError(err.message);
+            const msg = err.response?.data?.message || err.message;
+            setError(msg);
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -93,7 +97,9 @@ export const useBookings = () => {
             fetchBookings(); // Refresh bookings list
             return response.data;
         } catch (err) {
-            setError(err.message);
+            const msg = err.response?.data?.message || err.message;
+            setError(msg);
+            throw err;
         } finally {
             setLoading(false);
         }

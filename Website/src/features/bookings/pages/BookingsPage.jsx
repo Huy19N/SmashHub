@@ -40,10 +40,10 @@ export default function BookingsPage() {
                 Theo dõi trạng thái và điều phối lịch đặt sân cho các thành viên trong thời gian thực.
               </p>
             </div>
-            {/* <Button className="shrink-0 flex items-center gap-2 px-8 py-3.5 rounded-full text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-shadow">
+            <Button className="shrink-0 flex items-center gap-2 px-8 py-3.5 rounded-full text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-shadow">
               <Plus size={20} />
-              <span>Đặt sân mới</span>
-            </Button> */}
+              <span>Tìm sân phù hợp</span>
+            </Button>
           </div>
 
           {/* Filters Bar */}
