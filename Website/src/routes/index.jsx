@@ -19,6 +19,7 @@ const GroupsDashboard = lazy(() => import('../features/groups/pages/GroupsDashbo
 const TeamManagementPage = lazy(() => import('../features/groups/pages/TeamManagementPage'));
 const JoinGroupPage = lazy(() => import('../features/groups/pages/JoinGroupPage'));
 const BookingsPage = lazy(() => import('../features/bookings/pages/BookingsPage'));
+const SchedulesPage = lazy(() => import('../features/schedules/pages/SchedulesPage'));
 
 /**
  * Global Routing Registry
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
   {
     path: '/bookings',
     element: <ProtectedRoute><BookingsPage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.SCHEDULES,
+    element: <ProtectedRoute><SchedulesPage /></ProtectedRoute>
   },
   {
     element: <AuthLayout />,

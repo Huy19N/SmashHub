@@ -26,7 +26,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'Dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
     { id: 'teams', label: 'Quản lý Nhóm', icon: Users, path: '/groups' },
     { id: 'Bookings', label: 'Đặt sân', icon: CalendarDays, path: '/bookings' },
-    { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays },
+    { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays, path: '/schedules' },
     { id: 'finance', label: 'Tài chính', icon: DollarSign },
     { id: 'profile', label: 'Cá nhân', icon: UserCircle },
   ];
@@ -81,7 +81,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
         {/* "+ New Session/Team" Button */}
         <div className="px-4 py-4">
           <button
-            onClick={onCreateGroup}
+            onClick={() => onCreateGroup && onCreateGroup()}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-200 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 hover:-translate-y-0.5 font-label cursor-pointer"
           >
             <Plus className="h-4.5 w-4.5" />
