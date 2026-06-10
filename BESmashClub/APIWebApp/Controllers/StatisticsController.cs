@@ -115,14 +115,14 @@ public class StatisticsController : ControllerBase
 
             var totalContributedFees = await _context.ScheduleParticipants
                 .Where(sp => sp.UserId == userId && sp.IsAttended && memberTeamIds.Contains(sp.Schedule.HostTeamId))
-                .SumAsync(sp => sp.Schedule.CostPerPerson);
+                .SumAsync(sp => sp.Schedule.BaseCourtCost);
 
             response.MemberStats = new MemberStatsDto
             {
                 TotalSchedulesCount = totalSchedulesCount,
                 TotalAttended = totalAttended,
                 AttendanceRate = totalSchedulesCount > 0 ? Math.Round((double)totalAttended / totalSchedulesCount * 100, 1) : 0,
-                TotalContributedFees = totalContributedFees ?? 0
+                TotalContributedFees = totalContributedFees
             };
         }
 

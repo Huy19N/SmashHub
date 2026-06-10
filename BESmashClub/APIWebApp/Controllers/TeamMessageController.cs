@@ -74,7 +74,7 @@ namespace APIWebApp.Controllers
             {
                 return NotFound(ApiResponse.ErrorResponse(ex.Message));
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }

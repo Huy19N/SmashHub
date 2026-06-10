@@ -72,7 +72,7 @@ public class TeamsController : ControllerBase
             var result = await _teamService.UpdateTeamAsync(GetCurrentUserId(), teamId, request);
             return Ok(ApiResponse<TeamDetailResponse>.SuccessResponse(result, "Cập nhật team thành công."));
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
@@ -94,7 +94,7 @@ public class TeamsController : ControllerBase
             await _teamService.DeleteTeamAsync(GetCurrentUserId(), teamId);
             return Ok(ApiResponse.SuccessResponse("Giải tán team thành công."));
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
