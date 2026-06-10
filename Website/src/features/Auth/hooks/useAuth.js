@@ -49,11 +49,11 @@ export const useLogin = () => {
       const accessToken = userData.accessToken;
       const decoded = parseJwt(accessToken);
 
-      const userId = decoded?.nameid || decoded?.sub || decoded?.userId || userData.userId;
-      const roleId = decoded?.role || decoded?.roleId || userData.roleId;
+      const userId = decoded?.sub || decoded?.nameid || decoded?.userId || userData.userId;
+      const roleName = decoded?.role || decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
       if (userId) localStorage.setItem('userId', userId);
-      if (roleId) localStorage.setItem('roleId', roleId);
+      if (roleName) localStorage.setItem('roleName', roleName);
 
       // Save Access Token in memory instead of localStorage
       setAccessToken(accessToken);
@@ -133,10 +133,10 @@ export const useRegister = () => {
 export default function useAuth() {
   const userId = localStorage.getItem('userId');
   const name = localStorage.getItem('name');
-  const roleId = localStorage.getItem('roleId');
+  const roleName = localStorage.getItem('roleName');
   const token = getAccessToken();
 
-  const user = userId ? { userId, name, roleId, token } : null;
+  const user = userId ? { userId, name, roleName, token } : null;
 
   const { login, isLoading: isLoginLoading, error: loginError } = useLogin();
   const { register, isLoading: isRegisterLoading, error: registerError } = useRegister();

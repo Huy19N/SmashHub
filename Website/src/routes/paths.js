@@ -18,5 +18,6 @@ export const PATHS = {
   LOGIN: '/login',
   REGISTER: '/register',
   PROFILE: '/profile',
+  COURTS_MANAGEMENT: '/courts-management',
   NOT_FOUND: '*',
 };

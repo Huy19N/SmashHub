@@ -8,4 +8,5 @@ public interface ICourtService
     Task<List<CourtResponse>> GetCourtsByFacilityAsync(int facilityId);
     Task<CourtResponse> GetCourtDetailAsync(int courtId);
     Task<CourtResponse> UpdateCourtAsync(Guid userId, int courtId, UpdateCourtRequest request);
+    Task<bool> DeleteCourtAsync(Guid userId, int courtId);
 }

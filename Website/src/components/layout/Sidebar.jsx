@@ -21,13 +21,20 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const isDarkMode = theme === 'dark';
 
   const { user, isLoading } = useGetUserId();
+  
+  // Role from API response (primary) or JWT-decoded localStorage (fallback)
+  const roleName = user?.data?.roleName || localStorage.getItem('roleName');
+  const isFacilityOwner = roleName === 'FacilityOwner';
 
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Bảng thống kê', icon: LayoutDashboard },
+  const sidebarItems = isFacilityOwner ? [
+    { id: 'dashboard', label: 'Bảng thống kê', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'courts-management', label: 'Quản lý sân', icon: Settings, path: '/courts-management' },
+    { id: 'profile', label: 'Cá nhân', icon: UserCircle, path: '/profile' },
+  ] : [
+    { id: 'dashboard', label: 'Bảng thống kê', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'teams', label: 'Quản lý Nhóm', icon: Users, path: '/groups' },
     { id: 'bookings', label: 'Đặt sân', icon: CalendarDays, path: '/bookings' },
     { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays, path: '/schedules' },
-    // { id: 'finance', label: 'Tài chính', icon: DollarSign },
     { id: 'profile', label: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ];
 
@@ -79,15 +86,17 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
         </div>
 
         {/* "+ New Session/Team" Button */}
-        <div className="px-4 py-4">
-          <button
-            onClick={() => onCreateGroup && onCreateGroup()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-200 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 hover:-translate-y-0.5 font-label cursor-pointer"
-          >
-            <Plus className="h-4.5 w-4.5" />
-            Tạo Nhóm Mới
-          </button>
-        </div>
+        {!isFacilityOwner && (
+          <div className="px-4 py-4">
+            <button
+              onClick={() => onCreateGroup && onCreateGroup()}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-200 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 hover:-translate-y-0.5 font-label cursor-pointer"
+            >
+              <Plus className="h-4.5 w-4.5" />
+              Tạo Nhóm Mới
+            </button>
+          </div>
+        )}
 
         {/* Navigation Menu */}
         <nav className="px-3 space-y-1 mt-1">

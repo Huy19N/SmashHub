@@ -90,6 +90,20 @@ public class CourtService : ICourtService
         return await GetCourtDetailAsync(courtId);
     }
 
+    public async Task<bool> DeleteCourtAsync(Guid userId, int courtId)
+    {
+        var court = await _unitOfWork.Courts.GetByIdAsync(courtId);
+        if (court == null)
+            throw new KeyNotFoundException("Không tìm thấy sân.");
+
+        // Check ownership via facility
+        if (!await _unitOfWork.Facilities.IsOwnerAsync(court.FacilityId, userId))
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa sân này.");
+
+        await _unitOfWork.Courts.RemoveAsync(court);
+        return true;
+    }
+
     #region Helpers
 
     private static CourtResponse MapToResponse(Court c)

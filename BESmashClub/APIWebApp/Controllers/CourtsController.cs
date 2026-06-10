@@ -94,4 +94,26 @@ public class CourtsController : ControllerBase
             return Forbid();
         }
     }
+
+    /// <summary>
+    /// Xóa sân (chỉ chủ sở hữu cơ sở).
+    /// </summary>
+    [HttpDelete("api/courts/{courtId:int}")]
+    public async Task<IActionResult> DeleteCourt(int courtId)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            await _courtService.DeleteCourtAsync(userId, courtId);
+            return Ok(ApiResponse.SuccessResponse("Xóa sân thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
 }

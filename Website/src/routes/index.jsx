@@ -21,6 +21,8 @@ const JoinGroupPage = lazy(() => import('../features/groups/pages/JoinGroupPage'
 const BookingsPage = lazy(() => import('../features/bookings/pages/BookingsPage'));
 const SchedulesPage = lazy(() => import('../features/schedules/pages/SchedulesPage'));
 const ProfilePage = lazy(() => import('../features/profiles/pages/ProfilePage'));
+const DashboardPage = lazy(() => import('../features/dashboard/pages/DashboardPage'));
+const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pages/CourtsManagementPage'));
 
 /**
  * Global Routing Registry
@@ -39,11 +41,6 @@ export const router = createBrowserRouter([
       {
         path: PATHS.ABOUT,
         element: <AboutPage />
-      },
-      // Keep legacy routes resolving to their new counterparts if accessed
-      {
-        path: PATHS.DASHBOARD,
-        element: <Navigate to={PATHS.ABOUT} replace />
       },
       {
         path: PATHS.MEMBERS,
@@ -82,6 +79,14 @@ export const router = createBrowserRouter([
   {
     path: PATHS.PROFILE,
     element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.DASHBOARD,
+    element: <ProtectedRoute><DashboardPage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.COURTS_MANAGEMENT,
+    element: <ProtectedRoute><CourtsManagementPage /></ProtectedRoute>
   },
   {
     element: <AuthLayout />,

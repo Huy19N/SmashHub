@@ -15,7 +15,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
-import useAuth from '../../features/Auth/hooks/useAuth';
+import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,8 +26,11 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const { user, logout } = useAuth();
+  const { user: apiUser } = useGetUserId();
   const isAuthenticated = !!user;
   const avatarInitials = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+
+  const roleName = apiUser?.data?.roleName || user?.roleName || localStorage.getItem('roleName');
 
   const isHomePage = location.pathname === PATHS.HOME;
 
@@ -261,16 +264,28 @@ export default function Navbar() {
                   </div>
                   <div>
                     <div className="text-white font-medium">{user.name}</div>
-                    <div className="text-xs text-gray-500">Hội viên SmashClub</div>
+                    <div className="text-xs text-gray-500">
+                      {roleName === 'FacilityOwner' ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => navigate(PATHS.GROUPS)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
-                >
-                  <UsersRound className="h-4 w-4 text-primary" />
-                  Nhóm của tôi
-                </button>
+                {roleName === 'FacilityOwner' ? (
+                  <button
+                    onClick={() => navigate(PATHS.COURTS_MANAGEMENT)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                  >
+                    <Layers className="h-4 w-4 text-primary" />
+                    Quản lý sân
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate(PATHS.GROUPS)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                  >
+                    <UsersRound className="h-4 w-4 text-primary" />
+                    Nhóm của tôi
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors font-label cursor-pointer"
