@@ -171,7 +171,8 @@ public class AuthService : IAuthService
                 1 => "Admin",
                 3 => "FacilityOwner",
                 _ => "User"
-            })
+            }),
+            new Claim("RoleId", user.RoleId.ToString())
         };
 
         var token = new JwtSecurityToken(
