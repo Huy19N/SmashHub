@@ -47,6 +47,70 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[FacilityBankAccounts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityImages]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityOperatingHours]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityPaymentConfigs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityReviews]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityWallets]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Features]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[LocalFiles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchAcceptances]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchAcceptanceStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchChallenges]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchChallengeStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PaymentGateways]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Payments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PaymentStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PayoutRequests]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[RefreshTokens]",
          "ObjectType": 0
       },
@@ -95,6 +159,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[TierFeatures]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[UserRoles]",
          "ObjectType": 0
       },
@@ -108,6 +176,14 @@
       },
       {
          "Name": "[dbo].[UserSubscriptions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoCallParticipants]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoCallSessions]",
          "ObjectType": 0
       }
    ],

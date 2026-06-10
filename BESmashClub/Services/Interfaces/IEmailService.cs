@@ -1,3 +1,5 @@
+using Entites.Models;
+
 namespace Services.Interfaces;
 
 public interface IEmailService
@@ -7,4 +9,5 @@ public interface IEmailService
     Task<bool> VerifyEmailAsync(string code, string email);
     Task SendPasswordResetAsync(string email);
     Task ResetPasswordAsync(string code, string email, string newPassword);
+    Task SendBookingNotificationToOwnerAsync(Booking booking);
 }

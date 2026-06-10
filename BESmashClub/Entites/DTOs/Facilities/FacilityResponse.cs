@@ -10,5 +10,8 @@ public class FacilityResponse
     public string? District { get; set; }
     public string? Address { get; set; }
     public int CourtCount { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public double? DistanceKm { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

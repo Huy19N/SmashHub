@@ -14,4 +14,6 @@ public partial class SubscriptionTier
     public string Description { get; set; }
 
     public virtual ICollection<SubscriptionPlan> SubscriptionPlans { get; set; } = new List<SubscriptionPlan>();
+
+    public virtual ICollection<Feature> Features { get; set; } = new List<Feature>();
 }

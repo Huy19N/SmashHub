@@ -15,5 +15,7 @@ public partial class Sport
 
     public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
 
+    public virtual ICollection<MatchChallenge> MatchChallenges { get; set; } = new List<MatchChallenge>();
+
     public virtual ICollection<SportLevel> SportLevels { get; set; } = new List<SportLevel>();
 }

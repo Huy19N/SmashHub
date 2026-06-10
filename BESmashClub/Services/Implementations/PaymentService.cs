@@ -1,6 +1,7 @@
 using Entites.DTOs.Common;
 using Entites.DTOs.Payments;
 using Entites.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PayOS;
 using PayOS.Models.V2.PaymentRequests;
@@ -16,11 +17,13 @@ public class PaymentService : IPaymentService
     private readonly UnitOfWork _unitOfWork;
     private readonly PayOSSettings _payOSSettings;
     private readonly PayOSClient _payOSClient;
+    private readonly IEmailService _emailService;
 
-    public PaymentService(UnitOfWork unitOfWork, IOptions<PayOSSettings> payOSSettings)
+    public PaymentService(UnitOfWork unitOfWork, IOptions<PayOSSettings> payOSSettings, IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _payOSSettings = payOSSettings.Value;
+        _emailService = emailService;
 
         // Initialize PayOS client with platform credentials
         _payOSClient = new PayOSClient(new PayOSOptions
@@ -68,7 +71,7 @@ public class PaymentService : IPaymentService
             Amount = plan.Price,
             Description = $"Đăng ký gói {plan.Tier.TierName} - {plan.DurationMonths} tháng",
             StatusId = 1, // Pending
-            PaymentProvider = "PayOS",
+            PaymentMethod = "Gateway",
             CreatedAt = DateTime.Now
         };
 
@@ -84,7 +87,7 @@ public class PaymentService : IPaymentService
 
         var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
 
-        payment.CheckoutUrl = paymentLink.CheckoutUrl;
+        payment.Note = paymentLink.CheckoutUrl;
 
         await _unitOfWork.Payments.CreateAsync(payment);
 
@@ -131,7 +134,7 @@ public class PaymentService : IPaymentService
             Amount = booking.TotalCost.Value,
             Description = $"Đặt sân {booking.Court?.CourtName} - {booking.Court?.Facility?.Name}",
             StatusId = 1, // Pending
-            PaymentProvider = "PayOS",
+            PaymentMethod = "Gateway",
             CreatedAt = DateTime.Now
         };
 
@@ -147,7 +150,68 @@ public class PaymentService : IPaymentService
 
         var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
 
-        payment.CheckoutUrl = paymentLink.CheckoutUrl;
+        payment.Note = paymentLink.CheckoutUrl;
+
+        await _unitOfWork.Payments.CreateAsync(payment);
+
+        return MapToResponse(payment);
+    }
+
+    public async Task<PaymentResponse> CreateSplitBookingPaymentAsync(Guid userId, Guid acceptanceId)
+    {
+        var context = _unitOfWork.Payments.GetContext();
+        var acceptance = await context.Set<MatchAcceptance>()
+            .Include(ma => ma.ChallengerTeam)
+            .Include(ma => ma.Challenge).ThenInclude(c => c.Schedule).ThenInclude(s => s.Booking).ThenInclude(b => b.Court).ThenInclude(c => c.Facility)
+            .FirstOrDefaultAsync(ma => ma.AcceptanceId == acceptanceId);
+
+        if (acceptance == null)
+            throw new KeyNotFoundException("Không tìm thấy yêu cầu gia nhập trận ghép đấu.");
+
+        var challenge = acceptance.Challenge;
+        var booking = challenge?.Schedule?.Booking;
+        if (booking == null)
+            throw new InvalidOperationException("Không tìm thấy thông tin đặt sân liên kết với trận ghép này.");
+
+        // Chia đôi chi phí đặt sân
+        var splitAmount = (booking.TotalCost ?? 0) / 2;
+        if (splitAmount <= 0)
+            throw new InvalidOperationException("Số tiền chia đôi không hợp lệ.");
+
+        // Kiểm tra xem đã có giao dịch đang chờ nào chưa
+        var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
+            acceptanceId.ToString(), "Booking");
+        if (existingPayment != null && existingPayment.StatusId == 1)
+            throw new InvalidOperationException("Bạn đã có giao dịch đang chờ thanh toán cho lượt ghép đấu này.");
+
+        var orderCode = GenerateOrderCode();
+
+        var payment = new Payment
+        {
+            PaymentId = Guid.NewGuid(),
+            OrderCode = orderCode,
+            PaymentType = "Booking",
+            ReferenceId = acceptanceId.ToString(),
+            UserId = userId,
+            Amount = splitAmount,
+            Description = $"Ghép đấu 50% tiền sân {booking.Court?.CourtName}",
+            StatusId = 1, // Pending
+            PaymentMethod = "Gateway",
+            CreatedAt = DateTime.Now
+        };
+
+        var payosRequest = new CreatePaymentLinkRequest
+        {
+            OrderCode = orderCode,
+            Amount = (int)splitAmount,
+            Description = TruncateDescription($"SmashGhep {booking.Court?.CourtName}"),
+            ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
+            CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
+        };
+
+        var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+
+        payment.Note = paymentLink.CheckoutUrl;
 
         await _unitOfWork.Payments.CreateAsync(payment);
 
@@ -179,7 +243,7 @@ public class PaymentService : IPaymentService
             // Update payment status
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
-            payment.TransactionId = webhook.Data.PaymentLinkId;
+            payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             // 4. Parse reference to get plan info: SUB_{userId}_{planId}
@@ -235,60 +299,136 @@ public class PaymentService : IPaymentService
         if (payment.StatusId != 1)
             return;
 
+        var refId = Guid.Parse(payment.ReferenceId);
+
         if (webhook.Success)
         {
             // 3. Update payment status
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
-            payment.TransactionId = webhook.Data.PaymentLinkId;
+            payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
-            // 4. Update booking status to Confirmed
-            var bookingId = Guid.Parse(payment.ReferenceId);
-            var booking = await _unitOfWork.Booking.GetDetailAsync(bookingId);
-            if (booking != null && booking.StatusId == 1)
+            // 4. Kiểm tra xem ReferenceId là Booking hay MatchAcceptance
+            var booking = await _unitOfWork.Booking.GetDetailAsync(refId);
+            if (booking != null)
             {
-                booking.StatusId = 2; // Confirmed
-                await _unitOfWork.Booking.UpdateAsync(booking);
-
-                // 5. Create payout record for facility owner
-                var facility = booking.Court?.Facility;
-                if (facility != null)
+                if (booking.StatusId == 1)
                 {
-                    // Get bank account info
-                    var bankAccount = await _unitOfWork.FacilityBankAccounts
-                        .GetByFacilityIdAsync(facility.FacilityId);
+                    booking.StatusId = 2; // Confirmed
+                    await _unitOfWork.Booking.UpdateAsync(booking);
 
-                    var payout = new Payout
+                    // 5. Tạo payout record cho facility owner
+                    var facility = booking.Court?.Facility;
+                    if (facility != null)
                     {
-                        PayoutId = Guid.NewGuid(),
-                        PaymentId = payment.PaymentId,
-                        FacilityId = facility.FacilityId,
-                        OwnerUserId = facility.OwnerId,
-                        Amount = payment.Amount,
-                        StatusId = 1, // Pending
-                        BankAccountNo = bankAccount?.AccountNumber,
-                        BankName = bankAccount?.BankName,
-                        AccountHolder = bankAccount?.AccountHolder,
-                        CreatedAt = DateTime.Now
-                    };
+                        var bankAccount = await _unitOfWork.FacilityBankAccounts
+                            .GetByFacilityIdAsync(facility.FacilityId);
 
-                    await _unitOfWork.Payouts.CreateAsync(payout);
+                        var payout = new Payout
+                        {
+                            PayoutId = Guid.NewGuid(),
+                            PaymentId = payment.PaymentId,
+                            FacilityId = facility.FacilityId,
+                            OwnerUserId = facility.OwnerId,
+                            Amount = payment.Amount,
+                            StatusId = 1, // Pending
+                            BankAccountNo = bankAccount?.AccountNumber,
+                            BankName = bankAccount?.BankName,
+                            AccountHolder = bankAccount?.AccountHolder,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        await _unitOfWork.Payouts.CreateAsync(payout);
+
+                        // 5.1 Cập nhật ví cơ sở
+                        var context = _unitOfWork.Users.GetContext();
+                        var wallet = await context.Set<FacilityWallet>()
+                            .FirstOrDefaultAsync(w => w.FacilityId == facility.FacilityId);
+                        if (wallet == null)
+                        {
+                            wallet = new FacilityWallet
+                            {
+                                FacilityId = facility.FacilityId,
+                                Balance = payment.Amount,
+                                TotalEarned = payment.Amount,
+                                LastUpdatedAt = DateTime.Now
+                            };
+                            await context.Set<FacilityWallet>().AddAsync(wallet);
+                        }
+                        else
+                        {
+                            wallet.Balance += payment.Amount;
+                            wallet.TotalEarned += payment.Amount;
+                            wallet.LastUpdatedAt = DateTime.Now;
+                            context.Entry(wallet).State = EntityState.Modified;
+                        }
+                        await context.SaveChangesAsync();
+
+                        // Gửi email thông báo cho chủ sân
+                        try
+                        {
+                            await _emailService.SendBookingNotificationToOwnerAsync(booking);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Gửi email thông báo lịch đặt cho chủ sân thất bại: {ex.Message}");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Đây là trường hợp thanh toán tiền ghép đấu (MatchAcceptance)
+                var context = _unitOfWork.Payments.GetContext();
+                var acceptance = await context.Set<MatchAcceptance>()
+                    .Include(ma => ma.Challenge).ThenInclude(c => c.Schedule).ThenInclude(s => s.Booking)
+                    .FirstOrDefaultAsync(ma => ma.AcceptanceId == refId);
+
+                if (acceptance != null)
+                {
+                    // Đánh dấu đã thanh toán thành công
+                    Console.WriteLine($"Matchmaking paid! Refund 50% ({payment.Amount}) to host user: {acceptance.Challenge.Schedule.Booking.BookedByUserId}");
+                    // Chấp nhận đã duyệt hoàn thành
+                    acceptance.StatusId = 2; // Accepted / Paid
+                    context.Entry(acceptance).State = EntityState.Modified;
+                    await context.SaveChangesAsync();
                 }
             }
         }
         else
         {
-            // Payment cancelled → cancel booking too
+            // Payment cancelled
             payment.StatusId = 3; // Cancelled
             await _unitOfWork.Payments.UpdateAsync(payment);
 
-            var bookingId = Guid.Parse(payment.ReferenceId);
-            var booking = await _unitOfWork.Booking.GetByIdAsync(bookingId);
-            if (booking != null && booking.StatusId == 1)
+            var booking = await _unitOfWork.Booking.GetByIdAsync(refId);
+            if (booking != null)
             {
-                booking.StatusId = 3; // Cancelled
-                await _unitOfWork.Booking.UpdateAsync(booking);
+                if (booking.StatusId == 1)
+                {
+                    booking.StatusId = 3; // Cancelled
+                    await _unitOfWork.Booking.UpdateAsync(booking);
+                }
+            }
+            else
+            {
+                // Trường hợp hủy thanh toán ghép đấu
+                var context = _unitOfWork.Payments.GetContext();
+                var acceptance = await context.Set<MatchAcceptance>().FirstOrDefaultAsync(ma => ma.AcceptanceId == refId);
+                if (acceptance != null)
+                {
+                    acceptance.StatusId = 3; // Rejected/Cancelled
+                    context.Entry(acceptance).State = EntityState.Modified;
+                    await context.SaveChangesAsync();
+
+                    var challenge = await _unitOfWork.MatchChallenges.GetByIdAsync(acceptance.ChallengeId);
+                    if (challenge != null)
+                    {
+                        challenge.StatusId = 1; // Mở lại tin ghép đấu để người khác đăng ký
+                        await _unitOfWork.MatchChallenges.UpdateAsync(challenge);
+                    }
+                }
             }
         }
     }
@@ -354,9 +494,9 @@ public class PaymentService : IPaymentService
             Description = p.Description,
             StatusId = p.StatusId,
             StatusName = p.Status?.StatusName,
-            PaymentProvider = p.PaymentProvider,
-            CheckoutUrl = p.CheckoutUrl,
-            TransactionId = p.TransactionId,
+            PaymentProvider = p.PaymentMethod,
+            CheckoutUrl = p.Note,
+            TransactionId = p.GatewayTransactionId,
             CreatedAt = p.CreatedAt,
             PaidAt = p.PaidAt
         };

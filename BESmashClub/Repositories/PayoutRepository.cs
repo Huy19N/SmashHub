@@ -11,7 +11,7 @@ public class PayoutRepository : GenericRepository<Payout>
 
     public async Task<Payout?> GetDetailAsync(Guid payoutId)
     {
-        return await _context.Payouts
+        return await _context.Set<Payout>()
             .Include(p => p.Payment)
             .Include(p => p.Facility)
             .Include(p => p.OwnerUser)
@@ -22,7 +22,7 @@ public class PayoutRepository : GenericRepository<Payout>
     public async Task<(List<Payout> Items, int TotalCount)> GetByOwnerIdAsync(
         Guid ownerId, int pageNumber, int pageSize)
     {
-        var query = _context.Payouts
+        var query = _context.Set<Payout>()
             .Where(p => p.OwnerUserId == ownerId)
             .Include(p => p.Payment)
             .Include(p => p.Facility)

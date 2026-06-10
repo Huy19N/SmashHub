@@ -5,9 +5,10 @@ namespace Entites.DTOs.Auth;
 public class VerifyEmailRequest
 {
     [Required]
-    public Guid Code { get; set; }
+    [EmailAddress]
+    public string Email { get; set; }
 
     [Required]
-    [EmailAddress]
-    public string Email { get; set; } = null!;
+    [StringLength(5, MinimumLength = 5)]
+    public string Code { get; set; }
 }

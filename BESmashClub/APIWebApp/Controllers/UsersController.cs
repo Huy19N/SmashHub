@@ -95,4 +95,51 @@ public class UsersController : ControllerBase
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    /// <summary>
+    /// Cập nhật ảnh đại diện (Avatar).
+    /// </summary>
+    [Authorize]
+    [HttpPost("me/avatar")]
+    public async Task<IActionResult> UpdateAvatar(IFormFile file, [FromServices] IFileService fileService)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResponse.ErrorResponse("Tệp tải lên không hợp lệ hoặc rỗng."));
+
+        if (!file.ContentType.StartsWith("image/"))
+            return BadRequest(ApiResponse.ErrorResponse("Vui lòng tải lên tệp hình ảnh hợp lệ."));
+
+        try
+        {
+            var userId = GetCurrentUserId();
+            var fileName = file.FileName;
+            var mimeType = file.ContentType;
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var fileData = ms.ToArray();
+
+            // Save file in LocalFiles table with purpose 'Avatar' and type 'Image'
+            var fileId = await fileService.UploadFileAsync(userId, fileName, fileData, "Image", "Avatar", mimeType);
+
+            // Update user profile
+            var profile = await _userService.UpdateAvatarAsync(userId, fileId);
+
+            return Ok(ApiResponse<UserProfileResponse>.SuccessResponse(profile, "Cập nhật ảnh đại diện thành công."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Kiểm tra trạng thái online/offline của một user cụ thể (public).
+    /// </summary>
+    [HttpGet("{userId:guid}/online")]
+    public IActionResult CheckUserOnline(Guid userId)
+    {
+        var isOnline = Services.Hubs.ChatHub.IsUserOnline(userId);
+        return Ok(ApiResponse<object>.SuccessResponse(new { UserId = userId, IsOnline = isOnline }));
+    }
 }

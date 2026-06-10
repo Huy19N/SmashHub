@@ -8,4 +8,5 @@ public interface IUserService
     Task<UserProfileResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request);
     Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
     Task<UserPublicResponse> GetPublicProfileAsync(Guid userId);
+    Task<UserProfileResponse> UpdateAvatarAsync(Guid userId, Guid fileId);
 }

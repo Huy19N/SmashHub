@@ -260,7 +260,7 @@ public class TeamService : ITeamService
 
     #region Messages
 
-    public async Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, string content)
+    public async Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, CreateTeamMessageRequest request)
     {
         if (!await _unitOfWork.TeamMembers.IsMemberAsync(teamId, currentUserId))
             throw new InvalidOperationException("Bạn không phải là thành viên của nhóm này.");
@@ -270,7 +270,9 @@ public class TeamService : ITeamService
             MessageId = Guid.NewGuid(),
             SenderId = currentUserId,
             TeamId = teamId,
-            Content = content,
+            Content = request.Content,
+            MessageType = request.MessageType,
+            MediaFileId = request.MediaFileId,
             SentAt = DateTime.Now,
             IsDeleted = false
         };
@@ -287,6 +289,9 @@ public class TeamService : ITeamService
             SenderId = created.SenderId,
             SenderName = created.Sender?.FullName,
             Content = created.Content,
+            MessageType = created.MessageType,
+            MediaFileId = created.MediaFileId,
+            MediaUrl = created.MediaFileId.HasValue ? $"/api/files/{created.MediaFileId.Value}" : null,
             SentAt = created.SentAt
         };
 
@@ -312,6 +317,9 @@ public class TeamService : ITeamService
                 SenderId = m.SenderId,
                 SenderName = m.Sender?.FullName,
                 Content = m.Content,
+                MessageType = m.MessageType,
+                MediaFileId = m.MediaFileId,
+                MediaUrl = m.MediaFileId.HasValue ? $"/api/files/{m.MediaFileId.Value}" : null,
                 SentAt = m.SentAt
             }).ToList(),
             TotalCount = totalCount,

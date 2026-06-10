@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -13,5 +13,7 @@ namespace Entites.DTOs.Teams
         public Guid TeamId { get; set; }
         [Required]
         public string Content { get; set; } = null!;
+        public int MessageType { get; set; } = 0; // 0: Text, 1: Image, 2: Video
+        public Guid? MediaFileId { get; set; }
     }
 }

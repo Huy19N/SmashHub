@@ -8,4 +8,6 @@ public interface IAuthService
     Task<TokenResponse> LoginAsync(LoginRequest request, string ipAddress, string userAgent);
     Task<TokenResponse> RefreshTokenAsync(string refreshToken, string ipAddress, string userAgent);
     Task LogoutAsync(Guid userId, string refreshToken);
+    Task<TokenResponse> VerifyRegistrationAsync(VerifyEmailRequest request, string ipAddress, string userAgent);
+    Task ResendVerificationCodeAsync(string email);
 }

@@ -13,11 +13,17 @@ public partial class TeamMessage
 
     public Guid SenderId { get; set; }
 
+    public int MessageType { get; set; }
+
     public string Content { get; set; }
+
+    public Guid? MediaFileId { get; set; }
 
     public DateTime? SentAt { get; set; }
 
     public bool IsDeleted { get; set; }
+
+    public virtual LocalFile MediaFile { get; set; }
 
     public virtual User Sender { get; set; }
 

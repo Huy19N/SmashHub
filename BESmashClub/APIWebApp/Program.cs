@@ -39,6 +39,8 @@ builder.Services.AddScoped<IFacilityService, FacilityService>();
 builder.Services.AddScoped<ICourtService, CourtService>();
 builder.Services.AddScoped<ICourtCostService, CourtCostService>();
 builder.Services.AddScoped<IStatusService, StatusService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IMatchmakingService, MatchmakingService>();
 
 // ---- Authentication ----
 builder.Services.AddAuthentication(options =>

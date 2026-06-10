@@ -17,6 +17,10 @@ public partial class Team
 
     public bool IsActive { get; set; }
 
+    public virtual ICollection<MatchAcceptance> MatchAcceptances { get; set; } = new List<MatchAcceptance>();
+
+    public virtual ICollection<MatchChallenge> MatchChallenges { get; set; } = new List<MatchChallenge>();
+
     public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
 
     public virtual ICollection<TeamInvite> TeamInvites { get; set; } = new List<TeamInvite>();
@@ -24,4 +28,6 @@ public partial class Team
     public virtual ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
 
     public virtual ICollection<TeamMessage> TeamMessages { get; set; } = new List<TeamMessage>();
+
+    public virtual ICollection<VideoCallSession> VideoCallSessions { get; set; } = new List<VideoCallSession>();
 }

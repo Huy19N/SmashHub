@@ -64,8 +64,21 @@ public class UserService : IUserService
         {
             UserId = user.UserId,
             FullName = user.FullName,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            AvatarFileId = user.AvatarFileId
         };
+    }
+
+    public async Task<UserProfileResponse> UpdateAvatarAsync(Guid userId, Guid fileId)
+    {
+        var user = await _unitOfWork.Users.GetByIdWithRoleAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy user.");
+
+        user.AvatarFileId = fileId;
+        await _unitOfWork.Users.UpdateAsync(user);
+
+        return MapToProfileResponse(user);
     }
 
     private static UserProfileResponse MapToProfileResponse(Entites.Models.User user)
@@ -78,7 +91,8 @@ public class UserService : IUserService
             PhoneNumber = user.PhoneNumber,
             RoleName = user.Role?.RoleName,
             CreatedAt = user.CreatedAt,
-            IsActive = user.IsActive
+            IsActive = user.IsActive,
+            AvatarFileId = user.AvatarFileId
         };
     }
 }

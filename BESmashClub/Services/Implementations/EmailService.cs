@@ -214,5 +214,108 @@ public class EmailService : IEmailService
 </html>";
     }
 
+    public async Task SendBookingNotificationToOwnerAsync(Booking booking)
+    {
+        var ownerEmail = booking.Court?.Facility?.Owner?.Email;
+        if (string.IsNullOrEmpty(ownerEmail))
+            return;
+
+        var subject = $"🏸 SmashClub - Lịch Đặt Mới: {booking.Court.Facility.Name}";
+        var body = BuildBookingNotificationBody(booking);
+
+        await SendEmailAsync(ownerEmail, subject, body);
+    }
+
+    private static string BuildBookingNotificationBody(Booking booking)
+    {
+        var customerName = booking.BookedByUser?.FullName ?? booking.CustomerNameOffline ?? "Khách đặt qua App";
+        var customerPhone = booking.BookedByUser?.PhoneNumber ?? "N/A";
+        var customerEmail = booking.BookedByUser?.Email ?? "N/A";
+        var startTime = booking.StartTime.ToString("HH:mm dd/MM/yyyy");
+        var endTime = booking.EndTime.ToString("HH:mm dd/MM/yyyy");
+        var cost = booking.TotalCost?.ToString("N0") ?? "0";
+
+        return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }}
+        .container {{ max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); overflow: hidden; }}
+        .header {{ background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 30px; text-align: center; }}
+        .header h1 {{ color: #ffffff; margin: 0; font-size: 28px; }}
+        .body {{ padding: 30px; }}
+        .body h2 {{ color: #333; }}
+        .body p {{ color: #555; line-height: 1.6; margin: 5px 0; }}
+        .info-box {{ background: #f9f9fb; border-left: 4px solid #11998e; padding: 15px; margin: 20px 0; border-radius: 4px; }}
+        .info-box table {{ width: 100%; border-collapse: collapse; }}
+        .info-box td {{ padding: 8px 4px; color: #444; }}
+        .info-box td.label {{ font-weight: bold; width: 150px; color: #666; }}
+        .footer {{ text-align: center; padding: 20px; color: #999; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>📅 Lịch Đặt Mới Thành Công</h1>
+        </div>
+        <div class='body'>
+            <h2>Kính gửi Chủ sân {booking.Court?.Facility?.Owner?.FullName},</h2>
+            <p>Hệ thống SmashClub xin thông báo đã ghi nhận một lượt đặt sân mới đã thanh toán thành công tại cơ sở của bạn:</p>
+            
+            <div class='info-box'>
+                <table>
+                    <tr>
+                        <td class='label'>Cơ sở:</td>
+                        <td>{booking.Court?.Facility?.Name}</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Sân:</td>
+                        <td>{booking.Court?.CourtName} ({booking.Court?.Sport?.SportName})</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Bắt đầu:</td>
+                        <td>{startTime}</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Kết thúc:</td>
+                        <td>{endTime}</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Doanh thu:</td>
+                        <td style='color: #11998e; font-weight: bold;'>{cost} VND (Đã cộng vào ví)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h3 style='color: #333;'>Thông tin khách hàng:</h3>
+            <div class='info-box'>
+                <table>
+                    <tr>
+                        <td class='label'>Khách hàng:</td>
+                        <td>{customerName}</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Số điện thoại:</td>
+                        <td>{customerPhone}</td>
+                    </tr>
+                    <tr>
+                        <td class='label'>Email:</td>
+                        <td>{customerEmail}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p>Vui lòng chuẩn bị sân bãi theo đúng khung giờ quy định.</p>
+        </div>
+        <div class='footer'>
+            <p>© 2026 SmashClub. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+    }
+
     #endregion
 }

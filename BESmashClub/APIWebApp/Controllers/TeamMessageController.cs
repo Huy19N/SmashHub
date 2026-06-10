@@ -49,7 +49,7 @@ namespace APIWebApp.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var result = await _teamService.SendTeamMessageAsync(userId, teamId, request.Content);
+                var result = await _teamService.SendTeamMessageAsync(userId, teamId, request);
                 return Ok(ApiResponse<TeamMessageResponse>.SuccessResponse(result, "Gửi tin nhắn thành công."));
             }
             catch (InvalidOperationException ex)

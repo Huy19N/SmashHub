@@ -1,4 +1,5 @@
 using Entites.DTOs.Common;
+using Entites.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Interfaces;
@@ -40,7 +41,7 @@ public class StatusService : IStatusService
 
     public async Task<List<StatusResponse>> GetPayoutStatusesAsync()
     {
-        var statuses = await _unitOfWork.Payouts.GetContext().PayoutStatuses
+        var statuses = await _unitOfWork.Payouts.GetContext().Set<PayoutStatus>()
             .Select(s => new StatusResponse { StatusId = s.StatusId, StatusName = s.StatusName })
             .ToListAsync();
         return statuses;

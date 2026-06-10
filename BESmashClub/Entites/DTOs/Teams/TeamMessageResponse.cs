@@ -18,6 +18,12 @@ namespace Entites.DTOs.Teams
 
         public string? SenderName { get; set; }
 
+        public int MessageType { get; set; }
+
+        public Guid? MediaFileId { get; set; }
+
+        public string? MediaUrl { get; set; }
+
         public DateTime? SentAt { get; set; }
     }
 }

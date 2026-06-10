@@ -12,7 +12,7 @@ namespace Repositories
         public async Task<Booking?> GetDetailAsync(Guid bookingId)
         {
             return await _context.Bookings
-                .Include(b => b.Court).ThenInclude(c => c.Facility)
+                .Include(b => b.Court).ThenInclude(c => c.Facility).ThenInclude(f => f.Owner)
                 .Include(b => b.Court).ThenInclude(c => c.Sport)
                 .Include(b => b.BookedByUser)
                 .Include(b => b.Status)

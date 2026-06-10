@@ -17,15 +17,21 @@ public partial class Schedule
 
     public int MaxParticipants { get; set; }
 
-    public decimal? CostPerPerson { get; set; }
+    public decimal BaseCourtCost { get; set; }
 
-    public string CostNote { get; set; }
+    public decimal? ExtraFee { get; set; }
+
+    public string ExtraFeeNote { get; set; }
+
+    public decimal? TotalCalculatedCost { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public virtual Booking Booking { get; set; }
 
     public virtual Team HostTeam { get; set; }
+
+    public virtual ICollection<MatchChallenge> MatchChallenges { get; set; } = new List<MatchChallenge>();
 
     public virtual ICollection<ScheduleParticipant> ScheduleParticipants { get; set; } = new List<ScheduleParticipant>();
 }

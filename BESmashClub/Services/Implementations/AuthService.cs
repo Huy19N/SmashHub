@@ -16,11 +16,13 @@ public class AuthService : IAuthService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly JwtSettings _jwtSettings;
+    private readonly IEmailService _emailService;
 
-    public AuthService(UnitOfWork unitOfWork, IOptions<JwtSettings> jwtSettings)
+    public AuthService(UnitOfWork unitOfWork, IOptions<JwtSettings> jwtSettings, IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _jwtSettings = jwtSettings.Value;
+        _emailService = emailService;
     }
 
     public async Task<TokenResponse> RegisterAsync(RegisterRequest request)
@@ -38,12 +40,15 @@ public class AuthService : IAuthService
             RoleId = 2, // User role
             CreatedAt = DateTime.Now,
             LastPwdChange = DateTime.Now,
-            IsActive = true
+            IsActive = false // Phải xác thực email để kích hoạt
         };
 
         await _unitOfWork.Users.CreateAsync(user);
 
-        return GenerateTokenResponse(user, null, null);
+        // Gửi mã OTP xác nhận tài khoản
+        await _emailService.SendEmailConfirmationAsync(user.Email);
+
+        return new TokenResponse { AccessToken = string.Empty, RefreshToken = string.Empty };
     }
 
     public async Task<TokenResponse> LoginAsync(LoginRequest request, string ipAddress, string userAgent)
@@ -115,6 +120,39 @@ public class AuthService : IAuthService
             RefreshToken = refreshTokenValue,
             ExpiresAt = expiresAt
         };
+    }
+
+    public async Task<TokenResponse> VerifyRegistrationAsync(VerifyEmailRequest request, string ipAddress, string userAgent)
+    {
+        // 1. Xác thực mã OTP qua EmailService
+        await _emailService.VerifyEmailAsync(request.Code, request.Email);
+
+        // 2. Lấy thông tin user
+        var user = await _unitOfWork.Users.GetByEmailAsync(request.Email);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy người dùng.");
+
+        if (user.IsActive == true)
+            throw new InvalidOperationException("Tài khoản đã được xác thực trước đó.");
+
+        // 3. Kích hoạt tài khoản
+        user.IsActive = true;
+        await _unitOfWork.Users.UpdateAsync(user);
+
+        // 4. Sinh Token tự động đăng nhập
+        return GenerateTokenResponse(user, ipAddress, userAgent);
+    }
+
+    public async Task ResendVerificationCodeAsync(string email)
+    {
+        var user = await _unitOfWork.Users.GetByEmailAsync(email);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy người dùng với email này.");
+
+        if (user.IsActive == true)
+            throw new InvalidOperationException("Tài khoản đã được xác thực và đang hoạt động.");
+
+        await _emailService.SendEmailConfirmationAsync(email);
     }
 
     private string GenerateAccessToken(User user, string jwtId, DateTime expiresAt)

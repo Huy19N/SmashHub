@@ -37,8 +37,8 @@ public class ScheduleService : IScheduleService
             BookingId = request.BookingId,
             Title = request.Title,
             MaxParticipants = request.MaxParticipants,
-            CostPerPerson = request.CostPerPerson,
-            CostNote = request.CostNote,
+            BaseCourtCost = request.CostPerPerson ?? 0,
+            ExtraFeeNote = request.CostNote,
             CreatedAt = DateTime.Now
         };
 
@@ -78,10 +78,10 @@ public class ScheduleService : IScheduleService
             schedule.MaxParticipants = request.MaxParticipants.Value;
 
         if (request.CostPerPerson.HasValue)
-            schedule.CostPerPerson = request.CostPerPerson.Value;
+            schedule.BaseCourtCost = request.CostPerPerson.Value;
 
         if (request.CostNote != null)
-            schedule.CostNote = request.CostNote;
+            schedule.ExtraFeeNote = request.CostNote;
 
         await _unitOfWork.Schedules.UpdateAsync(schedule);
 
@@ -216,8 +216,8 @@ public class ScheduleService : IScheduleService
             SportName = schedule.Booking?.Court?.Sport?.SportName,
             MaxParticipants = schedule.MaxParticipants,
             CurrentParticipants = schedule.ScheduleParticipants?.Count ?? 0,
-            CostPerPerson = schedule.CostPerPerson,
-            CostNote = schedule.CostNote,
+            CostPerPerson = schedule.BaseCourtCost,
+            CostNote = schedule.ExtraFeeNote,
             CreatedAt = schedule.CreatedAt
         };
     }

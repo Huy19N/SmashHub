@@ -11,7 +11,11 @@ public partial class Booking
 
     public int CourtId { get; set; }
 
-    public Guid BookedByUserId { get; set; }
+    public Guid? BookedByUserId { get; set; }
+
+    public string BookingType { get; set; }
+
+    public string CustomerNameOffline { get; set; }
 
     public DateTime StartTime { get; set; }
 

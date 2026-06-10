@@ -23,7 +23,7 @@ public interface ITeamService
     Task AcceptInviteAsync(Guid userId, string inviteToken);
 
     // Messages
-    Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, string content);
+    Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, CreateTeamMessageRequest request);
     Task<PagedResult<TeamMessageResponse>> GetTeamMessagesAsync(Guid teamId, string? search, PaginationParams pagination);
     Task RemoveTeamMessageAsync(Guid currentUserId, Guid messageId);
 }

@@ -33,18 +33,71 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Đăng ký tài khoản mới.
+    /// Đăng ký tài khoản mới (cần xác thực email để kích hoạt).
     /// </summary>
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
         {
-            var result = await _authService.RegisterAsync(request);
-            SetRefreshTokenCookie(result.RefreshToken);
-            return Ok(ApiResponse<TokenResponse>.SuccessResponse(result, "Đăng ký thành công."));
+            await _authService.RegisterAsync(request);
+            return Ok(ApiResponse.SuccessResponse("Đăng ký thành công. Vui lòng xác thực email để kích hoạt tài khoản."));
         }
         catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Xác thực đăng ký qua mã OTP (kích hoạt tài khoản và tự động đăng nhập).
+    /// </summary>
+    [HttpPost("verify-registration")]
+    public async Task<IActionResult> VerifyRegistration([FromBody] VerifyEmailRequest request)
+    {
+        try
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+            var result = await _authService.VerifyRegistrationAsync(request, ipAddress, userAgent);
+            SetRefreshTokenCookie(result.RefreshToken);
+            return Ok(ApiResponse<TokenResponse>.SuccessResponse(result, "Xác thực và kích hoạt tài khoản thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Gửi lại mã OTP xác nhận tài khoản.
+    /// </summary>
+    [HttpPost("resend-verification-code")]
+    public async Task<IActionResult> ResendVerificationCode([FromBody] string email)
+    {
+        try
+        {
+            await _authService.ResendVerificationCodeAsync(email);
+            return Ok(ApiResponse.SuccessResponse("Đã gửi lại mã xác nhận qua email. Vui lòng kiểm tra hộp thư."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
         {
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }

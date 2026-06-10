@@ -19,13 +19,31 @@ public partial class Facility
 
     public string Address { get; set; }
 
+    public string PhoneNumber { get; set; }
+
+    public string TermsAndRules { get; set; }
+
     public DateTime? CreatedAt { get; set; }
+
+    public decimal? Latitude { get; set; }
+
+    public decimal? Longitude { get; set; }
 
     public virtual ICollection<Court> Courts { get; set; } = new List<Court>();
 
+    public virtual ICollection<FacilityBankAccount> FacilityBankAccounts { get; set; } = new List<FacilityBankAccount>();
+
+    public virtual ICollection<FacilityImage> FacilityImages { get; set; } = new List<FacilityImage>();
+
+    public virtual ICollection<FacilityOperatingHour> FacilityOperatingHours { get; set; } = new List<FacilityOperatingHour>();
+
+    public virtual ICollection<FacilityPaymentConfig> FacilityPaymentConfigs { get; set; } = new List<FacilityPaymentConfig>();
+
+    public virtual ICollection<FacilityReview> FacilityReviews { get; set; } = new List<FacilityReview>();
+
+    public virtual FacilityWallet FacilityWallet { get; set; }
+
     public virtual User Owner { get; set; }
 
-    public virtual FacilityBankAccount BankAccount { get; set; }
-
-    public virtual ICollection<Payout> Payouts { get; set; } = new List<Payout>();
+    public virtual ICollection<PayoutRequest> PayoutRequests { get; set; } = new List<PayoutRequest>();
 }

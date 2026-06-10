@@ -7,7 +7,7 @@ public class BookingResponse
     public string? CourtName { get; set; }
     public string? FacilityName { get; set; }
     public string? SportName { get; set; }
-    public Guid BookedByUserId { get; set; }
+    public Guid? BookedByUserId { get; set; }
     public string? BookedByUserName { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }

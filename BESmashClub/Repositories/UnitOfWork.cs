@@ -27,6 +27,8 @@ public class UnitOfWork : IDisposable
     public FacilityBankAccountRepository FacilityBankAccounts { get; }
     public SubscriptionPlanRepository SubscriptionPlans { get; }
     public UserSubscriptionRepository UserSubscriptions { get; }
+    public MatchChallengeRepository MatchChallenges { get; }
+    public MatchAcceptanceRepository MatchAcceptances { get; }
 
     public UnitOfWork(SmashClubContext context)
     {
@@ -52,6 +54,8 @@ public class UnitOfWork : IDisposable
         FacilityBankAccounts = new FacilityBankAccountRepository(context);
         SubscriptionPlans = new SubscriptionPlanRepository(context);
         UserSubscriptions = new UserSubscriptionRepository(context);
+        MatchChallenges = new MatchChallengeRepository(context);
+        MatchAcceptances = new MatchAcceptanceRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()
