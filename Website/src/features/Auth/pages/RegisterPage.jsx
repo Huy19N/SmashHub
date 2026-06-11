@@ -4,6 +4,7 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { PATHS } from '../../../routes/paths';
 import { useRegister } from '../hooks/useAuth';
+import EmailVerificationModal from '../components/EmailVerificationModal';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -12,6 +13,8 @@ export default function RegisterPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const { register, isLoading } = useRegister();
   const navigate = useNavigate();
@@ -32,12 +35,25 @@ export default function RegisterPage() {
 
     try {
       await register(fullName, email, password, phoneNumber);
-      toast.success("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
-      navigate(PATHS.LOGIN);
+      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
+      setRegisteredEmail(email);
+      setShowVerifyModal(true);
     } catch (err) {
       const errMsg = err.message || 'Đăng ký không thành công.';
       toast.error(errMsg);
     }
+  };
+
+  const handleVerified = () => {
+    setShowVerifyModal(false);
+    toast.success("Tài khoản đã được xác thực! Vui lòng đăng nhập.");
+    navigate(PATHS.LOGIN);
+  };
+
+  const handleCloseVerifyModal = () => {
+    setShowVerifyModal(false);
+    toast("Bạn có thể xác thực email sau khi đăng nhập.", { icon: 'ℹ️' });
+    navigate(PATHS.LOGIN);
   };
 
   return (
@@ -103,6 +119,14 @@ export default function RegisterPage() {
           </Link>
         </p>
       </div>
+
+      {/* Email Verification Modal */}
+      <EmailVerificationModal
+        isOpen={showVerifyModal}
+        email={registeredEmail}
+        onClose={handleCloseVerifyModal}
+        onVerified={handleVerified}
+      />
     </div>
   );
 }

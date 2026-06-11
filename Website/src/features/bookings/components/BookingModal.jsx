@@ -152,34 +152,24 @@ export default function BookingModal({ isOpen, onClose, facility }) {
   const dragCourtRef = useRef(null);
   const dragStartIdx = useRef(null);
 
-  const [allCourtCosts, setAllCourtCosts] = useState({});
-  const [loadingCosts, setLoadingCosts] = useState(false);
+  const { courts, fetchCourts, courtStatuses, fetchCourtStatus, loading: loadingCourts } = useCourt();
+  const { createBooking, loading: bookingActionLoading } = useBookings();
 
-  const { courts, fetchCourts, loading: loadingCourts } = useCourt();
-  const { bookings, fetchBookings, createBooking, loading: bookingActionLoading } = useBookings();
+  const formatDateForApi = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+  const selectedDateStr = formatDateForApi(selectedDate);
 
   useEffect(() => {
     if (isOpen && facility) {
-      fetchCourts(facility.facilityId || facility.id);
-      fetchBookings();
+      const facId = facility.facilityId || facility.id;
+      fetchCourts(facId);
+      fetchCourtStatus(facId, selectedDateStr);
     }
-  }, [isOpen, facility, fetchCourts, fetchBookings]);
-
-  useEffect(() => {
-    if (courts.length === 0) return;
-    setLoadingCosts(true);
-    const promises = courts.map(c =>
-      getCourtCostByCourtIdAPI(c.courtId)
-        .then(res => ({ courtId: c.courtId, costs: res.data || [] }))
-        .catch(() => ({ courtId: c.courtId, costs: [] }))
-    );
-    Promise.all(promises).then(results => {
-      const map = {};
-      results.forEach(r => { map[r.courtId] = r.costs; });
-      setAllCourtCosts(map);
-      setLoadingCosts(false);
-    });
-  }, [courts]);
+  }, [isOpen, facility, selectedDateStr, fetchCourts, fetchCourtStatus]);
 
   useEffect(() => {
     setSelectedSlots([]);
@@ -199,51 +189,26 @@ export default function BookingModal({ isOpen, onClose, facility }) {
 
   if (!isOpen || !facility) return null;
 
-  // ─── Helpers ─────────────────────
-  const formatDateForApi = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  };
-  const selectedDateStr = formatDateForApi(selectedDate);
-
-  const getBookingsForCourt = (courtId) =>
-    (bookings || []).filter(b => b.courtId === courtId && b.startTime?.startsWith(selectedDateStr));
-
   const getSlotStatus = (courtId, slotIdx) => {
-    const slotStartMin = timeToMinutes(TIME_SLOTS[slotIdx]);
-    const slotEndMin = timeToMinutes(TIME_SLOTS[slotIdx + 1]);
+    const slotStartStr = TIME_SLOTS[slotIdx]; // "HH:mm"
+    const courtStatus = courtStatuses?.find(c => c.courtId === courtId);
+    if (!courtStatus || !courtStatus.isActive) return 'locked';
 
-    const courtBookings = getBookingsForCourt(courtId);
-    for (const b of courtBookings) {
-      const bStart = b.startTime.split('T')[1]?.substring(0, 5);
-      const bEnd = b.endTime.split('T')[1]?.substring(0, 5);
-      if (!bStart || !bEnd) continue;
-      if (slotStartMin < timeToMinutes(bEnd) && slotEndMin > timeToMinutes(bStart)) return 'booked';
-    }
-
-    const costs = allCourtCosts[courtId] || [];
-    if (costs.length === 0) return 'locked';
-    for (const cost of costs) {
-      const cStart = timeToMinutes(cost.startTime.substring(0, 5));
-      const cEnd = timeToMinutes(cost.endTime.substring(0, 5));
-      if (slotStartMin >= cStart && slotEndMin <= cEnd) return 'available';
-    }
+    const slotData = courtStatus.timeSlots?.find(s => s.startTime === slotStartStr);
+    if (!slotData) return 'locked';
+    
+    if (slotData.status === 'Booked') return 'booked';
+    if (slotData.status === 'Available') return 'available';
     return 'locked';
   };
 
   const getSlotCost = (courtId, slotIdx) => {
-    const slotStartMin = timeToMinutes(TIME_SLOTS[slotIdx]);
-    const costs = allCourtCosts[courtId] || [];
-    for (const cost of costs) {
-      const cStart = timeToMinutes(cost.startTime.substring(0, 5));
-      const cEnd = timeToMinutes(cost.endTime.substring(0, 5));
-      if (slotStartMin >= cStart && slotStartMin < cEnd) {
-        return (cost.cost / cost.durationMinutes) * SLOT_MINUTES;
-      }
-    }
-    return 0;
+    const slotStartStr = TIME_SLOTS[slotIdx];
+    const courtStatus = courtStatuses?.find(c => c.courtId === courtId);
+    if (!courtStatus) return 0;
+    
+    const slotData = courtStatus.timeSlots?.find(s => s.startTime === slotStartStr);
+    return slotData ? slotData.cost : 0;
   };
 
   // ─── Slot selection helpers ──────
@@ -373,7 +338,7 @@ export default function BookingModal({ isOpen, onClose, facility }) {
     }
   };
 
-  const isLoading = loadingCourts || loadingCosts;
+  const isLoading = loadingCourts || (courtStatuses && courtStatuses.length === 0 && courts.length > 0);
   const groups = getSelectionGroups();
 
   // ─── Render ──────────────────────

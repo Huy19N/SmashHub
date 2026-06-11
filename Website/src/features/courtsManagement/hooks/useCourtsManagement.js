@@ -115,7 +115,9 @@ export const useCourtsManagement = () => {
       setSelectedFacilityId(newFacility.facilityId);
       return newFacility;
     } catch (err) {
-      setError(err.message || 'Lỗi khi tạo cơ sở mới.');
+      console.error("Lỗi từ backend:", err.response?.data || err);
+      const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
+      setError(backendMessage || 'Lỗi khi tạo cơ sở mới.');
       throw err;
     }
   };

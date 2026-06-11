@@ -37,7 +37,8 @@ public class FacilitiesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+            var msg = ex.InnerException != null ? $"{ex.Message} Inner exception: {ex.InnerException.Message}" : ex.Message;
+            return BadRequest(ApiResponse.ErrorResponse(msg));
         }
     }
 

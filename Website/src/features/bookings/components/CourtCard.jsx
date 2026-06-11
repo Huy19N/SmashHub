@@ -1,10 +1,12 @@
 import React from 'react';
+import { MapPin } from 'lucide-react';
 
 export default function CourtCard({
   image,
   status,
   title,
   subtitle,
+  distanceKm,
   icon: Icon,
   onBook
 }) {
@@ -44,6 +46,12 @@ export default function CourtCard({
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 font-medium">
           {subtitle}
+          {distanceKm !== undefined && distanceKm !== null && (
+            <span className="block mt-1 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+              <MapPin className="w-3 h-3 inline-block mr-1 -mt-0.5" />
+              Cách đây {distanceKm.toFixed(1)} km
+            </span>
+          )}
         </p>
         
         <div className="mt-auto">

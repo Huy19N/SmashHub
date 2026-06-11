@@ -155,9 +155,9 @@ CREATE TABLE Facilities(
     City NVARCHAR(50) NOT NULL,
     District NVARCHAR(50) NOT NULL,
     [Address] NVARCHAR(255) NOT NULL,
-    [Location] GEOGRAPHY NOT NULL, -- Bắt buộc để tích hợp Map
-    Latitude AS CAST([Location].Lat AS DECIMAL(18,9)),
-    Longitude AS CAST([Location].Long AS DECIMAL(18,9)),
+    Latitude DECIMAL(18,9) NULL,
+    Longitude DECIMAL(18,9) NULL,
+    [Location] AS (geography::Point(ISNULL(Latitude, 0), ISNULL(Longitude, 0), 4326)), -- Tự động tính toán từ tọa độ
     PhoneNumber NVARCHAR(20),
     TermsAndRules NVARCHAR(MAX),   -- Điều khoản & Quy định của sân
     CreatedAt DATETIME DEFAULT GETDATE(),
@@ -622,8 +622,8 @@ INSERT INTO Users (UserId, RoleId, FullName, Email, Password) VALUES
     (@Owner1Id, 3, N'Trần Chủ Sân', 'owner@smash.vn', 'hash'),
     (@User1Id, 2, N'Hải Nguyễn', 'hai@smash.vn', 'hash');
  
-INSERT INTO Facilities (OwnerId, Name, City, District, [Address], [Location], PhoneNumber, TermsAndRules)
-VALUES (@Owner1Id, N'SmashClub Q10', N'HCM', N'Q10', N'Thành Thái, Q10', geography::STGeomFromText('POINT(106.6644 10.7726)', 4326), '0901234567', N'Vui lòng đi giày đế kếp không để lại dấu.');
+INSERT INTO Facilities (OwnerId, Name, City, District, [Address], Latitude, Longitude, PhoneNumber, TermsAndRules)
+VALUES (@Owner1Id, N'SmashClub Q10', N'HCM', N'Q10', N'Thành Thái, Q10', 10.7726, 106.6644, '0901234567', N'Vui lòng đi giày đế kếp không để lại dấu.');
 SET @Facility1Id = SCOPE_IDENTITY();
  
 INSERT INTO FacilityWallets (FacilityId, Balance, TotalEarned) VALUES (@Facility1Id, 0, 0);

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, Plus, Image as ImageIcon, Smile, Send, Loader2, AlertCircle, Trash2 } from 'lucide-react';
+import { Info, Plus, Image as ImageIcon, Smile, Send, Loader2, AlertCircle, Trash2, X, Phone, PhoneIncoming } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import { getAccessToken } from '../../../config/axios';
 import { useGetMessages, useSendMessage, useDeleteMessage } from '../hooks/useGroups';
+import { uploadFileAPI, getFileUrl } from '../api/files.api.js';
+import toast from 'react-hot-toast';
+import VideoCallOverlay from './VideoCallOverlay';
 
 /**
  * TeamChat – Real-time group chat powered by SignalR + REST API.
@@ -25,8 +28,14 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected | connecting | connected
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Video Call State
+  const [videoCallRoom, setVideoCallRoom] = useState(null); // { roomId, isInitiator }
+  const [incomingCall, setIncomingCall] = useState(null); // { roomId, callerId }
 
   const chatEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const connectionRef = useRef(null);
 
   // ─── Sync API messages into local state ────────────────────
@@ -80,6 +89,13 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
     connection.on('MessageDeleted', (messageId) => {
       setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
+    });
+
+    connection.on('CallStarted', (roomId, callerId, connId) => {
+      // Show incoming call if we didn't start it
+      if (String(callerId) !== String(currentUserId)) {
+        setIncomingCall({ roomId, callerId });
+      }
     });
 
     // Register handlers for backend events to suppress warnings
@@ -139,21 +155,54 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   }, [teamId, isLoading, fetchError]);
 
   // ─── Send handler ─────────────────────────────────────────
-  const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isSending) return;
+  const handleSendMessage = useCallback(async (text, mediaFileId = null, messageType = 0) => {
+    if (!text.trim() && !mediaFileId) return;
+    if (isSending) return;
 
-    const messageText = inputValue.trim();
     setInputValue('');
 
     try {
-      await sendMessageAPI(teamId, { content: messageText });
+      await sendMessageAPI(teamId, { 
+        content: text.trim() || (messageType === 1 ? '[Hình ảnh]' : ''),
+        messageType,
+        mediaFileId
+      });
       // The SignalR ReceiveTeamMessage event will add the message to the list
     } catch (err) {
-      // If WebSocket didn't catch it, add optimistically from the API response
       console.error('Failed to send message:', err);
-      setInputValue(messageText); // Restore the input on failure
+      toast.error('Gửi tin nhắn thất bại.');
+      if (!mediaFileId) setInputValue(text); // Restore the input on failure
     }
-  }, [inputValue, isSending, teamId, sendMessageAPI]);
+  }, [isSending, teamId, sendMessageAPI]);
+
+  // ─── Image Upload Handler ──────────────────────────────────
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Chỉ hỗ trợ tải lên hình ảnh.');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const response = await uploadFileAPI(file, 'TeamChat');
+      const data = response?.data ?? response;
+      const fileId = data?.fileId || data?.FileId;
+      if (fileId) {
+        await handleSendMessage('', fileId, 1); // 1 = Image
+      } else {
+        throw new Error('Không nhận được ID file từ server.');
+      }
+    } catch (err) {
+      console.error('Failed to upload image:', err);
+      toast.error('Tải ảnh lên thất bại.');
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // ─── Delete handler ────────────────────────────────────────
   const handleDeleteMessage = useCallback(async (messageId) => {
@@ -226,10 +275,50 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             </div>
           </div>
         </div>
-        <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-          <Info className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+          <button 
+            onClick={() => setVideoCallRoom({ roomId: `team_${teamId}`, isInitiator: true })}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+            title="Gọi nhóm"
+          >
+            <Phone className="h-5 w-5" />
+          </button>
+          <button className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
+            <Info className="h-5 w-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Incoming Call Alert */}
+      {incomingCall && !videoCallRoom && (
+        <div className="bg-emerald-500 text-white p-3 flex items-center justify-between px-6 animate-in slide-in-from-top">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            <span className="font-bold text-sm">Cuộc gọi nhóm đang diễn ra...</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIncomingCall(null)}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+            >
+              Bỏ qua
+            </button>
+            <button 
+              onClick={() => {
+                setVideoCallRoom({ roomId: incomingCall.roomId, isInitiator: false });
+                setIncomingCall(null);
+              }}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-emerald-600 hover:bg-gray-100 transition-colors flex items-center gap-1"
+            >
+              <PhoneIncoming className="w-4 h-4" />
+              Tham gia
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-white dark:bg-[#0b0f19]">
@@ -293,7 +382,17 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                         ? 'bg-[#047857] text-white rounded-2xl rounded-tr-sm shadow-sm'
                         : 'bg-[#EEF2FF] dark:bg-[#1e2532] text-gray-800 dark:text-gray-200 rounded-2xl rounded-tl-sm shadow-sm'
                         }`}>
-                        {msg.content}
+                        {msg.messageType === 1 && msg.mediaUrl ? (
+                          <div className="mb-2">
+                            <img src={msg.mediaUrl} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(msg.mediaUrl, '_blank')} />
+                          </div>
+                        ) : msg.messageType === 1 && msg.mediaFileId ? (
+                           <div className="mb-2">
+                            <img src={getFileUrl(msg.mediaFileId)} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(getFileUrl(msg.mediaFileId), '_blank')} />
+                          </div>
+                        ) : null}
+                        
+                        {msg.content !== '[Hình ảnh]' && msg.content}
                         <div className={`text-[10px] mt-1.5 text-right font-medium ${isMine(msg) ? 'text-green-200' : 'text-gray-400 dark:text-gray-500'}`}>
                           {formatTime(msg.sentAt)}
                         </div>
@@ -327,8 +426,20 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-white/10">
             <Plus className="h-5 w-5" />
           </button>
-          <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-white/10">
-            <ImageIcon className="h-5 w-5" />
+          
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingImage}
+            className={`p-2 transition-colors rounded-full ${uploadingImage ? 'text-emerald-500' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10'}`}
+          >
+            {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImageIcon className="h-5 w-5" />}
           </button>
 
           <input
@@ -340,10 +451,10 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSendMessage();
+                handleSendMessage(inputValue);
               }
             }}
-            disabled={isSending}
+            disabled={isSending || uploadingImage}
           />
 
           <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-white/10">
@@ -351,13 +462,23 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           </button>
           <button
             className="bg-[#047857] hover:bg-[#065f46] text-white p-2 rounded-lg transition-colors flex items-center justify-center ml-1 shadow-sm disabled:opacity-50"
-            onClick={handleSendMessage}
-            disabled={isSending || !inputValue.trim()}
+            onClick={() => handleSendMessage(inputValue)}
+            disabled={isSending || (!inputValue.trim() && !uploadingImage)}
           >
             {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
         </div>
       </div>
+
+      {/* Video Call Overlay */}
+      {videoCallRoom && (
+        <VideoCallOverlay
+          teamId={teamId}
+          roomId={videoCallRoom.roomId}
+          isInitiator={videoCallRoom.isInitiator}
+          onClose={() => setVideoCallRoom(null)}
+        />
+      )}
     </div>
   );
 }

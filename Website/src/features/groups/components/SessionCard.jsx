@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Clock, MapPin, ChevronRight, MoreVertical, Trash2, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { Clock, MapPin, ChevronRight, MoreVertical, Trash2, UserPlus, UserMinus, Loader2, Flame, Users } from 'lucide-react';
 
 /**
  * SessionCard Component
@@ -16,6 +16,9 @@ export default function SessionCard({
   isVoting,
   onVoteJoin,
   onVoteLeave,
+  onCreateChallenge,
+  activeChallengeId,
+  onViewMatchRequests,
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -104,6 +107,30 @@ export default function SessionCard({
                 )}
                 {isDeleting ? 'Đang xóa...' : 'Xóa lịch trình'}
               </button>
+              
+              {activeChallengeId ? (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onViewMatchRequests?.(activeChallengeId);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors cursor-pointer font-label"
+                >
+                  <Users className="h-4 w-4" />
+                  Xem yêu cầu ghép đấu
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onCreateChallenge?.(session.scheduleId);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors cursor-pointer font-label"
+                >
+                  <Flame className="h-4 w-4" />
+                  Tạo kèo ghép đấu
+                </button>
+              )}
             </div>
           )}
         </div>

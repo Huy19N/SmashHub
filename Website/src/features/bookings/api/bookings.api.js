@@ -47,6 +47,11 @@ export const updateCourtAPI = async (courtId, courtData) => {
     return response.data;
 }
 
+export const getCourtStatusAPI = async (facilityId, date) => {
+    const response = await api.get(`/facilities/${facilityId}/courts/status`, { params: { date } });
+    return response.data;
+}
+
 // -CourtCosts CRUD-
 
 export const getCourtCostByCourtIdAPI = async (courtId) => {
@@ -73,6 +78,11 @@ export const deleteCourtCostAPI = async (courtCostId) => {
 
 export const getAllFacilityAPI = async () => {
     const response = await api.get(`/facilities`);
+    return response.data;
+}
+
+export const getFilteredFacilitiesAPI = async (params) => {
+    const response = await api.get('/facilities/filter', { params });
     return response.data;
 }
 

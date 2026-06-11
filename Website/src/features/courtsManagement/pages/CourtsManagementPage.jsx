@@ -3,9 +3,46 @@ import {
   Building, Settings, Plus, Edit3, Trash2, CheckCircle2, AlertTriangle, 
   MapPin, Loader2, Save, X, Activity, ToggleLeft, ToggleRight, Sparkles 
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import useCourtsManagement from '../hooks/useCourtsManagement';
+
+// Fix for default Leaflet icon not showing in React
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [16, -28],
+    shadowSize: [41, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const hoangSaIcon = L.divIcon({
+  className: 'custom-island-label',
+  html: '<div style="font-weight: 900; color: #b91c1c; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff; font-size: 14px; white-space: nowrap;">Hoàng Sa (Việt Nam)</div>',
+  iconSize: [150, 20],
+  iconAnchor: [75, 10]
+});
+
+const truongSaIcon = L.divIcon({
+  className: 'custom-island-label',
+  html: '<div style="font-weight: 900; color: #b91c1c; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff; font-size: 14px; white-space: nowrap;">Trường Sa (Việt Nam)</div>',
+  iconSize: [150, 20],
+  iconAnchor: [75, 10]
+});
+
+const southSeaIcon = L.divIcon({
+  className: 'custom-sea-label',
+  html: '<div style="font-weight: bold; color: #1d4ed8; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size: 16px; font-style: italic; white-space: nowrap;">Biển Đông (South Sea)</div>',
+  iconSize: [200, 20],
+  iconAnchor: [100, 10]
+});
 
 export default function CourtsManagementPage() {
   const { theme } = useTheme();
@@ -38,6 +75,8 @@ export default function CourtsManagementPage() {
   const [facCity, setFacCity] = useState('');
   const [facDistrict, setFacDistrict] = useState('');
   const [facAddress, setFacAddress] = useState('');
+  const [facLatitude, setFacLatitude] = useState(10.762622); // Default to HCMC
+  const [facLongitude, setFacLongitude] = useState(106.660172);
   const [isSubmittingFacility, setIsSubmittingFacility] = useState(false);
   const [facilityFormError, setFacilityFormError] = useState('');
 
@@ -79,7 +118,9 @@ export default function CourtsManagementPage() {
         name: facName,
         city: facCity,
         district: facDistrict,
-        address: facAddress
+        address: facAddress || `${facDistrict}, ${facCity}`,
+        latitude: facLatitude,
+        longitude: facLongitude
       });
       setFacName('');
       setFacCity('');
@@ -87,7 +128,8 @@ export default function CourtsManagementPage() {
       setFacAddress('');
       setActiveTab('list');
     } catch (err) {
-      setFacilityFormError(err.message || 'Lỗi khi tạo cơ sở mới.');
+      const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
+      setFacilityFormError(backendMessage || 'Lỗi khi tạo cơ sở mới.');
     } finally {
       setIsSubmittingFacility(false);
     }
@@ -221,6 +263,19 @@ export default function CourtsManagementPage() {
 
   // Find active facility metadata
   const activeFacility = facilities.find(f => f.facilityId === selectedFacilityId);
+
+  // Map Component for picking location
+  const LocationPickerMarker = () => {
+    useMapEvents({
+      click(e) {
+        setFacLatitude(e.latlng.lat);
+        setFacLongitude(e.latlng.lng);
+      },
+    });
+    return facLatitude && facLongitude ? (
+      <Marker position={[facLatitude, facLongitude]} />
+    ) : null;
+  };
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
@@ -357,6 +412,35 @@ export default function CourtsManagementPage() {
                   onChange={(e) => setFacAddress(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
                 />
+              </div>
+
+              {/* Map Selection (chỉ hiển thị tham khảo vị trí) */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5 flex justify-between">
+                  <span>Vị trí tham khảo trên bản đồ</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Click vào bản đồ để đánh dấu</span>
+                </label>
+                <div className="h-64 rounded-xl overflow-hidden border border-gray-200 dark:border-border-dark relative z-0">
+                  <MapContainer 
+                    center={[10.762622, 106.660172]} 
+                    zoom={13} 
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; Google Maps'
+                      url="https://mt1.google.com/vt/lyrs=m&hl=vi&gl=VN&x={x}&y={y}&z={z}"
+                    />
+                    <Marker position={[16.5, 112.0]} icon={hoangSaIcon} interactive={false} />
+                    <Marker position={[10.0, 114.0]} icon={truongSaIcon} interactive={false} />
+                    <Marker position={[14.0, 113.0]} icon={southSeaIcon} interactive={false} />
+                    <LocationPickerMarker />
+                  </MapContainer>
+                </div>
+                {facLatitude && facLongitude && (
+                  <p className="text-[10px] text-gray-400 mt-1.5 text-right font-mono">
+                    Tọa độ: {facLatitude.toFixed(6)}, {facLongitude.toFixed(6)}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">

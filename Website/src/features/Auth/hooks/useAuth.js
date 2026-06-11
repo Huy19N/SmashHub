@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI, forgotPasswordAPI, resetPasswordAPI, verifyOTPAPI } from '../api/auth.api.js';
+import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI, forgotPasswordAPI, resetPasswordAPI, verifyOTPAPI, verifyEmailRegisterAPI, resendVerifyEmailAPI } from '../api/auth.api.js';
 import api, { setAccessToken, getAccessToken } from '../../../config/axios.js';
 
 export const useLogout = () => {
@@ -51,9 +51,11 @@ export const useLogin = () => {
 
       const userId = decoded?.sub || decoded?.nameid || decoded?.userId || userData.userId;
       const roleName = decoded?.role || decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      const roleId = decoded?.RoleId || decoded?.roleId || userData?.roleId;
 
       if (userId) localStorage.setItem('userId', userId);
       if (roleName) localStorage.setItem('roleName', roleName);
+      if (roleId) localStorage.setItem('roleId', roleId.toString());
 
       // Save Access Token in memory instead of localStorage
       setAccessToken(accessToken);
@@ -134,9 +136,10 @@ export default function useAuth() {
   const userId = localStorage.getItem('userId');
   const name = localStorage.getItem('name');
   const roleName = localStorage.getItem('roleName');
+  const roleId = localStorage.getItem('roleId');
   const token = getAccessToken();
 
-  const user = userId ? { userId, name, roleName, token } : null;
+  const user = userId ? { userId, name, roleName, roleId, token } : null;
 
   const { login, isLoading: isLoginLoading, error: loginError } = useLogin();
   const { register, isLoading: isRegisterLoading, error: registerError } = useRegister();
@@ -412,5 +415,57 @@ export const useVerifyOTP = () => {
     isLoading,
     error,
     verifyOTP,
+  };
+};
+
+// Verify email code
+export const useVerifyEmailRegister = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const verifyEmailRegister = async (email, code) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await verifyEmailRegisterAPI({ email, code });
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    verifyEmailRegister,
+  };
+};
+
+// Resend verify email code
+export const useResendVerifyEmail = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const resendVerifyEmail = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await resendVerifyEmailAPI({ email });
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    resendVerifyEmail,
   };
 };

@@ -23,8 +23,8 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const { user, isLoading } = useGetUserId();
   
   // Role from API response (primary) or JWT-decoded localStorage (fallback)
-  const roleName = user?.data?.roleName || localStorage.getItem('roleName');
-  const isFacilityOwner = roleName === 'FacilityOwner';
+  const roleId = user?.data?.roleId?.toString() || localStorage.getItem('roleId');
+  const isFacilityOwner = roleId === '3';
 
   const sidebarItems = isFacilityOwner ? [
     { id: 'dashboard', label: 'Bảng thống kê', icon: LayoutDashboard, path: '/dashboard' },
@@ -33,6 +33,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   ] : [
     { id: 'dashboard', label: 'Bảng thống kê', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'teams', label: 'Quản lý Nhóm', icon: Users, path: '/groups' },
+    { id: 'matchmaking', label: 'Bắt kèo', icon: Flame, path: '/matchmaking' },
     { id: 'bookings', label: 'Đặt sân', icon: CalendarDays, path: '/bookings' },
     { id: 'sessions', label: 'Lịch chơi', icon: CalendarDays, path: '/schedules' },
     { id: 'profile', label: 'Cá nhân', icon: UserCircle, path: '/profile' },

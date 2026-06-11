@@ -17,6 +17,8 @@ import {
     getFacilityByIdAPI,
     createFacilityAPI,
     updateFacilityAPI,
+    getFilteredFacilitiesAPI,
+    getCourtStatusAPI
 } from '../api/bookings.api.js';
 
 
@@ -123,6 +125,7 @@ export const useCourt = () => {
     const [courts, setCourts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [courtStatuses, setCourtStatuses] = useState([]);
 
     // Fetch all courts for a facility
     const fetchCourts = useCallback(async (facilityId) => {
@@ -182,14 +185,31 @@ export const useCourt = () => {
         }
     }, [fetchCourts]);
 
+    // Fetch court status
+    const fetchCourtStatus = useCallback(async (facilityId, date) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await getCourtStatusAPI(facilityId, date);
+            setCourtStatuses(response.data);
+            return response.data;
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         courts,
+        courtStatuses,
         loading,
         error,
         fetchCourts,
         fetchCourtById,
         createCourt,
         updateCourt,
+        fetchCourtStatus,
     };
 };
 
@@ -306,6 +326,21 @@ export const useFacility = () => {
         }
     }, []);
 
+    // Fetch filtered facilities
+    const fetchFilteredFacilities = useCallback(async (params) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await getFilteredFacilitiesAPI(params);
+            setFacilities(response.data);
+            return response.data;
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     // Fetch facility by ID
     const fetchFacilityById = useCallback(async (facilityId) => {
         try {
@@ -355,6 +390,7 @@ export const useFacility = () => {
         loading,
         error,
         fetchFacilities,
+        fetchFilteredFacilities,
         fetchFacilityById,
         createFacility,
         updateFacility,

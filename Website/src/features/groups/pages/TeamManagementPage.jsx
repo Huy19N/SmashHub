@@ -22,11 +22,14 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useTeamDetail, useTeamMembers, useRemoveMember, useCreateInvite, useTeamSchedules, useDeleteSchedule, useAddScheduleParticipant, useRemoveScheduleParticipant } from '../hooks/useGroups';
 import { getScheduleParticipantsAPI } from '../api/groups.api.js';
+import { useMatchmaking } from '../hooks/useMatchmaking';
+import toast from 'react-hot-toast';
 import MemberCard from '../components/MemberCard';
 import TeamChat from '../components/TeamChat';
 import SessionCard from '../components/SessionCard';
 import CreateScheduleModal from '../components/CreateScheduleModal';
 import ParticipantsModal from '../components/ParticipantsModal';
+import MatchRequestsModal from '../components/MatchRequestsModal';
 import Sidebar from '../../../components/layout/Sidebar';
 import { getUserIdAPI } from '../../Auth/api/auth.api.js';
 
@@ -137,6 +140,7 @@ export default function TeamManagementPage() {
   const { addParticipant } = useAddScheduleParticipant();
   const { removeParticipant } = useRemoveScheduleParticipant();
   const { createInvite } = useCreateInvite();
+  const { createChallenge, challenges, fetchActiveChallenges } = useMatchmaking();
 
   const [activeTab, setActiveTab] = useState('members');
   const [removingMember, setRemovingMember] = useState(null);
@@ -152,6 +156,14 @@ export default function TeamManagementPage() {
   const [profileDetails, setProfileDetails] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
+  const [viewingChallengeId, setViewingChallengeId] = useState(null);
+
+  // Fetch active challenges when schedule tab is active
+  useEffect(() => {
+    if (activeTab === 'schedule') {
+      fetchActiveChallenges({});
+    }
+  }, [activeTab, fetchActiveChallenges]);
 
   // Load which schedules the current user has joined
   const currentUserId = localStorage.getItem('userId');
@@ -189,6 +201,20 @@ export default function TeamManagementPage() {
       alert(err || 'Không thể tham gia.');
     } finally {
       setVotingScheduleId(null);
+    }
+  };
+
+  const handleCreateChallenge = async (scheduleId) => {
+    const level = window.prompt('Nhập trình độ yêu cầu (VD: Trung bình, Khá):', 'Trung bình');
+    if (!level) return;
+    const message = window.prompt('Nhập lời nhắn (VD: Giao lưu vui vẻ, phí chia đôi):', 'Giao lưu vui vẻ, phí sân chia đôi.');
+    
+    try {
+      await createChallenge({ scheduleId, level, message: message || '' });
+      toast.success('Đã đăng kèo ghép đấu lên hệ thống thành công!');
+      fetchActiveChallenges({});
+    } catch (err) {
+      toast.error('Lỗi tạo kèo: ' + (err.message || 'Unknown'));
     }
   };
 
@@ -431,7 +457,9 @@ export default function TeamManagementPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {schedules.map(schedule => (
+                    {schedules.map(schedule => {
+                      const activeChallenge = challenges?.find(c => c.scheduleId === schedule.scheduleId);
+                      return (
                       <SessionCard
                         key={schedule.scheduleId}
                         session={schedule}
@@ -441,6 +469,9 @@ export default function TeamManagementPage() {
                         isVoting={votingScheduleId === schedule.scheduleId}
                         onVoteJoin={handleVoteJoin}
                         onVoteLeave={handleVoteLeave}
+                        onCreateChallenge={handleCreateChallenge}
+                        activeChallengeId={activeChallenge?.challengeId}
+                        onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
                         onDelete={async () => {
                           if (!window.confirm('Bạn có chắc muốn xóa lịch trình này?')) return;
                           try {
@@ -455,7 +486,7 @@ export default function TeamManagementPage() {
                         }}
                         onManage={() => setManageSchedule(schedule)}
                       />
-                    ))}
+                    )})}
                   </div>
                 )}
               </div>
@@ -717,6 +748,14 @@ export default function TeamManagementPage() {
         }}
       />
 
+      <MatchRequestsModal
+        isOpen={!!viewingChallengeId}
+        onClose={() => {
+          setViewingChallengeId(null);
+          fetchActiveChallenges({});
+        }}
+        challengeId={viewingChallengeId}
+      />
     </div>
   );
 }

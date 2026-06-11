@@ -30,7 +30,8 @@ export default function Navbar() {
   const isAuthenticated = !!user;
   const avatarInitials = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
-  const roleName = apiUser?.data?.roleName || user?.roleName || localStorage.getItem('roleName');
+  const roleId = apiUser?.data?.roleId?.toString() || user?.roleId || localStorage.getItem('roleId');
+  const isFacilityOwner = roleId === '3';
 
   const isHomePage = location.pathname === PATHS.HOME;
 
@@ -153,16 +154,26 @@ export default function Navbar() {
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border-dark bg-[#0d1117]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in z-50">
                       <div className="px-4 py-3 border-b border-border-dark">
                         <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">Hội viên SmashClub</p>
+                        <p className="text-xs text-gray-500 truncate">{isFacilityOwner ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}</p>
                       </div>
                       <div className="py-1">
-                        <button
-                          onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.GROUPS); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
-                        >
-                          <UsersRound className="h-4 w-4 text-primary" />
-                          Nhóm của tôi
-                        </button>
+                        {isFacilityOwner ? (
+                          <button
+                            onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.COURTS_MANAGEMENT); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                          >
+                            <Layers className="h-4 w-4 text-primary" />
+                            Quản lý sân
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.GROUPS); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"
+                          >
+                            <UsersRound className="h-4 w-4 text-primary" />
+                            Nhóm của tôi
+                          </button>
+                        )}
                         <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors font-label cursor-pointer"
@@ -265,11 +276,11 @@ export default function Navbar() {
                   <div>
                     <div className="text-white font-medium">{user.name}</div>
                     <div className="text-xs text-gray-500">
-                      {roleName === 'FacilityOwner' ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}
+                      {isFacilityOwner ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}
                     </div>
                   </div>
                 </div>
-                {roleName === 'FacilityOwner' ? (
+                {isFacilityOwner ? (
                   <button
                     onClick={() => navigate(PATHS.COURTS_MANAGEMENT)}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors font-label cursor-pointer"

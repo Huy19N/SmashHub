@@ -77,3 +77,15 @@ export const verifyOTPAPI = async (data) => {
   const response = await axios.post(`/email/verifycodenodelete`, data);
   return response.data;
 };
+
+// Verify email code API 
+export const verifyEmailRegisterAPI = async (data) => {
+  const response = await axios.post(`/auth/verify-registration`, data);
+  return response.data;
+};
+
+// resend verify email code API 
+export const resendVerifyEmailAPI = async (email) => {
+  const response = await axios.post(`/auth/resend-verification-code`, email);
+  return response.data;
+};
