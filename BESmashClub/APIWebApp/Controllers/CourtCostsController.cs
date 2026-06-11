@@ -106,4 +106,30 @@ public class CourtCostsController : ControllerBase
             return Forbid();
         }
     }
+
+    /// <summary>
+    /// Cập nhật hàng loạt bảng giá cho sân (yêu cầu phải kín giờ).
+    /// </summary>
+    [HttpPut("api/courts/{courtId:int}/costs/bulk")]
+    public async Task<IActionResult> BulkUpdateCourtCosts(int courtId, [FromBody] List<BulkCourtCostRequest> requests)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _courtCostService.BulkUpdateCourtCostsAsync(userId, courtId, requests);
+            return Ok(ApiResponse<List<CourtCostResponse>>.SuccessResponse(result, "Cập nhật bảng giá hàng loạt thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

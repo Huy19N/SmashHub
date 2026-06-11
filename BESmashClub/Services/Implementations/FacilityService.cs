@@ -162,11 +162,94 @@ public class FacilityService : IFacilityService
         return accounts.Select(a => MapToBankAccountResponse(a, facility.Name)).ToList();
     }
 
+    public async Task<List<OperatingHourResponse>> GetOperatingHoursAsync(int facilityId)
+    {
+        var context = _unitOfWork.Facilities.GetContext();
+        var hours = await context.Set<FacilityOperatingHour>()
+            .Where(oh => oh.FacilityId == facilityId)
+            .OrderBy(oh => oh.DayOfWeek)
+            .ToListAsync();
+
+        return hours.Select(oh => new OperatingHourResponse
+        {
+            OperatingHourId = oh.OperatingHourId,
+            FacilityId = oh.FacilityId,
+            DayOfWeek = oh.DayOfWeek,
+            OpenTime = oh.OpenTime.ToString("HH:mm"),
+            CloseTime = oh.CloseTime.ToString("HH:mm")
+        }).ToList();
+    }
+
+    public async Task<List<OperatingHourResponse>> UpdateOperatingHoursAsync(Guid userId, int facilityId, List<OperatingHourRequest> request)
+    {
+        var facility = await _unitOfWork.Facilities.GetByIdAsync(facilityId);
+        if (facility == null) throw new KeyNotFoundException("Không tìm thấy cơ sở.");
+        if (facility.OwnerId != userId) throw new UnauthorizedAccessException("Bạn không có quyền cập nhật giờ hoạt động.");
+
+        var context = _unitOfWork.Facilities.GetContext();
+        
+        var oldHours = await context.Set<FacilityOperatingHour>()
+            .Where(oh => oh.FacilityId == facilityId).ToListAsync();
+        context.Set<FacilityOperatingHour>().RemoveRange(oldHours);
+
+        var newHours = request.Select(r => new FacilityOperatingHour
+        {
+            FacilityId = facilityId,
+            DayOfWeek = r.DayOfWeek,
+            OpenTime = TimeOnly.Parse(r.OpenTime),
+            CloseTime = TimeOnly.Parse(r.CloseTime)
+        }).ToList();
+
+        await context.Set<FacilityOperatingHour>().AddRangeAsync(newHours);
+        await context.SaveChangesAsync();
+
+        return await GetOperatingHoursAsync(facilityId);
+    }
+
+    public async Task<List<SportPriceDetailResponse>> GetSportPricesAsync(int facilityId)
+    {
+        var context = _unitOfWork.Facilities.GetContext();
+        var courts = await context.Set<Court>()
+            .Include(c => c.Sport)
+            .Include(c => c.CourtCosts)
+            .Where(c => c.FacilityId == facilityId && c.IsActive && c.Sport != null)
+            .ToListAsync();
+
+        var result = new List<SportPriceDetailResponse>();
+        var grouped = courts.GroupBy(c => new { c.SportId, c.Sport.SportName });
+
+        foreach (var group in grouped)
+        {
+            var costs = group.SelectMany(c => c.CourtCosts).Where(cc => cc.IsActive).ToList();
+            
+            var uniqueDetails = costs
+                .GroupBy(cc => new { cc.StartTime, cc.EndTime, cc.Cost, cc.DurationMinutes })
+                .Select(g => new SportPriceDetailResponse.PriceDetail
+                {
+                    StartTime = g.Key.StartTime.ToString("HH:mm"),
+                    EndTime = g.Key.EndTime.ToString("HH:mm"),
+                    Cost = g.Key.Cost,
+                    DurationMinutes = g.Key.DurationMinutes
+                })
+                .OrderBy(d => d.StartTime).ThenBy(d => d.Cost)
+                .ToList();
+
+            result.Add(new SportPriceDetailResponse
+            {
+                SportId = group.Key.SportId,
+                SportName = group.Key.SportName,
+                PriceDetails = uniqueDetails
+            });
+        }
+
+        return result;
+    }
+
     #region Helpers
 
     private static FacilityResponse MapToResponse(Facility f)
     {
-        return new FacilityResponse
+        var response = new FacilityResponse
         {
             FacilityId = f.FacilityId,
             OwnerId = f.OwnerId,
@@ -180,6 +263,30 @@ public class FacilityService : IFacilityService
             Longitude = f.Longitude,
             CreatedAt = f.CreatedAt
         };
+
+        if (f.Courts != null && f.Courts.Any())
+        {
+            var sportGroups = f.Courts
+                .Where(c => c.IsActive && c.Sport != null && c.CourtCosts != null)
+                .GroupBy(c => new { c.SportId, c.Sport.SportName });
+
+            foreach (var group in sportGroups)
+            {
+                var costs = group.SelectMany(c => c.CourtCosts).Where(cc => cc.IsActive).ToList();
+                if (costs.Any())
+                {
+                    response.SportPrices.Add(new SportPriceSummary
+                    {
+                        SportId = group.Key.SportId,
+                        SportName = group.Key.SportName,
+                        MinPrice = costs.Min(cc => cc.Cost),
+                        MaxPrice = costs.Max(cc => cc.Cost)
+                    });
+                }
+            }
+        }
+
+        return response;
     }
 
     private static FacilityBankAccountResponse MapToBankAccountResponse(FacilityBankAccount a, string facilityName)
@@ -202,6 +309,7 @@ public class FacilityService : IFacilityService
         var context = _unitOfWork.Facilities.GetContext();
         var query = context.Set<Facility>()
             .Include(f => f.Owner)
+            .Include(f => f.Courts).ThenInclude(c => c.Sport)
             .Include(f => f.Courts).ThenInclude(c => c.CourtCosts)
             .Include(f => f.FacilityOperatingHours)
             .AsQueryable();

@@ -15,4 +15,7 @@ public interface IFacilityService
     Task<List<FacilityBankAccountResponse>> GetBankAccountsAsync(Guid userId, int facilityId);
     Task<List<FacilityResponse>> GetFilteredFacilitiesAsync(FacilityFilterRequest request);
     Task<List<CourtAvailabilityResponse>> GetCourtAvailabilitiesAsync(int facilityId, DateTime date);
+    Task<List<OperatingHourResponse>> GetOperatingHoursAsync(int facilityId);
+    Task<List<OperatingHourResponse>> UpdateOperatingHoursAsync(Guid userId, int facilityId, List<OperatingHourRequest> request);
+    Task<List<SportPriceDetailResponse>> GetSportPricesAsync(int facilityId);
 }

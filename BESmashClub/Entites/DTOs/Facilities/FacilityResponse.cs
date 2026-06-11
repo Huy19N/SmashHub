@@ -14,4 +14,5 @@ public class FacilityResponse
     public decimal? Longitude { get; set; }
     public double? DistanceKm { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public List<SportPriceSummary> SportPrices { get; set; } = new();
 }

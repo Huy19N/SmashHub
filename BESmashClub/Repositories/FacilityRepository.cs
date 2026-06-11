@@ -34,6 +34,7 @@ public class FacilityRepository : GenericRepository<Facility>
             .Include(f => f.Owner)
             .Include(f => f.Courts).ThenInclude(c => c.Sport)
             .Include(f => f.Courts).ThenInclude(c => c.Status)
+            .Include(f => f.Courts).ThenInclude(c => c.CourtCosts)
             .FirstOrDefaultAsync(f => f.FacilityId == facilityId);
     }
 

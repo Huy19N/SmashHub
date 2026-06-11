@@ -228,4 +228,52 @@ public class FacilitiesController : ControllerBase
             return Forbid();
         }
     }
+
+    /// <summary>
+    /// Lấy danh sách giờ hoạt động của cơ sở (public).
+    /// </summary>
+    [HttpGet("{facilityId:int}/operating-hours")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetOperatingHours(int facilityId)
+    {
+        var result = await _facilityService.GetOperatingHoursAsync(facilityId);
+        return Ok(ApiResponse<List<OperatingHourResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Cập nhật giờ hoạt động của cơ sở (chỉ chủ sở hữu).
+    /// </summary>
+    [HttpPut("{facilityId:int}/operating-hours")]
+    public async Task<IActionResult> UpdateOperatingHours(int facilityId, [FromBody] List<OperatingHourRequest> request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _facilityService.UpdateOperatingHoursAsync(userId, facilityId, request);
+            return Ok(ApiResponse<List<OperatingHourResponse>>.SuccessResponse(result, "Cập nhật giờ hoạt động thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Lấy bảng giá chi tiết theo từng bộ môn của cơ sở (public).
+    /// </summary>
+    [HttpGet("{facilityId:int}/sport-prices")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSportPrices(int facilityId)
+    {
+        var result = await _facilityService.GetSportPricesAsync(facilityId);
+        return Ok(ApiResponse<List<SportPriceDetailResponse>>.SuccessResponse(result));
+    }
 }

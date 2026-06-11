@@ -1,5 +1,6 @@
 using Entites.DTOs.Courts;
 using Entites.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Interfaces;
 
@@ -35,7 +36,7 @@ public class CourtService : ICourtService
             SportId = request.SportId,
             CourtName = request.CourtName,
             StatusId = 1, // Sẵn sàng
-            IsActive = true
+            IsActive = false // Mặc định false, phải thiết lập bảng giá kín giờ mới được active
         };
 
         await _unitOfWork.Courts.CreateAsync(court);
@@ -82,8 +83,14 @@ public class CourtService : ICourtService
         if (request.StatusId.HasValue)
             court.StatusId = request.StatusId.Value;
 
-        if (request.IsActive.HasValue)
+        if (request.IsActive.HasValue && request.IsActive.Value != court.IsActive)
+        {
+            if (request.IsActive.Value)
+            {
+                await ValidateCourtCostCoverageAsync(courtId, court.FacilityId);
+            }
             court.IsActive = request.IsActive.Value;
+        }
 
         await _unitOfWork.Courts.UpdateAsync(court);
 
@@ -120,6 +127,40 @@ public class CourtService : ICourtService
             StatusName = c.Status?.StatusName,
             IsActive = c.IsActive
         };
+    }
+
+    private async Task ValidateCourtCostCoverageAsync(int courtId, int facilityId)
+    {
+        var context = _unitOfWork.Courts.GetContext();
+        var hours = await context.Set<FacilityOperatingHour>()
+            .Where(oh => oh.FacilityId == facilityId)
+            .ToListAsync();
+
+        if (!hours.Any())
+            throw new InvalidOperationException("Cơ sở chưa cấu hình Giờ hoạt động. Phải cấu hình giờ trước khi kích hoạt sân.");
+
+        var minOpenTime = hours.Min(h => h.OpenTime);
+        var maxCloseTime = hours.Max(h => h.CloseTime);
+
+        var activeCosts = await context.Set<CourtCost>()
+            .Where(cc => cc.CourtId == courtId && cc.IsActive)
+            .OrderBy(cc => cc.StartTime)
+            .ToListAsync();
+
+        if (!activeCosts.Any())
+            throw new InvalidOperationException("Sân chưa có bảng giá nào. Vui lòng thiết lập bảng giá kín giờ hoạt động trước khi kích hoạt.");
+
+        if (activeCosts.First().StartTime > minOpenTime)
+            throw new InvalidOperationException($"Bảng giá của sân chưa bắt đầu từ {minOpenTime:HH:mm} (giờ mở cửa sớm nhất).");
+
+        if (activeCosts.Last().EndTime < maxCloseTime)
+            throw new InvalidOperationException($"Bảng giá của sân chưa kéo dài đến {maxCloseTime:HH:mm} (giờ đóng cửa muộn nhất).");
+
+        for (int i = 0; i < activeCosts.Count - 1; i++)
+        {
+            if (activeCosts[i].EndTime < activeCosts[i + 1].StartTime)
+                throw new InvalidOperationException($"Bảng giá của sân bị hở ở khoảng {activeCosts[i].EndTime:HH:mm} đến {activeCosts[i + 1].StartTime:HH:mm}. Bạn phải thiết lập giá kín giờ.");
+        }
     }
 
     #endregion
