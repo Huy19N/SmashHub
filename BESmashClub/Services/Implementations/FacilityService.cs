@@ -24,6 +24,8 @@ public class FacilityService : IFacilityService
             City = request.City,
             District = request.District,
             Address = request.Address,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
             CreatedAt = DateTime.Now
         };
 
@@ -73,6 +75,12 @@ public class FacilityService : IFacilityService
 
         if (request.Address != null)
             facility.Address = request.Address;
+
+        if (request.Latitude.HasValue)
+            facility.Latitude = request.Latitude.Value;
+
+        if (request.Longitude.HasValue)
+            facility.Longitude = request.Longitude.Value;
 
         await _unitOfWork.Facilities.UpdateAsync(facility);
 
