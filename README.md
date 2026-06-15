@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./smashclub_banner.png" alt="SmashClub Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <img src="./smashhub_banner.png" alt="SmashHub Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
 </p>
 
-# ⚡ SmashClub — The Ultimate Sports Connection Platform
+# ⚡ SmashHub — The Ultimate Sports Connection Platform
 
 <p align="center">
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
@@ -17,9 +17,9 @@
 
 ## 🌟 The Vision Pivot
 
-**SmashClub** has evolved! What started as a dedicated badminton booking application has expanded into a comprehensive, high-octane **Sports Connection Platform**. 
+**SmashHub** has evolved! What started as a dedicated badminton booking application has expanded into a comprehensive, high-octane **Sports Connection Platform**. 
 
-Our new mission is to **connect people through active play** and build a social networking environment tailored for modern sports enthusiasts. By moving beyond single-sport limitations, SmashClub bridges the gap between active athletes, coaches, and facility managers across a diverse suite of athletic disciplines:
+Our new mission is to **connect people through active play** and build a social networking environment tailored for modern sports enthusiasts. By moving beyond single-sport limitations, SmashHub bridges the gap between active athletes, coaches, and facility managers across a diverse suite of athletic disciplines:
 
 *   🏸 **Badminton** — High-speed rallies, community court shares, and ladder tournaments.
 *   ⚽ **Soccer** — 5-a-side and 11-a-side matches, pickup game coordinators, and field reservations.
@@ -28,31 +28,31 @@ Our new mission is to **connect people through active play** and build a social 
 *   🎾 **Tennis** — Singles or doubles matching, rank-based matchups, and court bookings.
 *   🏓 **Pickleball** — The fastest-growing court sport, introducing casual playgroups, equipment shares, and social nights.
 
-We are shifting the community mindset towards an **active, accessible, and highly social sports networking ecosystem**. Whether you want to find an extra player for a weekend run, challenge localized teams, or split the booking cost of your local court, SmashClub is your perfect match.
+We are shifting the community mindset towards an **active, accessible, and highly social sports networking ecosystem**. Whether you want to find an extra player for a weekend run, challenge localized teams, or split the booking cost of your local court, SmashHub is your perfect match.
 
 ---
 
 ## 🏗️ Monorepo Architecture
 
-SmashClub is structured as a scalable, developer-friendly monorepo designed to facilitate independent front-end, mobile, and back-end database operations. 
+SmashHub is structured as a scalable, developer-friendly monorepo designed to facilitate independent front-end, mobile, and back-end database operations. 
 
 ```
-SmashClub/
+SmashHub/
 ├── Website/                  # React 19 + Vite 8 + Tailwind v4 Web Frontend
 ├── AndroidApp/               # Planned Flutter Mobile Client
 ├── SportBooking_Database/    # SQL Server Schemas & Backend Foundation
 │   └── SportBooking_Database.sql
-├── smashclub_banner.png      # Core branding asset
+├── smashhub_banner.png      # Core branding asset
 └── README.md                 # Project root documentation
 ```
 
 ### Component Breakdown
 
-*   ### [Website](file:///d:/Github/SmashClub/Website)
+*   ### [Website](file:///d:/Github/SmashHub/Website)
     The client-facing web application. Engineered with **ReactJS 19 (Vite 8)** and **Tailwind CSS v4** featuring a modular *Feature-First Architecture*. It integrates a smooth **Light/Dark mode switcher** with custom transitions, beautiful Montserrat typography, responsive layouts, and modern **glassmorphism** visual aesthetics.
-*   ### [AndroidApp](file:///d:/Github/SmashClub/AndroidApp)
+*   ### [AndroidApp](file:///d:/Github/SmashHub/AndroidApp)
     The planned cross-platform mobile application. Leveraging **Flutter** to provide natively compiled, high-performance user experiences for iOS and Android, allowing players to coordinate sessions on the go.
-*   ### [SportBooking_Database](file:///d:/Github/SmashClub/SportBooking_Database.sql)
+*   ### [SportBooking_Database](file:///d:/Github/SmashHub/SportBooking_Database.sql)
     The robust structural database schema powered by **SQL Server 2022**. It features a comprehensive, multi-sport schema including:
     *   **User & Session Security**: Multi-role structures (User, Admin) and high-security Refresh Token integrations.
     *   **Multi-Sport Level Profiles**: User sports profiles that evaluate player levels (Beginner, Intermediate, Advanced) independently for each sport.
@@ -88,8 +88,8 @@ Make sure you have [Node.js](https://nodejs.org/) installed (version `18.x` or h
 
 1.  **Clone the project repository** (if you haven't already):
     ```bash
-    git clone https://github.com/Huy19N/SmashClub.git
-    cd SmashClub
+    git clone https://github.com/Huy19N/SmashHub.git
+    cd SmashHub
     ```
 
 2.  **Navigate into the Website folder**:
@@ -107,7 +107,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (version `18.x` or h
     npm run dev
     ```
 
-Once started, Vite will output the local development URL (typically `http://localhost:5173`). Open it in your browser to experience the SmashClub portal.
+Once started, Vite will output the local development URL (typically `http://localhost:5173`). Open it in your browser to experience the SmashHub portal.
 
 ### Highlights of the Current Frontend
 *   **Adaptive Styling:** Switch between Light & Dark modes to see form designs morph automatically with beautiful image crossfades.
@@ -128,5 +128,5 @@ Once started, Vite will output the local development URL (typically `http://loca
 ---
 
 <p align="center">
-  <sub>Developed with ❤️ by the SmashClub Engineering Team. Shifting communities towards active sports connection.</sub>
+  <sub>Developed with ❤️ by the SmashHub Engineering Team. Shifting communities towards active sports connection.</sub>
 </p>
