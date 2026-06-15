@@ -96,7 +96,7 @@ export default function Navbar() {
               <Flame className="h-5 w-5 text-emerald-600 dark:text-primary" />
             </div>
             <span className="text-xl font-bold tracking-tight font-display text-slate-900 dark:text-white">
-              SMASH<span className="text-emerald-600 dark:text-primary font-black">CLUB</span>
+              SMASH<span className="text-emerald-600 dark:text-primary font-black">HUB</span>
             </span>
           </Link>
 
@@ -152,7 +152,7 @@ export default function Navbar() {
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-xl shadow-xl overflow-hidden animate-fade-in z-50">
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">{isAdmin ? 'Quản trị viên SmashClub' : isFacilityOwner ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}</p>
+                        <p className="text-xs text-gray-500 truncate">{isAdmin ? 'Quản trị viên SmashHub' : isFacilityOwner ? 'Chủ sân SmashHub' : 'Hội viên SmashHub'}</p>
                       </div>
                       <div className="py-1">
                         {isAdmin ? (
@@ -282,7 +282,7 @@ export default function Navbar() {
                   <div>
                     <div className="text-gray-900 dark:text-white font-medium">{user.name}</div>
                     <div className="text-xs text-gray-500">
-                      {isAdmin ? 'Quản trị viên SmashClub' : isFacilityOwner ? 'Chủ sân SmashClub' : 'Hội viên SmashClub'}
+                      {isAdmin ? 'Quản trị viên SmashHub' : isFacilityOwner ? 'Chủ sân SmashHub' : 'Hội viên SmashHub'}
                     </div>
                   </div>
                 </div>

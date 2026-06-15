@@ -113,39 +113,39 @@ export default function PayoutManagement() {
             <table className="w-full border-separate border-spacing-y-3 text-left">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider font-label">
-                  <th className="py-3 px-4">Cơ sở / Chủ sân</th>
-                  <th className="py-3 px-4">Số tiền rút</th>
-                  <th className="py-3 px-4">Tài khoản thụ hưởng</th>
-                  <th className="py-3 px-4">Ngày yêu cầu</th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-center">Hành động</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Cơ sở / Chủ sân</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Số tiền rút</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Tài khoản thụ hưởng</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Ngày yêu cầu</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Trạng thái</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-sm">
                 {filteredRequests.map((r) => (
                   <tr key={r.payoutId} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-emerald-600 dark:text-primary shrink-0" />
                         <p className="font-semibold text-gray-800 dark:text-white">{r.facilityName}</p>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5">Chủ: {r.ownerName} ({r.ownerEmail})</p>
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-primary">
+                    <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-primary whitespace-nowrap">
                       {formatCurrency(r.amount)}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <p className="font-semibold text-gray-800 dark:text-white uppercase">{r.bankName}</p>
                       <p className="text-xs text-gray-500 font-label">{r.accountNumber}</p>
                       <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{r.accountHolder}</p>
                     </td>
-                    <td className="py-3.5 px-4 text-gray-500">
+                    <td className="py-3.5 px-4 text-gray-500 whitespace-nowrap">
                       <p className="text-xs">{new Date(r.requestedAt).toLocaleDateString('vi-VN')}</p>
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         {new Date(r.requestedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-label uppercase ${
                         r.statusId === 1
                           ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
@@ -156,7 +156,7 @@ export default function PayoutManagement() {
                         {r.statusName === 'Pending' ? 'Chờ duyệt' : r.statusName === 'Completed' ? 'Đã chuyển' : 'Bị từ chối'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       {r.statusId === 1 ? (
                         <div className="flex justify-center gap-2">
                           <button

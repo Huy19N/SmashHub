@@ -6,7 +6,7 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     // Check local storage
-    const storedTheme = localStorage.getItem('smashclub_theme');
+    const storedTheme = localStorage.getItem('smashhub_theme');
     if (storedTheme) return storedTheme;
     // Check system preference
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }) {
     // Add the current theme class
     root.classList.add(theme);
     // Persist to local storage
-    localStorage.setItem('smashclub_theme', theme);
+    localStorage.setItem('smashhub_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

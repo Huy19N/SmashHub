@@ -18,10 +18,10 @@ export default function SEOManager({
   title,
   description,
   canonical,
-  image = '/assets/smashclub-og.jpg',
+  image = '/assets/smashhub-og.jpg',
   type = 'website'
 }) {
-  const baseTitle = 'SmashClub';
+  const baseTitle = 'SmashHub';
   const siteTagline = 'Premium Badminton Club & Court Management';
 
   useEffect(() => {

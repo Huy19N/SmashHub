@@ -167,7 +167,7 @@ export default function GroupsDashboard() {
 
           {/* Main Content Footer */}
           <div className="mt-12 pt-6 border-t border-gray-200/60 dark:border-border-dark/40 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 font-label">
-            <span>© {new Date().getFullYear()} SmashClub. Mọi quyền được bảo lưu.</span>
+            <span>© {new Date().getFullYear()} SmashHub. Mọi quyền được bảo lưu.</span>
             <div className="flex gap-4">
               <span className="hover:text-emerald-600 dark:hover:text-primary cursor-pointer transition-colors">Bảo mật</span>
               <span className="hover:text-emerald-600 dark:hover:text-primary cursor-pointer transition-colors">Điều khoản</span>

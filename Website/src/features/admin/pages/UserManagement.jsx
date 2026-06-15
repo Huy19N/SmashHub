@@ -90,25 +90,25 @@ export default function UserManagement() {
             <table className="w-full border-separate border-spacing-y-3 text-left">
               <thead>
                 <tr className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider font-label px-4">
-                  <th className="py-3 px-4">Thông tin cá nhân</th>
-                  <th className="py-3 px-4">Số điện thoại</th>
-                  <th className="py-3 px-4">Vai trò (Role)</th>
-                  <th className="py-3 px-4">Ngày tham gia</th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-center">Hành động</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Thông tin cá nhân</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Số điện thoại</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Vai trò (Role)</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Ngày tham gia</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Trạng thái</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-sm">
                 {filteredUsers.map((u) => (
                   <tr key={u.userId} className="bg-white/60 dark:bg-gray-800/40 hover:bg-white dark:hover:bg-gray-700/60 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1 rounded-2xl group">
-                    <td className="py-4 px-5 rounded-l-2xl">
+                    <td className="py-4 px-5 rounded-l-2xl whitespace-nowrap">
                       <p className="font-extrabold text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">{u.fullName}</p>
                       <p className="text-xs text-gray-500 font-medium">{u.email}</p>
                     </td>
-                    <td className="py-3.5 px-4 text-gray-700 dark:text-gray-300">
+                    <td className="py-3.5 px-4 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                       {u.phoneNumber || <span className="text-gray-400 italic">Chưa cập nhật</span>}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <select
                         value={u.roleId}
                         onChange={(e) => handleRoleChange(u.userId, parseInt(e.target.value))}
@@ -121,10 +121,10 @@ export default function UserManagement() {
                         ))}
                       </select>
                     </td>
-                    <td className="py-3.5 px-4 text-gray-600 dark:text-gray-400">
+                    <td className="py-3.5 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                       {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-label uppercase ${u.isActive
                         ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                         : 'bg-red-500/10 text-red-600 border border-red-500/20'
@@ -142,7 +142,7 @@ export default function UserManagement() {
                         )}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(u.userId)}
                         className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold font-label cursor-pointer active:scale-95 transition-all border ${u.isActive

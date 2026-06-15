@@ -85,7 +85,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold font-display leading-tight dark:text-white">Bảng Thống Kê Tổng Quan</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Xem các chỉ số hiệu suất của hệ thống SmashClub.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Xem các chỉ số hiệu suất của hệ thống SmashHub.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-primary/10 border border-emerald-200 dark:border-primary/20 rounded-xl text-emerald-700 dark:text-primary text-xs font-bold font-label">
           <TrendingUp className="w-4 h-4" />
@@ -186,26 +186,26 @@ export default function AdminDashboard() {
           <table className="w-full border-separate border-spacing-y-3 text-left">
             <thead>
               <tr className="border-b border-gray-100 dark:border-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider font-label">
-                <th className="py-3 px-4">Khách hàng</th>
-                <th className="py-3 px-4">Cơ sở / Sân</th>
-                <th className="py-3 px-4">Thời gian</th>
-                <th className="py-3 px-4 text-right">Chi phí</th>
-                <th className="py-3 px-4">Hình thức</th>
-                <th className="py-3 px-4 text-center">Trạng thái</th>
+                <th className="py-3 px-4 whitespace-nowrap">Khách hàng</th>
+                <th className="py-3 px-4 whitespace-nowrap">Cơ sở / Sân</th>
+                <th className="py-3 px-4 whitespace-nowrap">Thời gian</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">Chi phí</th>
+                <th className="py-3 px-4 whitespace-nowrap">Hình thức</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-sm">
               {(stats.recentBookings || []).map((b) => (
                 <tr key={b.bookingId} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <p className="font-semibold text-gray-800 dark:text-white">{b.customerName}</p>
                     <p className="text-[10px] text-gray-400">{b.customerEmail}</p>
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <p className="font-semibold text-gray-800 dark:text-white">{b.courtName}</p>
                     <p className="text-xs text-gray-500">{b.facilityName}</p>
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <p className="text-gray-700 dark:text-gray-300">
                       {new Date(b.startTime).toLocaleDateString('vi-VN')}
                     </p>
@@ -213,10 +213,10 @@ export default function AdminDashboard() {
                       {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-gray-800 dark:text-white">
+                  <td className="py-3.5 px-4 text-right font-bold text-gray-800 dark:text-white whitespace-nowrap">
                     {formatCurrency(b.totalCost)}
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-label uppercase ${
                       b.bookingType === 'Online'
                         ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'

@@ -37,6 +37,7 @@ export default function HomePage() {
   const targetTime = useRef(0);
   const currentTime = useRef(0);
   const rafId = useRef(null);
+  const lastSeekTime = useRef(0);
 
   // 1. Asset Loader Loop
   useEffect(() => {
@@ -142,9 +143,11 @@ export default function HomePage() {
 
             // Only seek when the delta is meaningful (avoids flooding the decoder)
             const seekDelta = Math.abs(video.currentTime - currentTime.current);
-            if (seekDelta > 0.03) {
+            const now = performance.now();
+            if (!video.seeking && seekDelta > 0.05 && now - lastSeekTime.current > 60) {
               try {
                 video.currentTime = currentTime.current;
+                lastSeekTime.current = now;
               } catch (e) { }
             }
           }
@@ -228,7 +231,7 @@ export default function HomePage() {
     <>
       <SEOManager
         title="Immersive Badminton Club Experience"
-        description="Experience the thrill of SmashClub. Real-time cinematic video scroll synchronization highlights our premium courts."
+        description="Experience the thrill of SmashHub. Real-time cinematic video scroll synchronization highlights our premium courts."
       />
 
       {/* ---------------- PRELOADER ---------------- */}
@@ -239,7 +242,7 @@ export default function HomePage() {
           `}
         >
           <div className="flex items-center justify-between text-xs tracking-[0.2em] font-semibold text-gray-500 font-label">
-            <div>SMASHCLUB · EST. 2026</div>
+            <div>SMASHHUB · EST. 2026</div>
             <div className="hidden sm:block">COURT MANAGEMENT v1.0</div>
           </div>
           <div className="flex flex-col items-center justify-center space-y-6">
@@ -290,7 +293,7 @@ export default function HomePage() {
 
         {/* BRIGHT / DARK SHADER */}
         <div
-          className="fixed inset-0 bg-gradient-to-b from-white/15 via-white/5 to-white/20 dark:from-black/60 dark:via-black/40 dark:to-black/70 z-[2] pointer-events-none transition-colors duration-500"
+          className="fixed inset-0 bg-gradient-to-b from-white/5 via-white/10 to-white/5 dark:from-black/60 dark:via-black/40 dark:to-black/70 z-[2] pointer-events-none transition-colors duration-500"
           style={{ transform: 'translate3d(0,0,0)' }}
         />
 
@@ -381,7 +384,7 @@ export default function HomePage() {
                     <span className="text-gradient-primary italic">Tốc Độ & Sức Bật</span>
                   </h2>
                   <p data-aos="fade-up" data-aos-delay="200" className="text-slate-700 dark:text-gray-200 leading-relaxed text-base sm:text-lg font-sans drop-shadow-md">
-                    Mỗi sân tại SmashClub đều được trang bị hệ thống sàn chống sốc chuyên nghiệp và bề mặt PVC tiêu chuẩn. Hệ thống đèn LED dọc công suất cao mang đến tầm nhìn hoàn hảo mà không gây chói mắt.
+                    Mỗi sân tại SmashHub đều được trang bị hệ thống sàn chống sốc chuyên nghiệp và bề mặt PVC tiêu chuẩn. Hệ thống đèn LED dọc công suất cao mang đến tầm nhìn hoàn hảo mà không gây chói mắt.
                   </p>
                   <div data-aos="fade-up" data-aos-delay="300" className="grid grid-cols-2 gap-4 pt-4 font-label">
                     <div className="glass-panel p-4 rounded-2xl flex items-start gap-3 border border-slate-200/50 dark:border-white/10 shadow-lg">
@@ -482,7 +485,7 @@ export default function HomePage() {
                     Chinh Phục Sân Đấu?
                   </h2>
                   <p data-aos="fade-up" data-aos-delay="300" className="text-slate-600 dark:text-gray-300 text-sm sm:text-base max-w-lg mx-auto leading-relaxed font-sans">
-                    Tham gia SmashClub ngay hôm nay để đặt sân tự động, sắm trang bị chuyên nghiệp tại cửa hàng Pro Shop và thử sức trên bảng xếp hạng.
+                    Tham gia SmashHub ngay hôm nay để đặt sân tự động, sắm trang bị chuyên nghiệp tại cửa hàng Pro Shop và thử sức trên bảng xếp hạng.
                   </p>
 
                   <div data-aos="fade-up" data-aos-delay="400" className="flex flex-wrap justify-center gap-4 pt-4 font-label">
@@ -523,11 +526,11 @@ export default function HomePage() {
                 <Flame className="h-5 w-5 text-emerald-600 dark:text-primary" />
               </div>
               <span className="text-lg font-bold font-display text-gradient-primary">
-                SMASH<span className="text-slate-900 dark:text-white">CLUB</span>
+                SMASH<span className="text-slate-900 dark:text-white">HUB</span>
               </span>
             </div>
             <div className="text-slate-500 dark:text-gray-500 text-xs sm:text-sm text-center md:text-left">
-              © {new Date().getFullYear()} SmashClub. Mọi quyền được bảo lưu.
+              © {new Date().getFullYear()} SmashHub. Mọi quyền được bảo lưu.
             </div>
             <div className="flex gap-6 text-xs sm:text-sm text-slate-500 dark:text-gray-400">
               <a href="#privacy" className="hover:text-emerald-500 dark:hover:text-primary transition-colors">Chính sách bảo mật</a>
@@ -548,7 +551,7 @@ export default function HomePage() {
         >
           {/* Subtle Outer Glow */}
           <div className="absolute inset-0 rounded-full bg-emerald-500/15 dark:bg-primary/20 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 pointer-events-none" />
-          
+
           <div className="relative h-6 w-6 overflow-hidden flex items-center justify-center">
             {theme === 'dark' ? (
               <Sun className="h-6 w-6 text-amber-400 transform rotate-0 scale-100 transition-all duration-500 group-hover:rotate-45" />

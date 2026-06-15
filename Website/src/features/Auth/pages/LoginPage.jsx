@@ -61,12 +61,12 @@ export default function LoginPage() {
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-3 cursor-pointer group">
             <div className="relative flex items-center justify-center">
-              <input type="checkbox" className="appearance-none w-5 h-5 rounded-full border border-gray-500/50 bg-white/10 checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/30 transition-all cursor-pointer peer" />
-              <svg className="absolute w-3 h-3 text-bg-dark pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity duration-300" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <input type="checkbox" className="appearance-none w-5 h-5 rounded-full border border-slate-300 dark:border-gray-500/50 bg-slate-200 dark:bg-white/10 checked:bg-emerald-500 dark:checked:bg-primary checked:border-emerald-500 dark:checked:border-primary focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-primary/30 transition-all cursor-pointer peer" />
+              <svg className="absolute w-3 h-3 text-white dark:text-bg-dark pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity duration-300" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Ghi nhớ đăng nhập</span>
+            <span className="text-sm text-slate-800 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Ghi nhớ đăng nhập</span>
           </label>
           <button
             type="button"
@@ -77,13 +77,13 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 rounded-xl" isLoading={isLoading}>
+        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 rounded-full py-4.5" isLoading={isLoading}>
           Đăng Nhập
         </Button>
       </form>
 
       <div className="text-center pt-2">
-        <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
+        <p className="text-sm text-slate-700 dark:text-gray-300 transition-colors">
           Bạn chưa có tài khoản?{' '}
           <Link to={PATHS.REGISTER} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-extrabold transition-colors">
             Đăng ký ngay

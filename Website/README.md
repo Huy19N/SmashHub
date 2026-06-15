@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="./public/smashclub_banner.png" alt="SmashClub Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <img src="./public/smashhub_banner.png" alt="SmashHub Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
 </p>
 
-# ⚛️ SmashClub — Frontend Web Application
+# ⚛️ SmashHub — Frontend Web Application
 
-Welcome to the frontend application directory of **SmashClub**! This responsive web interface is engineered using the latest frontend standard to support our pivoted mission: **redefining social sports connection and player matching**.
+Welcome to the frontend application directory of **SmashHub**! This responsive web interface is engineered using the latest frontend standard to support our pivoted mission: **redefining social sports connection and player matching**.
 
 This client app serves as the digital gateway for athletes to explore active playgroups, book courts, build custom profiles, and discover local communities.
 
@@ -95,5 +95,5 @@ Vite will start the server and run on your machine (typically at `http://localho
 ---
 
 <p align="center">
-  <sub>Part of the ⚡ <b>SmashClub Monorepo</b>. Redefining active sports connection.</sub>
+  <sub>Part of the ⚡ <b>SmashHub Monorepo</b>. Redefining active sports connection.</sub>
 </p>

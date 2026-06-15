@@ -107,30 +107,6 @@ export default function SessionCard({
                 )}
                 {isDeleting ? 'Đang xóa...' : 'Xóa lịch trình'}
               </button>
-              
-              {activeChallengeId ? (
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    onViewMatchRequests?.(activeChallengeId);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors cursor-pointer font-label"
-                >
-                  <Users className="h-4 w-4" />
-                  Xem yêu cầu ghép đấu
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    onCreateChallenge?.(session.scheduleId);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors cursor-pointer font-label"
-                >
-                  <Flame className="h-4 w-4" />
-                  Tạo kèo ghép đấu
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -179,7 +155,7 @@ export default function SessionCard({
         {/* Card Footer: Vote button (left) and Manage link (right) */}
         <div className="flex items-center justify-between pt-1">
           {/* Vote buttons - left side */}
-          <div>
+          <div className="flex items-center gap-2">
             {hasJoined ? (
               <button
                 onClick={() => onVoteLeave?.(session.scheduleId)}
@@ -209,6 +185,26 @@ export default function SessionCard({
                 )}
                 {isFull ? 'Đã đầy' : 'Tham gia'}
               </button>
+            )}
+
+            {isLeader && (
+              activeChallengeId ? (
+                <button
+                  onClick={() => onViewMatchRequests?.(activeChallengeId)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20 transition-all cursor-pointer font-label"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Yêu cầu ghép
+                </button>
+              ) : (
+                <button
+                  onClick={() => onCreateChallenge?.(session.scheduleId, session.sportId)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 dark:hover:bg-amber-500/20 transition-all cursor-pointer font-label"
+                >
+                  <Flame className="h-3.5 w-3.5" />
+                  Bắt kèo
+                </button>
+              )
             )}
           </div>
 

@@ -289,6 +289,9 @@ export default function BookingsPage() {
                   <MapContainer
                     center={userLocation ? [userLocation.lat, userLocation.lng] : [10.762622, 106.660172]}
                     zoom={userLocation ? 13 : 11}
+                    minZoom={5}
+                    maxBounds={[[4.0, 100.0], [24.0, 122.0]]}
+                    maxBoundsViscosity={1.0}
                     style={{ height: '100%', width: '100%' }}
                   >
                     <TileLayer

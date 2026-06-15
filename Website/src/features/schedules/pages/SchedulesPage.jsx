@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { CalendarDays, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getTeamsAPI, getTeamSchedulesAPI, getScheduleParticipantsAPI, getTeamMembersAPI } from '../../groups/api/groups.api.js';
-import { useAddScheduleParticipant, useRemoveScheduleParticipant } from '../../groups/hooks/useGroups.js';
+import { useAddScheduleParticipant, useRemoveScheduleParticipant, useDeleteSchedule } from '../../groups/hooks/useGroups.js';
+import { useMatchmaking } from '../../groups/hooks/useMatchmaking.js';
+import toast from 'react-hot-toast';
 import SessionCard from '../../groups/components/SessionCard.jsx';
+import MatchRequestsModal from '../../groups/components/MatchRequestsModal.jsx';
 import ParticipantsModal from '../../groups/components/ParticipantsModal.jsx';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -18,9 +21,13 @@ export default function SchedulesPage() {
   const [votingScheduleId, setVotingScheduleId] = useState(null);
   const [manageSchedule, setManageSchedule] = useState(null);
   const [userTeams, setUserTeams] = useState([]);
+  const [deletingScheduleId, setDeletingScheduleId] = useState(null);
+  const [viewingChallengeId, setViewingChallengeId] = useState(null);
 
   const { addParticipant } = useAddScheduleParticipant();
   const { removeParticipant } = useRemoveScheduleParticipant();
+  const { deleteSchedule } = useDeleteSchedule();
+  const { createChallenge, challenges, fetchActiveChallenges } = useMatchmaking();
 
   const currentUserId = localStorage.getItem('userId');
 
@@ -118,6 +125,7 @@ export default function SchedulesPage() {
 
   useEffect(() => {
     fetchAllData();
+    fetchActiveChallenges({});
   }, [currentUserId]);
 
   const handleVoteJoin = async (scheduleId) => {
@@ -145,6 +153,27 @@ export default function SchedulesPage() {
       alert(err || 'Không thể hủy tham gia.');
     } finally {
       setVotingScheduleId(null);
+    }
+  };
+
+  const handleCreateChallenge = async (scheduleId, sportId, hostTeamId) => {
+    const level = window.prompt('Nhập trình độ yêu cầu (VD: Trung bình, Khá):', 'Trung bình');
+    if (level === null) return;
+    const message = window.prompt('Nhập lời nhắn (VD: Giao lưu vui vẻ, phí chia đôi):', 'Giao lưu vui vẻ, phí sân chia đôi.');
+    if (message === null) return;
+    
+    try {
+      await createChallenge({ 
+        scheduleId, 
+        hostTeamId,
+        sportId: sportId || 1,
+        isCostSplit: true,
+        message: message || '' 
+      });
+      toast.success('Đã đăng kèo ghép đấu lên hệ thống thành công!');
+      fetchActiveChallenges({});
+    } catch (err) {
+      toast.error('Lỗi tạo kèo: ' + (err.message || 'Unknown'));
     }
   };
 
@@ -204,16 +233,36 @@ export default function SchedulesPage() {
                     Nhóm: {schedule.hostTeamName}
                   </span>
                 </div>
-                <SessionCard
-                  session={schedule}
-                  isLeader={isTeamLeader(schedule.teamId)}
-                  hasJoined={joinedScheduleIds.has(schedule.scheduleId)}
-                  isVoting={votingScheduleId === schedule.scheduleId}
-                  onVoteJoin={handleVoteJoin}
-                  onVoteLeave={handleVoteLeave}
-                  onDelete={null} // Only delete from team management page
-                  onManage={() => setManageSchedule(schedule)}
-                />
+                {(() => {
+                  const activeChallenge = challenges?.find(c => c.scheduleId === schedule.scheduleId);
+                  return (
+                    <SessionCard
+                      session={schedule}
+                      isLeader={isTeamLeader(schedule.teamId)}
+                      isDeleting={deletingScheduleId === schedule.scheduleId}
+                      hasJoined={joinedScheduleIds.has(schedule.scheduleId)}
+                      isVoting={votingScheduleId === schedule.scheduleId}
+                      onVoteJoin={handleVoteJoin}
+                      onVoteLeave={handleVoteLeave}
+                      onCreateChallenge={(schedId, spId) => handleCreateChallenge(schedId, spId, schedule.teamId)}
+                      activeChallengeId={activeChallenge?.challengeId}
+                      onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
+                      onDelete={async () => {
+                        if (!window.confirm('Bạn có chắc muốn xóa lịch trình này?')) return;
+                        try {
+                          setDeletingScheduleId(schedule.scheduleId);
+                          await deleteSchedule(schedule.scheduleId);
+                          fetchAllData();
+                        } catch (err) {
+                          alert(err || 'Không thể xóa lịch trình.');
+                        } finally {
+                          setDeletingScheduleId(null);
+                        }
+                      }}
+                      onManage={() => setManageSchedule(schedule)}
+                    />
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -229,6 +278,15 @@ export default function SchedulesPage() {
         onSuccess={() => {
           fetchAllData(); // refresh
         }}
+      />
+      
+      <MatchRequestsModal
+        isOpen={!!viewingChallengeId}
+        onClose={() => {
+          setViewingChallengeId(null);
+          fetchActiveChallenges({});
+        }}
+        challengeId={viewingChallengeId}
       />
     </div>
   );

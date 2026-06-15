@@ -33,7 +33,7 @@ export default function MainLayout() {
       <footer className="border-t border-border-dark py-6 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-gray-500 text-xs sm:text-sm text-center md:text-left">
-            © {new Date().getFullYear()} SmashClub. All rights reserved. Built for 60fps performance and modular SEO scalability.
+            © {new Date().getFullYear()} SmashHub. All rights reserved. Built for 60fps performance and modular SEO scalability.
           </div>
           <div className="flex gap-6 text-xs sm:text-sm text-gray-400">
             <a href="#privacy" className="hover:text-primary transition-colors">Privacy Policy</a>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* SmashClub Design Palette (Image 2) */
+  /* SmashHub Design Palette (Image 2) */
   --color-primary: #0BE860;
   /* Vibrant Green */
   --color-primary-dark: #09c952;
@@ -187,3 +187,11 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+@media (max-width: 767px) {
+  .mobile-bottom-nav ~ main,
+  .mobile-bottom-nav ~ div,
+  .mobile-bottom-nav ~ .flex-1 {
+    padding-bottom: 76px !important;
+  }
+}

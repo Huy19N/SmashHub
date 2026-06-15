@@ -59,7 +59,7 @@ export default function RegisterPage() {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h1 className="text-4xl font-black font-display tracking-tight text-gray-900 dark:text-white transition-colors duration-500">Tham Gia SmashClub</h1>
+        <h1 className="text-4xl font-black font-display tracking-tight text-gray-900 dark:text-white transition-colors duration-500">Tham Gia SmashHub</h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 transition-colors duration-500">Tạo tài khoản của bạn ngay hôm nay</p>
       </div>
 
@@ -72,7 +72,7 @@ export default function RegisterPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Họ và Tên"
             placeholder="Nhập họ tên của bạn"
@@ -106,13 +106,13 @@ export default function RegisterPage() {
           required
         />
 
-        <Button type="submit" className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 rounded-xl" isLoading={isLoading}>
+        <Button type="submit" className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 rounded-full py-4.5" isLoading={isLoading}>
           Tạo tài khoản
         </Button>
       </form>
 
       <div className="text-center pt-2">
-        <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
+        <p className="text-sm text-slate-700 dark:text-gray-300 transition-colors">
           Bạn đã có tài khoản?{' '}
           <Link to={PATHS.LOGIN} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-extrabold transition-colors">
             Đăng nhập

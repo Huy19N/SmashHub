@@ -33,7 +33,7 @@ export default function AuthLayout() {
             <Flame className="h-6 w-6 text-primary animate-pulse-slow" />
           </div>
           <span className="text-2xl font-bold font-display tracking-wider text-white">
-            SMASH<span className="text-primary">CLUB</span>
+            SMASH<span className="text-primary">HUB</span>
           </span>
         </Link>
         <ThemeSwitcher />

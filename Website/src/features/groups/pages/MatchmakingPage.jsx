@@ -122,7 +122,14 @@ export default function MatchmakingPage() {
 
           {/* Map Area */}
           <div className="bg-white dark:bg-card-dark border border-gray-100 dark:border-border-dark rounded-2xl overflow-hidden shadow-sm h-[400px] relative z-0">
-             <MapContainer center={[10.762622, 106.660172]} zoom={11} style={{ height: '100%', width: '100%' }}>
+             <MapContainer 
+               center={[10.762622, 106.660172]} 
+               zoom={11} 
+               minZoom={5}
+               maxBounds={[[4.0, 100.0], [24.0, 122.0]]}
+               maxBoundsViscosity={1.0}
+               style={{ height: '100%', width: '100%' }}
+             >
                 <TileLayer
                   attribution='&copy; Google Maps'
                   url="https://mt1.google.com/vt/lyrs=m&hl=vi&gl=VN&x={x}&y={y}&z={z}"

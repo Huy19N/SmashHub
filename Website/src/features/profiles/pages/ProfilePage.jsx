@@ -586,7 +586,7 @@ export default function ProfilePage() {
                   {sportsNotDeclared.length === 0 && userSportProfiles.length > 0 && (
                     <div className="mt-6 p-4 bg-emerald-50/50 dark:bg-white/5 border border-emerald-150/40 dark:border-white/10 rounded-2xl text-[11px] text-emerald-800 dark:text-primary/95 font-label flex items-start gap-2.5 leading-relaxed">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>Bạn đã khai báo đầy đủ trình độ cho toàn bộ các môn thể thao hoạt động trong hệ thống SmashClub!</span>
+                      <span>Bạn đã khai báo đầy đủ trình độ cho toàn bộ các môn thể thao hoạt động trong hệ thống SmashHub!</span>
                     </div>
                   )}
                 </div>

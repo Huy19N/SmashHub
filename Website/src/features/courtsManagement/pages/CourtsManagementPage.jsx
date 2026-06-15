@@ -384,7 +384,7 @@ export default function CourtsManagementPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: CLB Cầu lông SmashClub Arena Q10"
+                  placeholder="Ví dụ: CLB Cầu lông SmashHub Arena Q10"
                   value={facName}
                   onChange={(e) => setFacName(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
@@ -499,6 +499,9 @@ export default function CourtsManagementPage() {
                   <MapContainer 
                     center={[10.762622, 106.660172]} 
                     zoom={13} 
+                    minZoom={5}
+                    maxBounds={[[4.0, 100.0], [24.0, 122.0]]}
+                    maxBoundsViscosity={1.0}
                     style={{ height: '100%', width: '100%' }}
                   >
                     <TileLayer

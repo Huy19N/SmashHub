@@ -1,5 +1,5 @@
 import { Send } from 'lucide-react';
-import bannerBg from '../../../assets/smashclub_banner.png';
+import bannerBg from '../../../assets/smashhub_banner.png';
 import founderTeamImg from '../../../assets/founder_team.jpg';
 
 export default function ContactSection() {
@@ -8,7 +8,7 @@ export default function ContactSection() {
       {/* Background Image Container with Gradient Fade */}
       <div className="absolute top-0 left-0 w-full h-[500px]">
         <div className="absolute inset-0 bg-white/40 dark:bg-black/60 z-10 transition-colors duration-500" />
-        <img src={bannerBg} alt="SmashClub Banner" className="w-full h-full object-cover object-top opacity-80" />
+        <img src={bannerBg} alt="SmashHub Banner" className="w-full h-full object-cover object-top opacity-80" />
         <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-white dark:from-[#0b0f19] to-transparent z-10 transition-colors duration-500" />
       </div>
 
@@ -30,7 +30,7 @@ export default function ContactSection() {
                   <label className="text-[10px] font-black text-slate-800 dark:text-white tracking-widest uppercase font-label">Họ tên</label>
                   <input
                     type="text"
-                    placeholder="Smashclub"
+                    placeholder="Smashhub"
                     className="w-full bg-slate-100 dark:bg-[#1a2130] border border-slate-200 dark:border-transparent rounded-2xl px-4 py-3.5 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 dark:focus:border-primary/50 focus:ring-1 focus:ring-emerald-500 dark:focus:ring-primary/50 transition-all duration-300 text-sm"
                   />
                 </div>
@@ -75,7 +75,7 @@ export default function ContactSection() {
           <div className="w-full md:w-[40%] hidden md:block relative bg-slate-100 dark:bg-[#1a2130] transition-colors duration-500">
             <img
               src={founderTeamImg}
-              alt="SmashClub Founder Team"
+              alt="SmashHub Founder Team"
               className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
             />
           </div>

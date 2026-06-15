@@ -3,7 +3,7 @@ export default function AboutPage() {
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pt-12">
       <div className="space-y-4">
         <h1 className="text-4xl font-bold font-display text-white tracking-tight">
-          Giới Thiệu <span className="text-primary">SmashClub</span>
+          Giới Thiệu <span className="text-primary">SmashHub</span>
         </h1>
         <p className="text-gray-400 text-lg max-w-2xl">
           Tìm hiểu về hành trình, cơ sở vật chất đẳng cấp thế giới và sứ mệnh nâng tầm trải nghiệm cầu lông của chúng tôi.

@@ -204,13 +204,20 @@ export default function TeamManagementPage() {
     }
   };
 
-  const handleCreateChallenge = async (scheduleId) => {
+  const handleCreateChallenge = async (scheduleId, sportId) => {
     const level = window.prompt('Nhập trình độ yêu cầu (VD: Trung bình, Khá):', 'Trung bình');
-    if (!level) return;
+    if (level === null) return;
     const message = window.prompt('Nhập lời nhắn (VD: Giao lưu vui vẻ, phí chia đôi):', 'Giao lưu vui vẻ, phí sân chia đôi.');
+    if (message === null) return;
     
     try {
-      await createChallenge({ scheduleId, level, message: message || '' });
+      await createChallenge({ 
+        scheduleId, 
+        hostTeamId: teamId,
+        sportId: sportId || team?.sportId || 1,
+        isCostSplit: true,
+        message: message || '' 
+      });
       toast.success('Đã đăng kèo ghép đấu lên hệ thống thành công!');
       fetchActiveChallenges({});
     } catch (err) {
@@ -495,7 +502,7 @@ export default function TeamManagementPage() {
 
           {/* Footer */}
           <div className="mt-12 pt-6 border-t border-gray-200/60 dark:border-border-dark/40 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 font-label">
-            <span>© {new Date().getFullYear()} SmashClub. Mọi quyền được bảo lưu.</span>
+            <span>© {new Date().getFullYear()} SmashHub. Mọi quyền được bảo lưu.</span>
             <div className="flex gap-4">
               <span className="hover:text-emerald-600 dark:hover:text-primary cursor-pointer transition-colors">Bảo mật</span>
               <span className="hover:text-emerald-600 dark:hover:text-primary cursor-pointer transition-colors">Điều khoản</span>
@@ -713,7 +720,7 @@ export default function TeamManagementPage() {
             {/* Modal Footer */}
             <div className="px-6 py-4 bg-gray-50 dark:bg-[#0c0f17] border-t border-gray-150 dark:border-border-dark/60 flex items-center justify-between shrink-0">
               <span className="text-[10px] text-gray-400 dark:text-gray-500 font-label">
-                Hệ cơ sở dữ liệu SmashClub
+                Hệ cơ sở dữ liệu SmashHub
               </span>
               <button
                 onClick={() => setViewingProfileMember(null)}
