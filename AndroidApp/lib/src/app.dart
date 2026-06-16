@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'shared/theme/app_theme.dart';
+import 'features/splash/presentation/splash_screen.dart';
+import 'features/auth/presentation/profile_screen.dart';
+
 
 class SmashHubApp extends StatelessWidget {
   const SmashHubApp({super.key});
@@ -10,9 +13,10 @@ class SmashHubApp extends StatelessWidget {
       title: 'SmashHub',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Default to dark mode for a premium sports aesthetic
+      themeMode:
+          ThemeMode.dark, // Default to dark mode for a premium sports aesthetic
       debugShowCheckedModeBanner: false,
-      home: const DashboardScreen(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -23,15 +27,12 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'SMASHHUB',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2),
         ),
         actions: [
           IconButton(
@@ -40,7 +41,13 @@ class DashboardScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.person_outline),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -59,9 +66,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Ready for your next smash session?',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 24),
 
@@ -172,7 +177,13 @@ class DashboardScreen extends StatelessWidget {
                   title: 'Auth Status',
                   subtitle: 'Manage profile',
                   icon: Icons.fingerprint_rounded,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -200,11 +211,7 @@ class DashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                icon,
-                color: theme.colorScheme.primary,
-                size: 28,
-              ),
+              Icon(icon, color: theme.colorScheme.primary, size: 28),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
