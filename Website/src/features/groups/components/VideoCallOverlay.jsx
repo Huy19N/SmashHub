@@ -41,8 +41,6 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
         connection = new signalR.HubConnectionBuilder()
           .withUrl(hubUrl, {
             accessTokenFactory: () => getAccessToken(),
-            skipNegotiation: true,
-            transport: signalR.HttpTransportType.WebSockets,
           })
           .withAutomaticReconnect()
           .build();

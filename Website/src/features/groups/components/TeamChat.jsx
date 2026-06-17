@@ -62,15 +62,13 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
     let cancelled = false;
     let startPromise = null;
 
-    // Build the hub URL — backend is on the same host minus /api
-    const apiUrl = import.meta.env.VITE_API_URL; // e.g. https://localhost:7020/api
-    const hubUrl = apiUrl.replace(/\/api\/?$/, '') + '/hub/chat';
+    // Build the hub URL — prioritize the specific env variable, otherwise fallback to API URL
+    const hubUrl = import.meta.env.VITE_CHAT_HUB_URL || (import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') + '/hub/chat');
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => getAccessToken(),
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets,
+        // Removed skipNegotiation and transport to allow SignalR to fallback to LongPolling/SSE if WebSockets fail through proxy
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning) // Will log warnings/errors internally
