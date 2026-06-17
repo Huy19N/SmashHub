@@ -22,7 +22,7 @@ export default function DashboardPage() {
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
       <Sidebar activeMenu="dashboard" />
 
-      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar">
+      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white font-display tracking-tight">

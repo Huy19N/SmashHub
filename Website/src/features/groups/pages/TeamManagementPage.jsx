@@ -327,7 +327,7 @@ export default function TeamManagementPage() {
         <Sidebar onCreateGroup={() => navigate('/groups')} activeMenu="teams" />
 
         {/* ── Right Content Area ── */}
-        <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col justify-between">
+        <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col justify-between animate-page">
           <div className="space-y-8">
 
             {/* Back Link to Groups list */}
@@ -360,13 +360,13 @@ export default function TeamManagementPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-border-dark/60">
+            <div className="flex border-b border-gray-200 dark:border-border-dark/60 gap-1">
               {contentTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-5 py-3 text-sm font-bold transition-all border-b-2 font-label cursor-pointer ${activeTab === tab.id
-                    ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary'
+                  className={`px-5 py-3 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${activeTab === tab.id
+                    ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary bg-emerald-500/5 dark:bg-primary/5 rounded-t-xl'
                     : 'text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-white'
                     }`}
                 >
@@ -376,128 +376,131 @@ export default function TeamManagementPage() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'members' && (
-              <>
-                {members.length === 0 ? (
-                  <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 max-w-lg mx-auto">
-                    <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
-                    <div className="space-y-1">
-                      <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Chưa có thành viên nào</h3>
+            <div key={activeTab} className="animate-tab-panel">
+              {activeTab === 'members' && (
+                <>
+                  {members.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 max-w-lg mx-auto animate-fade-in">
+                      <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Chưa có thành viên nào</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
+                          Hãy mời bạn bè tham gia nhóm của bạn.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleAddMember}
+                        className="mt-4 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-all font-label cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" /> Thêm thành viên
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {members.map((m) => (
+                        <MemberCard
+                          key={m.userId}
+                          member={m}
+                          onRemove={(member) => setRemovingMember(member)}
+                          onViewProfile={(member) => handleViewProfile(member)}
+                        />
+                      ))}
+
+                      {/* Add Member Card */}
+                      <button
+                        onClick={handleAddMember}
+                        className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-border-dark/60 bg-white/50 dark:bg-card-dark/10 hover:border-emerald-500/40 dark:hover:border-primary/30 hover:bg-emerald-50/30 dark:hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer group/add"
+                      >
+                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-emerald-100 dark:group-hover/add:bg-primary/10 transition-colors">
+                          <Plus className="h-5 w-5 text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors" />
+                        </div>
+                        <span className="mt-3 text-sm font-semibold text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors font-label">
+                          Thêm thành viên mới
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeTab === 'chat' && (
+                <div className="animate-fade-in">
+                  <TeamChat teamId={teamId} teamName={team.teamName} memberCount={members?.length || team.members?.length || 0} />
+                </div>
+              )}
+
+              {activeTab === 'schedule' && (
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display">Lịch trình nhóm</h3>
+                      <p className="text-sm text-gray-500 font-label">Xem và tham gia các buổi chơi của nhóm.</p>
+                    </div>
+                    {isLeader && (
+                      <button
+                        onClick={() => {
+                          setScheduleModalKey(prev => prev + 1);
+                          setShowCreateSchedule(true);
+                        }}
+                        className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all font-label flex items-center gap-2 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Tạo lịch trình
+                      </button>
+                    )}
+                  </div>
+
+                  {schedulesLoading ? (
+                    <div className="text-center py-20">
+                      <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto mb-4" />
+                      <p className="text-sm text-gray-500">Đang tải lịch trình...</p>
+                    </div>
+                  ) : schedules.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 animate-fade-in">
+                      <CalendarDays className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Chưa có lịch trình nào</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
-                        Hãy mời bạn bè tham gia nhóm của bạn.
+                        {isLeader ? 'Nhấn nút tạo lịch trình ở góc trên để bắt đầu giao lưu.' : 'Đợi trưởng nhóm tạo kèo giao lưu nhé.'}
                       </p>
                     </div>
-                    <button
-                      onClick={handleAddMember}
-                      className="mt-4 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-all font-label cursor-pointer inline-flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" /> Thêm thành viên
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {members.map((m) => (
-                      <MemberCard
-                        key={m.userId}
-                        member={m}
-                        onRemove={(member) => setRemovingMember(member)}
-                        onViewProfile={(member) => handleViewProfile(member)}
-                      />
-                    ))}
-
-                    {/* Add Member Card */}
-                    <button
-                      onClick={handleAddMember}
-                      className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-border-dark/60 bg-white/50 dark:bg-card-dark/10 hover:border-emerald-500/40 dark:hover:border-primary/30 hover:bg-emerald-50/30 dark:hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer group/add"
-                    >
-                      <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-emerald-100 dark:group-hover/add:bg-primary/10 transition-colors">
-                        <Plus className="h-5 w-5 text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors" />
-                      </div>
-                      <span className="mt-3 text-sm font-semibold text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors font-label">
-                        Thêm thành viên mới
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {activeTab === 'chat' && (
-              <div className="animate-fade-in">
-                <TeamChat teamId={teamId} teamName={team.teamName} memberCount={members?.length || team.members?.length || 0} />
-              </div>
-            )}
-
-            {activeTab === 'schedule' && (
-              <div className="animate-fade-in space-y-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display">Lịch trình nhóm</h3>
-                    <p className="text-sm text-gray-500 font-label">Xem và tham gia các buổi chơi của nhóm.</p>
-                  </div>
-                  {isLeader && (
-                    <button
-                      onClick={() => {
-                        setScheduleModalKey(prev => prev + 1);
-                        setShowCreateSchedule(true);
-                      }}
-                      className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all font-label flex items-center gap-2 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Tạo lịch trình
-                    </button>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+                      {schedules.map(schedule => {
+                        const activeChallenge = challenges?.find(c => c.scheduleId === schedule.scheduleId);
+                        return (
+                          <SessionCard
+                            key={schedule.scheduleId}
+                            session={schedule}
+                            isLeader={isLeader}
+                            isDeleting={deletingScheduleId === schedule.scheduleId}
+                            hasJoined={joinedScheduleIds.has(schedule.scheduleId)}
+                            isVoting={votingScheduleId === schedule.scheduleId}
+                            onVoteJoin={handleVoteJoin}
+                            onVoteLeave={handleVoteLeave}
+                            onCreateChallenge={handleCreateChallenge}
+                            activeChallengeId={activeChallenge?.challengeId}
+                            onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
+                            onDelete={async () => {
+                              if (!window.confirm('Bạn có chắc muốn xóa lịch trình này?')) return;
+                              try {
+                                setDeletingScheduleId(schedule.scheduleId);
+                                await deleteSchedule(schedule.scheduleId);
+                                refetchSchedules();
+                              } catch (err) {
+                                alert(err || 'Không thể xóa lịch trình.');
+                              } finally {
+                                setDeletingScheduleId(null);
+                              }
+                            }}
+                            onManage={() => setManageSchedule(schedule)}
+                          />
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
-
-                {schedulesLoading ? (
-                  <div className="text-center py-20">
-                    <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto mb-4" />
-                    <p className="text-sm text-gray-500">Đang tải lịch trình...</p>
-                  </div>
-                ) : schedules.length === 0 ? (
-                  <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4">
-                    <CalendarDays className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Chưa có lịch trình nào</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
-                      {isLeader ? 'Nhấn nút tạo lịch trình ở góc trên để bắt đầu giao lưu.' : 'Đợi trưởng nhóm tạo kèo giao lưu nhé.'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {schedules.map(schedule => {
-                      const activeChallenge = challenges?.find(c => c.scheduleId === schedule.scheduleId);
-                      return (
-                      <SessionCard
-                        key={schedule.scheduleId}
-                        session={schedule}
-                        isLeader={isLeader}
-                        isDeleting={deletingScheduleId === schedule.scheduleId}
-                        hasJoined={joinedScheduleIds.has(schedule.scheduleId)}
-                        isVoting={votingScheduleId === schedule.scheduleId}
-                        onVoteJoin={handleVoteJoin}
-                        onVoteLeave={handleVoteLeave}
-                        onCreateChallenge={handleCreateChallenge}
-                        activeChallengeId={activeChallenge?.challengeId}
-                        onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
-                        onDelete={async () => {
-                          if (!window.confirm('Bạn có chắc muốn xóa lịch trình này?')) return;
-                          try {
-                            setDeletingScheduleId(schedule.scheduleId);
-                            await deleteSchedule(schedule.scheduleId);
-                            refetchSchedules();
-                          } catch (err) {
-                            alert(err || 'Không thể xóa lịch trình.');
-                          } finally {
-                            setDeletingScheduleId(null);
-                          }
-                        }}
-                        onManage={() => setManageSchedule(schedule)}
-                      />
-                    )})}
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Footer */}

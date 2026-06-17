@@ -300,7 +300,7 @@ export default function CourtsManagementPage() {
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
       <Sidebar activeMenu="courts-management" />
 
-      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar">
+      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -317,7 +317,7 @@ export default function CourtsManagementPage() {
             <div className="flex items-center bg-gray-150 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-1 rounded-2xl gap-1">
               <button
                 onClick={() => setActiveTab('list')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
                   activeTab === 'list'
                     ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -327,7 +327,7 @@ export default function CourtsManagementPage() {
               </button>
               <button
                 onClick={() => setActiveTab('add-court')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
                   activeTab === 'add-court'
                     ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -354,7 +354,9 @@ export default function CourtsManagementPage() {
             <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mb-4" />
             <p className="text-sm text-gray-500 dark:text-gray-400 font-label">Đang tải danh sách cơ sở...</p>
           </div>
-        ) : facilities.length === 0 || activeTab === 'add-facility' ? (
+        ) : (
+          <div key={activeTab} className="animate-tab-panel">
+            {facilities.length === 0 || activeTab === 'add-facility' ? (
           /* SECTION: Create first Facility form */
           <div className="max-w-xl mx-auto bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 sm:p-8 shadow-sm">
             <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-100 dark:border-border-dark/40">
@@ -843,6 +845,8 @@ export default function CourtsManagementPage() {
                 })}
               </div>
             )}
+          </div>
+        )}
           </div>
         )}
 

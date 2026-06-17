@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId } from '../../features/Auth/hooks/useAuth';
+import { getAvatarUrl } from '../../utils/avatarUtils';
 
 export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const navigate = useNavigate();
@@ -82,8 +83,24 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
               <div className="h-10 w-full bg-gray-100 dark:bg-white/5 rounded-xl animate-pulse" />
             ) : user?.data?.fullName && (
               <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-white/5 border border-emerald-100/50 dark:border-white/10 shadow-sm transition-colors hover:bg-emerald-50 dark:hover:bg-white/10">
-                <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-primary/20 flex items-center justify-center shrink-0">
-                  <UserCircle className="w-4 h-4 text-emerald-600 dark:text-primary" />
+                <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 bg-emerald-100 dark:bg-primary/20 flex items-center justify-center relative">
+                  {user?.data?.avatarFileId ? (
+                    <img
+                      src={getAvatarUrl(user.data.avatarFileId)}
+                      alt={user.data.fullName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    style={{ display: user?.data?.avatarFileId ? 'none' : 'flex' }}
+                    className="w-full h-full items-center justify-center text-emerald-600 dark:text-primary"
+                  >
+                    <UserCircle className="w-4 h-4" />
+                  </div>
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider font-label leading-none mb-1">
@@ -118,8 +135,8 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
                 <button
                   key={item.id}
                   onClick={() => item.path && navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-150 font-label cursor-pointer ${isActive
-                    ? 'text-emerald-800 bg-emerald-50/70 border-l-4 border-emerald-600 dark:text-primary dark:bg-primary/5 dark:border-emerald-500'
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:translate-x-1.5 active:scale-95 font-label cursor-pointer ${isActive
+                    ? 'text-emerald-800 bg-emerald-50/70 border-l-4 border-emerald-600 dark:text-primary dark:bg-primary/10 dark:border-primary shadow-[0_4px_12px_rgba(11,232,96,0.08)]'
                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                     }`}
                 >
@@ -164,10 +181,10 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
             <button
               key={item.id}
               onClick={() => item.path && navigate(item.path)}
-              className="flex-1 flex flex-col items-center justify-center transition-all cursor-pointer"
+              className="flex-1 flex flex-col items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer"
             >
               <div className={`flex flex-col items-center justify-center w-full max-w-[68px] py-1 rounded-2xl transition-all duration-200 ${isActive
-                  ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary font-bold scale-[1.03]'
+                  ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary font-bold scale-[1.03] shadow-[0_0_12px_rgba(11,232,96,0.1)]'
                   : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}>
                 <item.icon className="h-5 w-5" />

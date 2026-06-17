@@ -72,7 +72,7 @@ export default function AdminLayout() {
                 <button
                   key={item.id}
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 font-label cursor-pointer active:scale-95 border ${isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:translate-x-1.5 active:scale-95 font-label cursor-pointer border ${isActive
                     ? 'text-emerald-700 bg-emerald-500/10 border-emerald-500/20 dark:text-primary dark:bg-primary/10 dark:border-primary/20 shadow-sm'
                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 border-transparent dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                     }`}
@@ -121,11 +121,11 @@ export default function AdminLayout() {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className="flex-1 flex flex-col items-center justify-center transition-all cursor-pointer"
+              className="flex-1 flex flex-col items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer"
             >
               <div className={`flex flex-col items-center justify-center w-full max-w-[68px] py-1 rounded-2xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary font-bold scale-[1.03]'
+                  ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary font-bold scale-[1.03] shadow-[0_0_12px_rgba(11,232,96,0.1)]'
                   : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
               }`}>
                 <item.icon className="h-5 w-5" />
@@ -159,7 +159,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Nested Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-[#0e1322]">
+        <div key={location.pathname} className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-[#0e1322] animate-page">
           <Outlet />
         </div>
       </main>

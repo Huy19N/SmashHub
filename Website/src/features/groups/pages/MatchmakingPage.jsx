@@ -105,7 +105,7 @@ export default function MatchmakingPage() {
     <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300">
       <Sidebar activeMenu="matchmaking" />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto animate-page">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 space-y-10">
           
           {/* Header */}

@@ -80,7 +80,7 @@ export default function GroupsDashboard() {
         <Sidebar onCreateGroup={() => setShowCreateModal(true)} activeMenu="teams" />
 
         {/* ── Right Content Area ── */}
-        <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col justify-between">
+        <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col justify-between animate-page">
           <div className="space-y-8">
 
             {/* Header Area */}
@@ -104,11 +104,11 @@ export default function GroupsDashboard() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-border-dark/60">
+            <div className="flex border-b border-gray-200 dark:border-border-dark/60 gap-1">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`px-5 py-3 text-sm font-bold transition-all border-b-2 font-label cursor-pointer ${activeTab === 'all'
-                  ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary'
+                className={`px-5 py-3 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${activeTab === 'all'
+                  ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary bg-emerald-500/5 dark:bg-primary/5 rounded-t-xl'
                   : 'text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-white'
                   }`}
               >
@@ -116,8 +116,8 @@ export default function GroupsDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-5 py-3 text-sm font-bold transition-all border-b-2 font-label cursor-pointer ${activeTab === 'active'
-                  ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary'
+                className={`px-5 py-3 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${activeTab === 'active'
+                  ? 'text-emerald-700 border-emerald-600 dark:text-primary dark:border-primary bg-emerald-500/5 dark:bg-primary/5 rounded-t-xl'
                   : 'text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-white'
                   }`}
               >
@@ -126,43 +126,45 @@ export default function GroupsDashboard() {
             </div>
 
             {/* Teams Grid */}
-            {!teams || teams.length === 0 ? (
-              <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 max-w-lg mx-auto">
-                <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Bạn chưa tham gia nhóm nào</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
-                    Bạn có thể tự tạo một nhóm mới hoặc tìm kiếm các nhóm có sẵn để tham gia.
-                  </p>
+            <div key={activeTab} className="animate-tab-panel">
+              {!teams || teams.length === 0 ? (
+                <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 max-w-lg mx-auto">
+                  <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Bạn chưa tham gia nhóm nào</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
+                      Bạn có thể tự tạo một nhóm mới hoặc tìm kiếm các nhóm có sẵn để tham gia.
+                    </p>
+                  </div>
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-all font-label cursor-pointer inline-flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" /> Tạo nhóm mới
+                    </button>
+                    <button
+                      onClick={() => console.log('Navigate to search')}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 dark:bg-transparent dark:border-border-dark dark:text-gray-300 dark:hover:bg-white/5 transition-all font-label cursor-pointer inline-flex items-center justify-center gap-2"
+                    >
+                      <Search className="h-4 w-4" /> Tìm & Tham gia nhóm
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-all font-label cursor-pointer inline-flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" /> Tạo nhóm mới
-                  </button>
-                  <button
-                    onClick={() => console.log('Navigate to search')}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 dark:bg-transparent dark:border-border-dark dark:text-gray-300 dark:hover:bg-white/5 transition-all font-label cursor-pointer inline-flex items-center justify-center gap-2"
-                  >
-                    <Search className="h-4 w-4" /> Tìm & Tham gia nhóm
-                  </button>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {displayTeams.map((team) => (
+                    <TeamCard
+                      key={team.teamId}
+                      team={team}
+                      onManage={handleManageTeam}
+                      onEdit={(t) => setEditingTeam(t)}
+                      onDelete={(t) => setDeletingTeam(t)}
+                    />
+                  ))}
                 </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {displayTeams.map((team) => (
-                  <TeamCard
-                    key={team.teamId}
-                    team={team}
-                    onManage={handleManageTeam}
-                    onEdit={(t) => setEditingTeam(t)}
-                    onDelete={(t) => setDeletingTeam(t)}
-                  />
-                ))}
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Main Content Footer */}

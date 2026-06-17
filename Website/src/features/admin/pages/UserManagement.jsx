@@ -7,10 +7,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAdminUsers } from '../hooks/useAdmin';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
+import { getAllUserByIdAPI } from '../../profiles/api/profiles.api.js';
 import toast from 'react-hot-toast';
 export default function UserManagement() {
   const { users, isLoading, fetchUsers, changeRole, toggleStatus } = useAdminUsers();
   const [searchQuery, setSearchQuery] = useState('');
+  const [avatars, setAvatars] = useState({});
   const [roleFilter, setRoleFilter] = useState('all');
   const roles = [
     { id: 1, name: 'Admin' },
@@ -18,9 +21,31 @@ export default function UserManagement() {
     { id: 3, name: 'FacilityOwner' }
   ];
 
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    if (users.length > 0) {
+      users.forEach(async (u) => {
+        if (!u.avatarFileId && avatars[u.userId] === undefined) {
+          try {
+            const res = await getAllUserByIdAPI(u.userId);
+            setAvatars(prev => ({ ...prev, [u.userId]: res.data?.avatarFileId || null }));
+          } catch (e) {
+            setAvatars(prev => ({ ...prev, [u.userId]: null }));
+          }
+        }
+      });
+    }
+  }, [users]);
 
   // Handle role change
   const handleRoleChange = async (userId, newRoleId) => {
@@ -90,6 +115,7 @@ export default function UserManagement() {
             <table className="w-full border-separate border-spacing-y-3 text-left">
               <thead>
                 <tr className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider font-label px-4">
+                  <th className="py-3 px-4 whitespace-nowrap">Ảnh đại diện</th>
                   <th className="py-3 px-4 whitespace-nowrap">Thông tin cá nhân</th>
                   <th className="py-3 px-4 whitespace-nowrap">Số điện thoại</th>
                   <th className="py-3 px-4 whitespace-nowrap">Vai trò (Role)</th>
@@ -101,7 +127,26 @@ export default function UserManagement() {
               <tbody className="divide-y divide-gray-100 dark:divide-white/5 text-sm">
                 {filteredUsers.map((u) => (
                   <tr key={u.userId} className="bg-white/60 dark:bg-gray-800/40 hover:bg-white dark:hover:bg-gray-700/60 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1 rounded-2xl group">
-                    <td className="py-4 px-5 rounded-l-2xl whitespace-nowrap">
+                    <td className="py-3 px-4 rounded-l-2xl whitespace-nowrap">
+                      {u.avatarFileId || avatars[u.userId] ? (
+                        <img
+                          src={getAvatarUrl(u.avatarFileId || avatars[u.userId])}
+                          alt={u.fullName}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-white/10"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        style={{ display: u.avatarFileId || avatars[u.userId] ? 'none' : 'flex' }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 items-center justify-center text-white font-bold text-xs select-none"
+                      >
+                        {getInitials(u.fullName)}
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 whitespace-nowrap">
                       <p className="font-extrabold text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">{u.fullName}</p>
                       <p className="text-xs text-gray-500 font-medium">{u.email}</p>
                     </td>

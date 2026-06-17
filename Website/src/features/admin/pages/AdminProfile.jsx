@@ -5,14 +5,19 @@ import {
   Phone,
   Lock,
   Save,
-  ShieldAlert
+  ShieldAlert,
+  Loader2,
+  Edit3
 } from 'lucide-react';
 import axios from '../../../config/axios';
 import toast from 'react-hot-toast';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
+import { useUploadUserAvatar } from '../../profiles/hooks/useProfiles';
 
 export default function AdminProfile() {
-  const [profile, setProfile] = useState({ fullName: '', email: '', phoneNumber: '', roleName: '' });
+  const [profile, setProfile] = useState({ fullName: '', email: '', phoneNumber: '', roleName: '', avatarFileId: null });
   const [isLoading, setIsLoading] = useState(true);
+  const { uploadUserAvatar, isLoading: isUploadingAvatar } = useUploadUserAvatar();
 
   // Forms states
   const [fullName, setFullName] = useState('');
@@ -47,6 +52,36 @@ export default function AdminProfile() {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File ảnh quá lớn (tối đa 5MB).');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await uploadUserAvatar(formData);
+      toast.success('Cập nhật ảnh đại diện thành công.');
+      // Refresh profile data to get the new avatar
+      fetchProfile();
+    } catch (err) {
+      console.error('Failed to upload avatar:', err);
+      toast.error('Cập nhật ảnh đại diện thất bại.');
+    }
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   // Update Profile Info
   const handleUpdateProfile = async (e) => {
@@ -129,8 +164,49 @@ export default function AdminProfile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Card Summary */}
         <div className="p-6 rounded-2xl bg-white dark:bg-[#0b0f19]/60 border border-gray-100 dark:border-white/5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col items-center text-center space-y-4">
-          <div className="h-24 w-24 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-primary flex items-center justify-center border border-emerald-500/20">
-            <UserCircle className="w-16 h-16" />
+          <div className="relative">
+            <input
+              type="file"
+              id="admin-avatar-upload"
+              className="hidden"
+              accept="image/jpeg,image/png,image/gif"
+              onChange={handleFileChange}
+            />
+            <label
+              htmlFor="admin-avatar-upload"
+              className="relative group cursor-pointer block h-24 w-24 rounded-full overflow-hidden border border-emerald-500/20"
+            >
+              {profile.avatarFileId ? (
+                <img
+                  src={getAvatarUrl(profile.avatarFileId)}
+                  alt={profile.fullName}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                style={{ display: profile.avatarFileId ? 'none' : 'flex' }}
+                className="w-full h-full bg-emerald-500/10 text-emerald-600 dark:text-primary items-center justify-center font-bold text-3xl"
+              >
+                {getInitials(profile.fullName)}
+              </div>
+
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-300">
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <span className="text-[10px] text-white font-bold uppercase tracking-wider text-center px-1">Thay đổi</span>
+                )}
+              </div>
+
+              <div className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1 rounded-full shadow-md border border-white dark:border-gray-800 transition-transform duration-300 hover:scale-110">
+                <Edit3 className="w-3 h-3" />
+              </div>
+            </label>
           </div>
           <div>
             <h2 className="font-extrabold text-lg leading-tight font-display dark:text-white">{profile.fullName}</h2>

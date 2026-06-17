@@ -20,6 +20,22 @@ export const updateUserAPI = async (userData) => {
     return response.data;
 }
 
+// POST user avatar (POST /api/users/me/avatar)
+export const uploadUserAvatarAPI = async (avatarData) => {
+    const response = await api.post('/users/me/avatar', avatarData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+}
+
+// GET user online status (GET /api/users/{userId}/online)
+export const getUserOnlineAPI = async (userId) => {
+    const response = await api.get(`/users/${userId}/online`);
+    return response.data;
+}
+
 // ─── Users sports profiles  ────────────────────────────────────────────────
 
 /** Get user (GET /api/users/me/sport-profiles) */
@@ -44,4 +60,5 @@ export const updateUserSportProfilesAPI = async (sportId, data) => {
 export const deleteUserSportProfilesAPI = async (sportId) => {
     const response = await api.delete(`/users/me/sport-profiles/${sportId}`);
     return response.data;
-}
+}
+

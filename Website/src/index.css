@@ -30,6 +30,9 @@
   --animate-fade-in: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-slide-up: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-pulse-slow: pulseSlow 3s infinite ease-in-out;
+  --animate-page: pageTransition 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-tab-panel: tabTransition 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-dropdown: dropdownFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 
   @keyframes shimmer {
     0% {
@@ -60,6 +63,39 @@
     to {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+
+  @keyframes pageTransition {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes tabTransition {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 

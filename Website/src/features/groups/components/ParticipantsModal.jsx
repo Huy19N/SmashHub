@@ -92,7 +92,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
           <div className="flex px-5 gap-4">
             <button
               onClick={() => setActiveTab('list')}
-              className={`pb-2 text-sm font-bold transition-colors border-b-2 font-label cursor-pointer ${
+              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${
                 activeTab === 'list' 
                   ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary' 
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -102,7 +102,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
             </button>
             <button
               onClick={() => setActiveTab('edit')}
-              className={`pb-2 text-sm font-bold transition-colors border-b-2 font-label cursor-pointer ${
+              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${
                 activeTab === 'edit' 
                   ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary' 
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -114,7 +114,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+        <div key={activeTab} className="p-5 overflow-y-auto flex-1 custom-scrollbar animate-tab-panel">
           {activeTab === 'list' ? (
             // LIST TAB
             participantsLoading ? (

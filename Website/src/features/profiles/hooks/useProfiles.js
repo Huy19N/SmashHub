@@ -3,6 +3,8 @@ import {
     getAllUserAPI,
     getAllUserByIdAPI,
     updateUserAPI,
+    getUserOnlineAPI,
+    uploadUserAvatarAPI,
     getAllUserSportProfilesAPI,
     createUserSportProfilesAPI,
     updateUserSportProfilesAPI,
@@ -157,4 +159,50 @@ export const useDeleteUserSportProfile = () => {
         }
     };
     return { deleteUserSportProfile, isLoading, error };
-}
+}
+
+// ─── useGetUserOnline ───────────────────────────────────────────
+export const useGetUserOnline = (userId) => {
+    const [userOnline, setUserOnline] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const fetchUserOnline = useCallback(async () => {
+        if (!userId) return;
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await getUserOnlineAPI(userId);
+            setUserOnline(response?.data ?? response ?? null);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
+    useEffect(() => {
+        if (userId) {
+            fetchUserOnline();
+        }
+    }, [userId, fetchUserOnline]);
+    return { userOnline, isLoading, error, refetch: fetchUserOnline };
+}
+
+// ─── useUploadUserAvatar ───────────────────────────────────────────
+export const useUploadUserAvatar = () => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const uploadUserAvatar = async (avatarData) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await uploadUserAvatarAPI(avatarData);
+            return response?.data ?? response;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    return { uploadUserAvatar, isLoading, error };
+}

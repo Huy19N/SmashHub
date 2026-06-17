@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
 import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
+import { getAvatarUrl } from '../../utils/avatarUtils';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -91,9 +92,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to={PATHS.HOME} className="flex items-center gap-2 group">
+          <Link to={PATHS.HOME} className="flex items-center gap-2 group active:scale-95 transition-transform duration-200">
             <div className="bg-emerald-500/10 dark:bg-primary/20 p-2 rounded-lg border border-emerald-500/20 dark:border-primary/30 group-hover:border-emerald-500 dark:group-hover:border-primary group-hover:bg-emerald-500/20 dark:group-hover:bg-primary/30 transition-all duration-300">
-              <Flame className="h-5 w-5 text-emerald-600 dark:text-primary" />
+              <Flame className="h-5 w-5 text-emerald-600 dark:text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
             <span className="text-xl font-bold tracking-tight font-display text-slate-900 dark:text-white">
               SMASH<span className="text-emerald-600 dark:text-primary font-black">HUB</span>
@@ -119,9 +120,9 @@ export default function Navbar() {
                   }
                 }}
                 className={({ isActive }) => `
-                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300
+                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 active:scale-95 hover:scale-[1.03]
                   ${isActive
-                    ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary border border-emerald-500/20 dark:border-primary/20'
+                    ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary border border-emerald-500/20 dark:border-primary/20 shadow-[0_0_15px_rgba(11,232,96,0.15)]'
                     : 'text-slate-800 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-white hover:bg-emerald-500/5 dark:hover:bg-white/5 border border-transparent'}
                 `}
               >
@@ -143,13 +144,29 @@ export default function Navbar() {
                   <div
                     onClick={() => setAvatarDropdownOpen(!avatarDropdownOpen)}
                     title={user?.name || 'Account'}
-                    className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 flex items-center justify-center font-bold text-white text-lg shadow-md ring-2 ring-emerald-500/30 cursor-pointer hover:scale-105 transition-transform"
+                    className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative"
                   >
-                    {avatarInitials}
+                    {apiUser?.data?.avatarFileId ? (
+                      <img
+                        src={getAvatarUrl(apiUser.data.avatarFileId)}
+                        alt={user?.name || 'Avatar'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      style={{ display: apiUser?.data?.avatarFileId ? 'none' : 'flex' }}
+                      className="w-full h-full bg-gradient-to-r from-emerald-400 to-emerald-600 items-center justify-center font-bold text-white text-lg select-none"
+                    >
+                      {avatarInitials}
+                    </div>
                   </div>
                   {/* Dropdown Menu */}
                   {avatarDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-xl shadow-xl overflow-hidden animate-fade-in z-50">
+                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-xl shadow-xl overflow-hidden animate-dropdown z-50">
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
                         <p className="text-xs text-gray-500 truncate">{isAdmin ? 'Quản trị viên SmashHub' : isFacilityOwner ? 'Chủ sân SmashHub' : 'Hội viên SmashHub'}</p>
@@ -221,7 +238,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Panel */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl animate-fade-in absolute w-full left-0 top-full shadow-2xl">
+        <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl animate-dropdown absolute w-full left-0 top-full shadow-2xl">
           <nav className="px-3 pt-2 pb-6 space-y-1">
             {navItems.map((item) => (
               <NavLink
@@ -251,9 +268,9 @@ export default function Navbar() {
                   }
                 }}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200
+                  flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 active:scale-[0.98] hover:scale-[1.01]
                   ${isActive
-                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(11,232,96,0.1)]'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'}
                 `}
               >
@@ -276,8 +293,24 @@ export default function Navbar() {
             {isAuthenticated && (
               <div className="pt-4 pb-2 border-t border-white/10 mt-4 px-2 space-y-2">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 flex items-center justify-center font-bold text-white text-lg shadow-md ring-2 ring-emerald-500/30">
-                    {avatarInitials}
+                  <div className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 flex items-center justify-center relative">
+                    {apiUser?.data?.avatarFileId ? (
+                      <img
+                        src={getAvatarUrl(apiUser.data.avatarFileId)}
+                        alt={user?.name || 'Avatar'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      style={{ display: apiUser?.data?.avatarFileId ? 'none' : 'flex' }}
+                      className="w-full h-full bg-gradient-to-r from-emerald-400 to-emerald-600 items-center justify-center font-bold text-white text-lg select-none"
+                    >
+                      {avatarInitials}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-900 dark:text-white font-medium">{user.name}</div>

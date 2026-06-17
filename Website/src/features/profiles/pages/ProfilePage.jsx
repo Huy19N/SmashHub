@@ -1,27 +1,36 @@
 import { useState, useEffect } from 'react';
-import { 
-  User, Mail, Phone, Shield, Calendar, Edit3, Plus, Trash2, Save, X, Loader2, Award, 
-  Activity, TrendingUp, CheckCircle2, AlertCircle 
+import {
+  User, Mail, Phone, Shield, Calendar, Edit3, Plus, Trash2, Save, X, Loader2, Award,
+  Activity, TrendingUp, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { 
-  useGetMyProfile, 
-  useUpdateUser, 
-  useGetAllUserSportProfiles, 
-  useCreateUserSportProfile, 
-  useUpdateUserSportProfile, 
-  useDeleteUserSportProfile 
+import {
+  useGetMyProfile,
+  useUpdateUser,
+  useGetAllUserSportProfiles,
+  useCreateUserSportProfile,
+  useUpdateUserSportProfile,
+  useDeleteUserSportProfile,
+  useGetUserOnline,
+  useUploadUserAvatar
 } from '../hooks/useProfiles.js';
 import { getAllSportsAPI, getSportLevelAPI } from '../../bookings/api/bookings.api.js';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const { theme } = useTheme();
-  
+
   // Profile info hooks
   const { user: profileData, isLoading: isProfileLoading, error: profileError, refetch: refetchProfile } = useGetMyProfile();
   const { updateUser, isLoading: isUpdatingUser } = useUpdateUser();
-  
+  const { uploadUserAvatar, isLoading: isUploadingAvatar } = useUploadUserAvatar();
+
+  // Online status hooks
+  const { userOnline, isLoading: isOnlineLoading } = useGetUserOnline(profileData?.userId || profileData?.id);
+  const isOnline = userOnline === true || userOnline?.isOnline === true || userOnline?.status === 'online' || userOnline?.status === true;
+
   // Sport profile hooks
   const { userSportProfiles, isLoading: isSportProfilesLoading, refetch: refetchSportProfiles } = useGetAllUserSportProfiles();
   const { createUserSportProfile, isLoading: isCreatingSport } = useCreateUserSportProfile();
@@ -56,6 +65,33 @@ export default function ProfilePage() {
       setEditPhone(profileData.phoneNumber || '');
     }
   }, [profileData]);
+
+  // Handle avatar file selection & upload
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn tệp tin hình ảnh.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước ảnh không được vượt quá 5MB.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await uploadUserAvatar(formData);
+      toast.success('Cập nhật ảnh đại diện thành công!');
+      refetchProfile();
+    } catch (err) {
+      toast.error(err.message || 'Lỗi khi cập nhật ảnh đại diện.');
+    }
+  };
 
   // Fetch all sports from database
   const fetchAvailableSports = async () => {
@@ -109,7 +145,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setInfoError('');
     setInfoSuccess('');
-    
+
     if (!editName.trim()) {
       setInfoError('Tên hiển thị không được để trống.');
       return;
@@ -212,7 +248,7 @@ export default function ProfilePage() {
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
       <Sidebar activeMenu="profile" />
 
-      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar">
+      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white font-display tracking-tight">
@@ -233,8 +269,8 @@ export default function ProfilePage() {
             <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
             <h3 className="text-base font-bold text-red-800 dark:text-red-400 font-display">Đã xảy ra lỗi</h3>
             <p className="text-sm text-red-600 dark:text-red-400/80 font-label mt-1">{profileError}</p>
-            <button 
-              onClick={refetchProfile} 
+            <button
+              onClick={refetchProfile}
               className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors"
             >
               Thử lại
@@ -242,19 +278,57 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-8 pb-16">
-            
+
             {/* User Profile Card (Hero Banner) */}
             <div className="relative overflow-hidden bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* Decorative top colored strip */}
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600" />
 
-              <div className="relative group">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-extrabold text-3xl sm:text-4xl shadow-md border-4 border-white dark:border-gray-800 select-none">
-                  {getInitials(profileData?.fullName)}
-                </div>
-                <div className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1.5 rounded-full shadow-md border border-white dark:border-gray-800">
-                  <User className="w-3.5 h-3.5" />
-                </div>
+              <div className="relative">
+                <input
+                  type="file"
+                  id="avatar-upload-input"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={isUploadingAvatar}
+                />
+                <label
+                  htmlFor="avatar-upload-input"
+                  className="relative group cursor-pointer block"
+                >
+                  {profileData?.avatarFileId ? (
+                    <img
+                      src={getAvatarUrl(profileData.avatarFileId)}
+                      alt={profileData.fullName}
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover shadow-md border-4 border-white dark:border-gray-800 transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    style={{ display: profileData?.avatarFileId ? 'none' : 'flex' }}
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-extrabold text-3xl sm:text-4xl shadow-md border-4 border-white dark:border-gray-800 select-none transition-transform duration-300 group-hover:scale-105"
+                  >
+                    {getInitials(profileData?.fullName)}
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-300">
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <span className="text-[10px] text-white font-bold uppercase tracking-wider text-center px-1">Thay đổi ảnh</span>
+                    )}
+                  </div>
+
+                  {/* Edit Icon Button */}
+                  <div className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1.5 rounded-full shadow-md border border-white dark:border-gray-800 transition-transform duration-300 hover:scale-110">
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </div>
+                </label>
               </div>
 
               <div className="flex-1 text-center md:text-left pt-2">
@@ -267,7 +341,7 @@ export default function ProfilePage() {
                     {profileData?.roleName === 'User' ? 'Thành viên' : profileData?.roleName}
                   </span>
                 </div>
-                
+
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-label mt-1.5 flex items-center justify-center md:justify-start gap-1.5">
                   <Mail className="w-4 h-4 text-gray-400" />
                   {profileData?.email}
@@ -279,8 +353,22 @@ export default function ProfilePage() {
                     <span>Đã tham gia: {formatDate(profileData?.createdAt)}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Trạng thái: Hoạt động</span>
+                    {isOnlineLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+                    ) : isOnline ? (
+                      <>
+                        <span className="relative flex h-2 w-2 mr-1">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>Trạng thái: Trực tuyến (Online)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-gray-400 mr-1.5"></span>
+                        <span>Trạng thái: Ngoại tuyến (Offline)</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -288,7 +376,7 @@ export default function ProfilePage() {
 
             {/* Profile Grid Detail Modules */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              
+
               {/* LEFT Column: Account details & Editing form (2/5 size) */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 shadow-sm">
@@ -489,8 +577,8 @@ export default function ProfilePage() {
                       {userSportProfiles.map((sport) => {
                         const isCurrentlyEditing = editingSportId === sport.sportId;
                         return (
-                          <div 
-                            key={sport.sportId} 
+                          <div
+                            key={sport.sportId}
                             className="p-5 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-50/50 dark:from-white/5 dark:to-white/[0.02] border border-gray-200/60 dark:border-border-dark/40 flex flex-col justify-between hover:shadow-md transition-shadow relative"
                           >
                             <div className="absolute top-4 right-4 flex items-center gap-1.5">
@@ -603,13 +691,13 @@ export default function ProfilePage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-gray-150 dark:border-border-dark/60 transform transition-all duration-300 animate-scaleIn">
-            
+
             <div className="relative p-6 border-b border-gray-100 dark:border-border-dark/40 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-black text-gray-900 dark:text-white font-display">Khai báo trình độ mới</h3>
                 <p className="text-[10px] text-gray-400 font-label mt-0.5">Thêm một môn chơi cùng cấp độ vào hồ sơ của bạn</p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAddModal(false)}
                 className="p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer"
               >
