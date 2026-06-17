@@ -148,3 +148,4 @@ app.MapControllers();
 app.MapHub<ChatHub>("/hub/chat");
 
 app.Run();
+
