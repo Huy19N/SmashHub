@@ -36,8 +36,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
         }
 
         // 2. Connect to Hub
-        const apiUrl = import.meta.env.VITE_API_URL;
-        const hubUrl = apiUrl.replace(/\/api\/?$/, '') + '/hub/chat';
+        const hubUrl = import.meta.env.VITE_VIDEO_CALL_HUB_URL || (import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') + '/hub/video-call');
 
         connection = new signalR.HubConnectionBuilder()
           .withUrl(hubUrl, {
@@ -118,8 +117,8 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
       }
       Object.values(peersRef.current).forEach(peer => peer.close());
       if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        connection.invoke('LeaveCall', roomId).catch(() => {});
-        connection.stop().catch(() => {});
+        connection.invoke('LeaveCall', roomId).catch(() => { });
+        connection.stop().catch(() => { });
       }
     };
   }, [teamId, roomId, isInitiator, onClose]);
@@ -221,9 +220,8 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
       <div className="p-6 flex items-center justify-center gap-6 pb-12">
         <button
           onClick={toggleAudio}
-          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${
-            isAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
-          }`}
+          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${isAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+            }`}
         >
           {isAudioMuted ? <MicOff className="h-6 w-6 text-white" /> : <Mic className="h-6 w-6 text-white" />}
         </button>
@@ -237,9 +235,8 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
 
         <button
           onClick={toggleVideo}
-          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${
-            isVideoMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
-          }`}
+          className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors shadow-lg ${isVideoMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+            }`}
         >
           {isVideoMuted ? <VideoOff className="h-6 w-6 text-white" /> : <Video className="h-6 w-6 text-white" />}
         </button>
