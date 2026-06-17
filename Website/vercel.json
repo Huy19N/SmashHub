@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "http://tad-min.io.vn:5000/api/:path*"
+        }
+    ]
+}
