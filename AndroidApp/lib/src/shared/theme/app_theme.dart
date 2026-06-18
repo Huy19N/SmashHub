@@ -4,9 +4,9 @@ class AppTheme {
   AppTheme._();
 
   // Colors
-  static const Color primaryColor = Color(0xFF00E676); // Vibrant sport green
-  static const Color primaryDarkColor = Color(0xFF00B248);
-  static const Color primaryLightColor = Color(0xFF66FFA6);
+  static const Color primaryColor = Color(0xFF00663C); // Dark sport green
+  static const Color primaryDarkColor = Color(0xFF004D2C);
+  static const Color primaryLightColor = Color(0xFFE2F3E7); // Soft light green tint
 
   // Dark Scheme Colors
   static const Color darkBackgroundColor = Color(0xFF0A0A0A); // Deep black/obsidian
@@ -15,8 +15,8 @@ class AppTheme {
   static const Color darkOnSurfaceColor = Color(0xFFF4F4F5);
 
   // Light Scheme Colors
-  static const Color lightBackgroundColor = Color(0xFFFFFFFF);
-  static const Color lightSurfaceColor = Color(0xFFF4F4F5); // Zinc 100
+  static const Color lightBackgroundColor = Color(0xFFF5F3EC); // Pale beige/cream background
+  static const Color lightSurfaceColor = Color(0xFFFFFFFF); // White cards for premium contrast
   static const Color lightOnBackgroundColor = Color(0xFF09090B);
   static const Color lightOnSurfaceColor = Color(0xFF18181B);
 
@@ -30,7 +30,7 @@ class AppTheme {
         primary: primaryColor,
         secondary: primaryLightColor,
         surface: darkSurfaceColor,
-        onPrimary: Colors.black,
+        onPrimary: Colors.white,
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: darkBackgroundColor,
@@ -51,7 +51,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.black,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -93,7 +93,7 @@ class AppTheme {
         primary: primaryColor,
         secondary: primaryDarkColor,
         surface: lightSurfaceColor,
-        onPrimary: Colors.black,
+        onPrimary: Colors.white,
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: lightBackgroundColor,
@@ -114,7 +114,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.black,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

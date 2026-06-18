@@ -117,7 +117,7 @@ class AppButton extends StatelessWidget {
     if (onPressed == null) return Colors.grey;
     switch (type) {
       case AppButtonType.primary:
-        return Colors.black;
+        return Colors.white;
       case AppButtonType.secondary:
         return isDark ? Colors.white : Colors.black87;
       case AppButtonType.text:

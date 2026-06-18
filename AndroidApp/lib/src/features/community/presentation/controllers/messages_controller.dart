@@ -1,0 +1,38 @@
+import 'package:flutter/foundation.dart';
+import '../../../../shared/network/api_response.dart';
+import '../../domain/repositories/community_repository.dart';
+import '../../data/models/community_models.dart';
+
+class MessagesController extends ChangeNotifier {
+  final CommunityRepository _communityRepository;
+
+  MessagesController({required CommunityRepository communityRepository}) : _communityRepository = communityRepository;
+
+  bool _isLoading = false;
+  String? _errorMessage;
+  List<TeamResponse> _teams = [];
+
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  List<TeamResponse> get teams => _teams;
+
+  Future<void> fetchTeams() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _communityRepository.getTeams(pageNumber: 1, pageSize: 50);
+      if (response.success && response.data != null) {
+        _teams = response.data!.items;
+      } else {
+        _errorMessage = response.message ?? 'Lỗi tải danh sách câu lạc bộ';
+      }
+    } catch (e) {
+      _errorMessage = 'Lỗi kết nối tải dữ liệu câu lạc bộ';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+}

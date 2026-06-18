@@ -243,7 +243,7 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between text-xs tracking-[0.2em] font-semibold text-gray-500 font-label">
             <div>SMASHHUB · EST. 2026</div>
-            <div className="hidden sm:block">COURT MANAGEMENT v1.0</div>
+            <div className="hidden sm:block">QUẢN LÝ SÂN v1.0</div>
           </div>
           <div className="flex flex-col items-center justify-center space-y-6">
             <div className="relative">
@@ -253,13 +253,13 @@ export default function HomePage() {
               </div>
             </div>
             <div className="text-xs font-semibold text-gray-400 tracking-[0.3em] uppercase animate-pulse font-label">
-              Buffering Cinematics
+              Đang tải trải nghiệm
             </div>
           </div>
           <div className="space-y-4">
             <div className="flex items-end justify-between font-label">
               <div className="text-xs sm:text-sm font-bold tracking-widest text-gray-400 uppercase">
-                LOADING EXPERIENCE
+                ĐANG KHỞI TẠO
               </div>
               <div className="text-4xl sm:text-6xl font-extrabold font-display text-gradient-primary">
                 {loadingProgress}%

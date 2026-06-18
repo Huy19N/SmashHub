@@ -80,6 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Background PageView for full-bleed images
@@ -189,21 +190,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 }),
                               ),
 
-                              // Pill Gradient Button
+                              // Pill Button (No Gradient)
                               GestureDetector(
                                 onTap: _onNextPage,
                                 child: Container(
                                   height: 48, // Touch target height
                                   padding: const EdgeInsets.symmetric(horizontal: 24),
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        AppTheme.primaryColor,
-                                        Color(0xFF00E5FF),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
+                                    color: AppTheme.primaryColor,
                                     borderRadius: BorderRadius.circular(24),
                                     boxShadow: [
                                       BoxShadow(
@@ -220,7 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       Text(
                                         isLastPage ? 'Bắt đầu ngay' : 'Tiếp theo',
                                         style: const TextStyle(
-                                          color: Colors.black,
+                                          color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 15,
                                           letterSpacing: 0.5,
@@ -229,7 +223,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       const SizedBox(width: 6),
                                       const Icon(
                                         Icons.chevron_right_rounded,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                         size: 18,
                                       ),
                                     ],

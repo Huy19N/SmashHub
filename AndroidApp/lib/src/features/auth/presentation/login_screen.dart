@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/main_wrapper.dart';
 import 'register_screen.dart';
-import 'profile_screen.dart';
 import 'controllers/auth_controller.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../data/data_sources/auth_remote_data_source.dart';
@@ -69,10 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
       // 3. Xử lý phản hồi kết quả từ máy chủ
       if (mounted) {
         if (response.success) {
-          // Thành công: Chuyển hướng người dùng sang ProfileScreen (được sử dụng làm dashboard tạm thời)
+          // Thành công: Chuyển hướng người dùng sang MainWrapper
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const ProfileScreen(),
+              builder: (context) => const MainWrapper(),
             ),
           );
         } else {
@@ -90,68 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Widget _buildBackground(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Stack(
-      children: [
-        // Background color base
-        Container(color: theme.scaffoldBackgroundColor),
-        // Glow Orb 1 (Top Left)
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.1,
-          left: -MediaQuery.of(context).size.width * 0.25,
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.width * 0.8,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: theme.colorScheme.primary.withValues(
-                alpha: isDark ? 0.12 : 0.08,
-              ),
-            ),
-          ),
-        ),
-        // Glow Orb 2 (Bottom Right)
-        Positioned(
-          bottom: MediaQuery.of(context).size.height * 0.1,
-          right: -MediaQuery.of(context).size.width * 0.3,
-          width: MediaQuery.of(context).size.width * 1.0,
-          height: MediaQuery.of(context).size.width * 1.0,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                  : const Color(0xFF00E5FF).withValues(alpha: 0.06),
-            ),
-          ),
-        ),
-        // Blur filter to blend orbs organically
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 100.0, sigmaY: 100.0),
-            child: const SizedBox(),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Native organic glowing background
-          _buildBackground(context),
-
-          // Scrollable login form
-          SafeArea(
+      backgroundColor: isDark ? AppTheme.darkBackgroundColor : AppTheme.lightBackgroundColor,
+      body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -267,21 +212,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Gradient Login Button
+                      // Login Button (No Gradient)
                       GestureDetector(
                         onTap: _handleLogin,
                         child: Container(
                           height: 52, // Target touch height
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppTheme.primaryColor,
-                                Color(0xFF00E5FF),
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
+                            color: AppTheme.primaryColor,
                             borderRadius: BorderRadius.circular(26),
                             boxShadow: [
                               BoxShadow(
@@ -297,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             'Login',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -343,8 +281,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ],
-      ),
     );
   }
 }

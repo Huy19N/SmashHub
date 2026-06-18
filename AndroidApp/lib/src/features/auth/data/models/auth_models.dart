@@ -166,3 +166,72 @@ class CreateSportProfileRequest {
     };
   }
 }
+
+/// DTO gửi đi để cập nhật Trình độ môn thể thao.
+class UpdateSportProfileRequest {
+  final int rankValue;
+
+  UpdateSportProfileRequest({
+    required this.rankValue,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'rankValue': rankValue,
+    };
+  }
+}
+
+/// DTO phản hồi thông tin cá nhân của người dùng.
+class UserProfileResponse {
+  final String userId;
+  final String fullName;
+  final String email;
+  final String phoneNumber;
+  final String roleName;
+  final DateTime? createdAt;
+  final bool? isActive;
+  final String? avatarFileId;
+
+  UserProfileResponse({
+    required this.userId,
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.roleName,
+    this.createdAt,
+    this.isActive,
+    this.avatarFileId,
+  });
+
+  factory UserProfileResponse.fromJson(Map<String, dynamic> json) {
+    return UserProfileResponse(
+      userId: json['userId'] as String? ?? '',
+      fullName: json['fullName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String? ?? '',
+      roleName: json['roleName'] as String? ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : null,
+      isActive: json['isActive'] as bool?,
+      avatarFileId: json['avatarFileId'] as String?,
+    );
+  }
+}
+
+/// DTO gửi đi để cập nhật thông tin cá nhân.
+class UpdateProfileRequest {
+  final String fullName;
+  final String phoneNumber;
+
+  UpdateProfileRequest({
+    required this.fullName,
+    required this.phoneNumber,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'fullName': fullName,
+      'phoneNumber': phoneNumber,
+    };
+  }
+}

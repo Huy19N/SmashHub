@@ -5,26 +5,27 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_badge.dart';
 import '../../../shared/widgets/app_dropdown.dart';
 
+import '../../../shared/network/api_client.dart';
+import '../data/data_sources/profile_remote_data_source.dart';
+import '../data/repositories/profile_repository_impl.dart';
+import '../presentation/controllers/profile_controller.dart';
+
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool isEmbedded;
+  const ProfileScreen({super.key, this.isEmbedded = false});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  late final ProfileController _controller;
+
   // General User Information
   bool _isEditingInfo = false;
-  bool _isSavingInfo = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-
-  String _fullName = 'Hải Nguyễn';
-  String _phoneNumber = '0901234567';
-  final String _email = 'hai@smash.vn';
-  final String _role = 'Thành viên';
-  final String _joinDate = '16 tháng 6, 2026';
 
   // Sport levels state
   final List<SportItem> _availableSports = [
@@ -39,9 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     SportLevelItem(rankValue: 3, name: 'Tuyển thủ'),
   ];
 
-  // User's declared sports
-  List<UserSportProfile> _userSportProfiles = [];
-
   // Editing state for inline sport profiles
   int? _editingSportId;
   int? _editingRankValue;
@@ -49,23 +47,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _fullName);
-    _phoneController = TextEditingController(text: _phoneNumber);
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
 
-    // Initial seed profile data
-    _userSportProfiles = [
-      UserSportProfile(
-        sportId: 1,
-        sportName: 'Cầu Lông',
-        rankValue: 2,
-        levelName: 'Nâng cao',
-        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
+    final apiClient = ApiClient();
+    final dataSource = ProfileRemoteDataSource(apiClient);
+    final repository = ProfileRepositoryImpl(dataSource);
+    _controller = ProfileController(profileRepository: repository);
+    
+    _controller.addListener(_onControllerUpdate);
+    _controller.fetchProfileData();
+  }
+
+  void _onControllerUpdate() {
+    if (mounted) {
+      setState(() {
+        if (_controller.userProfile != null) {
+          _nameController.text = _controller.userProfile!.fullName;
+          _phoneController.text = _controller.userProfile!.phoneNumber;
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerUpdate);
+    _controller.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -75,23 +83,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleSaveInfo() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isSavingInfo = true;
-    });
+    final success = await _controller.updateProfile(
+      _nameController.text,
+      _phoneController.text,
+    );
 
-    // Simulate API delay
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    setState(() {
-      _fullName = _nameController.text;
-      _phoneNumber = _phoneController.text;
-      _isEditingInfo = false;
-      _isSavingInfo = false;
-    });
-
-    if (mounted) {
+    if (success) {
+      setState(() {
+        _isEditingInfo = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật thông tin cá nhân thành công!')),
+        );
+      }
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cập nhật thông tin cá nhân thành công!')),
+        SnackBar(content: Text(_controller.errorMessage ?? 'Cập nhật thất bại')),
       );
     }
   }
@@ -118,14 +126,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                setState(() {
-                  _userSportProfiles.removeWhere((p) => p.sportId == sportId);
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đã xóa trình độ môn $sportName.')),
-                );
+                final success = await _controller.deleteSportProfile(sportId);
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đã xóa trình độ môn $sportName.')),
+                  );
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(_controller.errorMessage ?? 'Xóa thất bại')),
+                  );
+                }
               },
               child: const Text(
                 'Xóa',
@@ -145,28 +157,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleUpdateSportLevel(int sportId) async {
     if (_editingRankValue == null) return;
 
-    final updatedLevelName = _sportLevels
-        .firstWhere((l) => l.rankValue == _editingRankValue)
-        .name;
+    final success = await _controller.updateSportRank(sportId, _editingRankValue!);
 
-    setState(() {
-      final index = _userSportProfiles.indexWhere((p) => p.sportId == sportId);
-      if (index != -1) {
-        _userSportProfiles[index] = UserSportProfile(
-          sportId: sportId,
-          sportName: _userSportProfiles[index].sportName,
-          rankValue: _editingRankValue!,
-          levelName: updatedLevelName,
-          updatedAt: DateTime.now(),
+    if (success) {
+      setState(() {
+        _editingSportId = null;
+        _editingRankValue = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật cấp độ chơi thành công!')),
         );
       }
-      _editingSportId = null;
-      _editingRankValue = null;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cập nhật cấp độ chơi thành công!')),
-    );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_controller.errorMessage ?? 'Cập nhật thất bại')),
+      );
+    }
   }
 
   // Handle adding new sport profile
@@ -181,9 +188,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final profiles = _controller.sportProfiles ?? [];
             final undeclaredSports = _availableSports
                 .where(
-                  (sport) => !_userSportProfiles.any(
+                  (sport) => !profiles.any(
                     (profile) => profile.sportId == sport.id,
                   ),
                 )
@@ -303,39 +311,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed:
                               (selectedSportId != null &&
                                   selectedRankValue != null)
-                              ? () {
+                              ? () async {
                                   final sportName = _availableSports
                                       .firstWhere(
                                         (s) => s.id == selectedSportId,
                                       )
                                       .name;
-                                  final levelName = _sportLevels
-                                      .firstWhere(
-                                        (l) => l.rankValue == selectedRankValue,
-                                      )
-                                      .name;
 
-                                  setState(() {
-                                    _userSportProfiles.add(
-                                      UserSportProfile(
-                                        sportId: selectedSportId!,
-                                        sportName: sportName,
-                                        rankValue: selectedRankValue!,
-                                        levelName: levelName,
-                                        updatedAt: DateTime.now(),
+                                  final success = await _controller.addSportProfile(
+                                    selectedSportId!,
+                                    selectedRankValue!,
+                                  );
+
+                                  if (success && mounted) {
+                                    Navigator.of(context).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Đã thêm trình độ môn $sportName.',
+                                        ),
                                       ),
                                     );
-                                  });
-
-                                  Navigator.of(context).pop();
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Đã thêm trình độ môn $sportName.',
-                                      ),
-                                    ),
-                                  );
+                                  } else if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(_controller.errorMessage ?? 'Thêm thất bại')),
+                                    );
+                                  }
                                 }
                               : null,
                           text: 'Xác nhận thêm',
@@ -365,10 +366,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final profiles = _controller.sportProfiles ?? [];
     final undeclaredSports = _availableSports
         .where(
           (sport) =>
-              !_userSportProfiles.any((profile) => profile.sportId == sport.id),
+              !profiles.any((profile) => profile.sportId == sport.id),
         )
         .toList();
 
@@ -378,16 +380,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Trang cá nhân',
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0),
         ),
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          constraints: const BoxConstraints(
-            minWidth: 48,
-            minHeight: 48,
-          ), // Touch target
-        ),
+        leading: widget.isEmbedded
+            ? null
+            : IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                constraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
+                ), // Touch target
+              ),
       ),
-      body: SafeArea(
+      body: _controller.isLoading && _controller.userProfile == null
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Column(
@@ -399,27 +405,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: isDark ? null : Colors.white,
                 child: Row(
                   children: [
-                    // Avatar Badge
+                    // Avatar Badge (No Gradient)
                     Container(
                       width: 80,
                       height: 80,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [AppTheme.primaryColor, Color(0xFF00B248)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: AppTheme.primaryColor,
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        _fullName.isNotEmpty
-                            ? _fullName.substring(0, 1).toUpperCase()
+                        _controller.userProfile?.fullName.isNotEmpty == true
+                            ? _controller.userProfile!.fullName.substring(0, 1).toUpperCase()
                             : 'U',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -434,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  _fullName,
+                                  _controller.userProfile?.fullName ?? 'Đang tải...',
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w900,
@@ -445,7 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 8),
                               AppBadge(
-                                label: _role,
+                                label: _controller.userProfile?.roleName ?? 'Thành viên',
                                 icon: Icons.shield_outlined,
                                 backgroundColor: isDark
                                     ? AppTheme.primaryColor.withValues(
@@ -471,7 +473,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  _email,
+                                  _controller.userProfile?.email ?? 'Chưa cập nhật',
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 13,
@@ -483,7 +485,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Đã tham gia: $_joinDate',
+                            'Đã tham gia: ${_controller.userProfile?.createdAt != null ? _formatDate(_controller.userProfile!.createdAt!) : ''}',
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark ? Colors.white38 : Colors.black38,
@@ -525,8 +527,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   onPressed: () {
                                     setState(() {
                                       _isEditingInfo = true;
-                                      _nameController.text = _fullName;
-                                      _phoneController.text = _phoneNumber;
+                                      _nameController.text = _controller.userProfile?.fullName ?? '';
+                                      _phoneController.text = _controller.userProfile?.phoneNumber ?? '';
                                     });
                                   },
                                   icon: const Icon(
@@ -563,7 +565,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
-                              initialValue: _email,
+                              initialValue: _controller.userProfile?.email ?? '',
                               decoration: const InputDecoration(
                                 labelText: 'Email',
                                 prefixIcon: Icon(Icons.mail_outline_rounded),
@@ -588,7 +590,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: AppButton(
                                     onPressed: _handleSaveInfo,
                                     text: 'Lưu thay đổi',
-                                    isLoading: _isSavingInfo,
+                                    isLoading: _controller.isLoading,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -610,20 +612,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _buildInfoItem(
                               Icons.person_outline_rounded,
                               'Tên đầy đủ',
-                              _fullName,
+                              _controller.userProfile?.fullName ?? 'Đang tải...',
                             ),
                             const SizedBox(height: 16),
                             _buildInfoItem(
                               Icons.mail_outline_rounded,
                               'Địa chỉ email',
-                              _email,
+                              _controller.userProfile?.email ?? 'Chưa cập nhật',
                             ),
                             const SizedBox(height: 16),
                             _buildInfoItem(
                               Icons.phone_outlined,
                               'Số điện thoại',
-                              _phoneNumber.isNotEmpty
-                                  ? _phoneNumber
+                              _controller.userProfile?.phoneNumber.isNotEmpty == true
+                                  ? _controller.userProfile!.phoneNumber
                                   : 'Chưa cập nhật',
                             ),
                           ],
@@ -673,7 +675,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                             if (undeclaredSports.isNotEmpty &&
-                                _userSportProfiles.isNotEmpty)
+                                profiles.isNotEmpty)
                               TextButton.icon(
                                 onPressed: _showAddSportBottomSheet,
                                 icon: const Icon(Icons.add_rounded, size: 16),
@@ -691,17 +693,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 20),
 
                         // List of profiles or empty state
-                        if (_userSportProfiles.isEmpty)
+                        if (profiles.isEmpty)
                           _buildEmptyState()
                         else ...[
                           ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _userSportProfiles.length,
+                            itemCount: profiles.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 16),
                             itemBuilder: (context, index) {
-                              final profile = _userSportProfiles[index];
+                              final profile = profiles[index];
                               final isEditingThis =
                                   _editingSportId == profile.sportId;
 
@@ -755,7 +757,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  'Cập nhật: ${_formatDate(profile.updatedAt)}',
+                                                  'Cập nhật: ${profile.updatedAt != null ? _formatDate(profile.updatedAt!) : 'Không rõ'}',
                                                   style: const TextStyle(
                                                     fontSize: 9,
                                                     color: Colors.grey,

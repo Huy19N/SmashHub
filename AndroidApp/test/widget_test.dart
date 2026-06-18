@@ -29,12 +29,25 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'password123');
     await tester.pumpAndSettle();
 
-    // 6. Tap the 'Login' button to proceed to ProfileScreen.
+    // 6. Tap the 'Login' button to proceed to MainWrapper (HomeScreen).
     // The button has the last 'Login' text (first is the subtitle 'Login').
     await tester.tap(find.text('Login').last);
-    await tester.pumpAndSettle(); // Settle navigation directly to ProfileScreen
+    // Settle transition to MainWrapper using fixed duration pumps because
+    // Shimmer on HomeScreen runs an infinite repeating animation.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
-    // 7. Verify Profile Screen is rendered.
+    // Verify Home Screen is rendered.
+    expect(find.text('Hải Nguyễn 👋'), findsOneWidget);
+    expect(find.text('Hành động nhanh'), findsOneWidget);
+    expect(find.text('Bản tin cộng đồng'), findsOneWidget);
+
+    // 7. Tap the 'Profile' tab in the bottom navigation using its icon to switch to ProfileScreen.
+    await tester.tap(find.byIcon(Icons.person_outline_rounded));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    // Verify Profile Screen is rendered.
     expect(find.text('Trang cá nhân'), findsOneWidget);
     expect(find.text('Trình độ thể thao'), findsOneWidget);
     expect(find.text('Hải Nguyễn'), findsNWidgets(2));

@@ -35,15 +35,13 @@ class AppCard extends StatelessWidget {
 
     return Container(
       margin: margin,
+      padding: padding,
       decoration: BoxDecoration(
         color: effectiveBg,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.fromBorderSide(effectiveBorder),
       ),
-      child: Padding(
-        padding: padding,
-        child: child,
-      ),
+      child: child,
     );
   }
 }
