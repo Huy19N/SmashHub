@@ -5,12 +5,8 @@
             "destination": "http://tad-min.io.vn:5000/api/:path*"
         },
         {
-            "source": "/hub/chat",
-            "destination": "http://tad-min.io.vn:5000/hub/chat"
-        },
-        {
-            "source": "/hub/video-call",
-            "destination": "http://tad-min.io.vn:5000/hub/video-call"
+            "source": "/hub/:path*",
+            "destination": "http://tad-min.io.vn:5000/hub/:path*"
         }
     ]
 }

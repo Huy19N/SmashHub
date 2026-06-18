@@ -35,8 +35,9 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
           localVideoRef.current.srcObject = stream;
         }
 
-        // 2. Connect to Hub
-        const hubUrl = import.meta.env.VITE_VIDEO_CALL_HUB_URL || (import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') + '/hub/video-call');
+        // 2. Connect to Hub — video call methods (SendSignal, StartCall, JoinCall, LeaveCall)
+        //    are all inside ChatHub, so we connect to the same /hub/chat endpoint.
+        const hubUrl = import.meta.env.VITE_CHAT_HUB_URL || (import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') + '/hub/chat');
 
         connection = new signalR.HubConnectionBuilder()
           .withUrl(hubUrl, {
