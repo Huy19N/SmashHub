@@ -150,4 +150,39 @@ class ProfileController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> uploadAvatar(String filePath) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _profileRepository.uploadAvatar(filePath);
+      if (response.success && response.data != null && response.data!.isNotEmpty) {
+        // Cập nhật lại thông tin profile
+        if (_userProfile != null) {
+          _userProfile = UserProfileResponse(
+            userId: _userProfile!.userId,
+            fullName: _userProfile!.fullName,
+            email: _userProfile!.email,
+            phoneNumber: _userProfile!.phoneNumber,
+            roleName: _userProfile!.roleName,
+            createdAt: _userProfile!.createdAt,
+            isActive: _userProfile!.isActive,
+            avatarFileId: response.data,
+          );
+        }
+        return true;
+      } else {
+        _errorMessage = response.message;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Lỗi tải ảnh đại diện lên máy chủ';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

@@ -44,4 +44,37 @@ class CommunityRepositoryImpl implements CommunityRepository {
   Future<ApiResponse<void>> deleteTeam(String teamId) {
     return _remoteDataSource.deleteTeam(teamId);
   }
+
+  @override
+  Future<ApiResponse<PagedResult<TeamMessageResponse>>> getTeamMessages(
+    String teamId, {
+    String? search,
+    required int pageNumber,
+    required int pageSize,
+  }) {
+    return _remoteDataSource.getTeamMessages(
+      teamId,
+      search: search,
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+    );
+  }
+
+  @override
+  Future<ApiResponse<TeamMessageResponse>> sendMessage(
+    String teamId,
+    SendMessageRequest request,
+  ) {
+    return _remoteDataSource.sendMessage(teamId, request);
+  }
+
+  @override
+  Future<ApiResponse<void>> deleteMessage(String teamId, String messageId) {
+    return _remoteDataSource.deleteMessage(teamId, messageId);
+  }
+
+  @override
+  Future<ApiResponse<void>> removeTeamMember(String teamId, String userId) {
+    return _remoteDataSource.removeTeamMember(teamId, userId);
+  }
 }

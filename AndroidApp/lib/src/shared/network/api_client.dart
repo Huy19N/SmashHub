@@ -1,14 +1,12 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'api_config.dart';
 
 /// Client API dùng để gửi các yêu cầu HTTP đến Backend.
 /// Được cấu hình với interceptor để xử lý Authentication, Cookie (Refresh Token) và xử lý lỗi tập trung.
 class ApiClient {
   late final Dio _dio;
-  
-  // URL cấu hình mặc định (dùng 10.0.2.2 cho giả lập Android để trỏ về localhost của máy host với HTTPS)
-  static const String _defaultBaseUrl = 'https://10.0.2.2:7020';
   
   // Lưu trữ Token & Cookie tạm thời trong bộ nhớ (Có thể tích hợp SharedPreferences / FlutterSecureStorage sau này)
   static String? _accessToken;
@@ -17,7 +15,7 @@ class ApiClient {
   ApiClient({String? baseUrl}) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? _defaultBaseUrl,
+        baseUrl: baseUrl ?? ApiConfig.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),

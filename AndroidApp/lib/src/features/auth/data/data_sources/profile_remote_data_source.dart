@@ -95,4 +95,34 @@ class ProfileRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi xóa môn thể thao');
     }
   }
+
+  /// Tải lên ảnh đại diện mới
+  Future<ApiResponse<String>> uploadAvatar(String filePath) async {
+    try {
+      final fileName = filePath.split('/').last;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+
+      final response = await _apiClient.post(
+        '/api/users/me/avatar',
+        data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+      );
+
+      return ApiResponse<String>.fromJson(
+        response.data,
+        (json) {
+          final map = json as Map<String, dynamic>;
+          return map['avatarFileId'] as String? ?? '';
+        },
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải lên ảnh đại diện');
+    } catch (e) {
+      return ApiResponse.error('Lỗi: $e');
+    }
+  }
 }

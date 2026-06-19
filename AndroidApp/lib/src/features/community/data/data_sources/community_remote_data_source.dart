@@ -97,4 +97,75 @@ class CommunityRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi giải tán câu lạc bộ');
     }
   }
+
+  /// Lấy danh sách tin nhắn của câu lạc bộ.
+  Future<ApiResponse<PagedResult<TeamMessageResponse>>> getTeamMessages(
+    String teamId, {
+    String? search,
+    required int pageNumber,
+    required int pageSize,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'PageNumber': pageNumber,
+        'PageSize': pageSize,
+      };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
+      final response = await _apiClient.get(
+        '/api/teams/$teamId/messages',
+        queryParameters: queryParams,
+      );
+      return ApiResponse<PagedResult<TeamMessageResponse>>.fromJson(
+        response.data,
+        (json) => PagedResult<TeamMessageResponse>.fromJson(
+          json as Map<String, dynamic>,
+          (item) => TeamMessageResponse.fromJson(item as Map<String, dynamic>),
+        ),
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải danh sách tin nhắn');
+    }
+  }
+
+  /// Gửi tin nhắn mới vào câu lạc bộ.
+  Future<ApiResponse<TeamMessageResponse>> sendMessage(
+    String teamId,
+    SendMessageRequest request,
+  ) async {
+    try {
+      final response = await _apiClient.post(
+        '/api/teams/$teamId/messages',
+        data: request.toJson(),
+      );
+      return ApiResponse<TeamMessageResponse>.fromJson(
+        response.data,
+        (json) => TeamMessageResponse.fromJson(json as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi gửi tin nhắn');
+    }
+  }
+
+  /// Xóa tin nhắn (soft delete).
+  Future<ApiResponse<void>> deleteMessage(String teamId, String messageId) async {
+    try {
+      final response = await _apiClient.delete('/api/teams/$teamId/messages/$messageId');
+      return ApiResponse.fromJson(response.data, (_) {});
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi xóa tin nhắn');
+    }
+  }
+
+  /// Xoá thành viên khỏi câu lạc bộ.
+  Future<ApiResponse<void>> removeTeamMember(String teamId, String userId) async {
+    try {
+      final response = await _apiClient.delete('/api/teams/$teamId/members/$userId');
+      return ApiResponse.fromJson(response.data, (_) {});
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi xoá thành viên khỏi câu lạc bộ');
+    }
+  }
 }

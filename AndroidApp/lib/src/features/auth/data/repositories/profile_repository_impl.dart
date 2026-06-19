@@ -37,4 +37,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<ApiResponse<void>> deleteSportProfile(int sportId) {
     return _remoteDataSource.deleteSportProfile(sportId);
   }
+
+  @override
+  Future<ApiResponse<String>> uploadAvatar(String filePath) {
+    return _remoteDataSource.uploadAvatar(filePath);
+  }
 }

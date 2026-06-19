@@ -9,4 +9,5 @@ abstract class ProfileRepository {
   Future<ApiResponse<UserSportProfileResponse>> createSportProfile(CreateSportProfileRequest request);
   Future<ApiResponse<UserSportProfileResponse>> updateSportProfile(int sportId, UpdateSportProfileRequest request);
   Future<ApiResponse<void>> deleteSportProfile(int sportId);
+  Future<ApiResponse<String>> uploadAvatar(String filePath);
 }

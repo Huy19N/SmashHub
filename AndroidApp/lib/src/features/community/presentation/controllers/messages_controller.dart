@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../../../../shared/network/api_response.dart';
 import '../../domain/repositories/community_repository.dart';
 import '../../data/models/community_models.dart';
 
@@ -26,7 +25,7 @@ class MessagesController extends ChangeNotifier {
       if (response.success && response.data != null) {
         _teams = response.data!.items;
       } else {
-        _errorMessage = response.message ?? 'Lỗi tải danh sách câu lạc bộ';
+        _errorMessage = response.message;
       }
     } catch (e) {
       _errorMessage = 'Lỗi kết nối tải dữ liệu câu lạc bộ';

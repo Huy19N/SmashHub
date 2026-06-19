@@ -1,9 +1,13 @@
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_badge.dart';
 import '../../../shared/widgets/app_dropdown.dart';
+import '../../../shared/network/api_config.dart';
 
 import '../../../shared/network/api_client.dart';
 import '../data/data_sources/profile_remote_data_source.dart';
@@ -54,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final dataSource = ProfileRemoteDataSource(apiClient);
     final repository = ProfileRepositoryImpl(dataSource);
     _controller = ProfileController(profileRepository: repository);
-    
+
     _controller.addListener(_onControllerUpdate);
     _controller.fetchProfileData();
   }
@@ -94,13 +98,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cập nhật thông tin cá nhân thành công!')),
+          const SnackBar(
+            content: Text('Cập nhật thông tin cá nhân thành công!'),
+          ),
         );
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.errorMessage ?? 'Cập nhật thất bại')),
+        SnackBar(
+          content: Text(_controller.errorMessage ?? 'Cập nhật thất bại'),
+        ),
       );
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (pickedFile != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đang tải ảnh lên...')));
+      }
+      final success = await _controller.uploadAvatar(pickedFile.path);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_controller.errorMessage ?? 'Tải ảnh thất bại'),
+          ),
+        );
+      }
     }
   }
 
@@ -135,7 +171,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(_controller.errorMessage ?? 'Xóa thất bại')),
+                    SnackBar(
+                      content: Text(_controller.errorMessage ?? 'Xóa thất bại'),
+                    ),
                   );
                 }
               },
@@ -157,7 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleUpdateSportLevel(int sportId) async {
     if (_editingRankValue == null) return;
 
-    final success = await _controller.updateSportRank(sportId, _editingRankValue!);
+    final success = await _controller.updateSportRank(
+      sportId,
+      _editingRankValue!,
+    );
 
     if (success) {
       setState(() {
@@ -171,7 +212,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.errorMessage ?? 'Cập nhật thất bại')),
+        SnackBar(
+          content: Text(_controller.errorMessage ?? 'Cập nhật thất bại'),
+        ),
       );
     }
   }
@@ -191,9 +234,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final profiles = _controller.sportProfiles ?? [];
             final undeclaredSports = _availableSports
                 .where(
-                  (sport) => !profiles.any(
-                    (profile) => profile.sportId == sport.id,
-                  ),
+                  (sport) =>
+                      !profiles.any((profile) => profile.sportId == sport.id),
                 )
                 .toList();
 
@@ -318,10 +360,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       )
                                       .name;
 
-                                  final success = await _controller.addSportProfile(
-                                    selectedSportId!,
-                                    selectedRankValue!,
-                                  );
+                                  final success = await _controller
+                                      .addSportProfile(
+                                        selectedSportId!,
+                                        selectedRankValue!,
+                                      );
 
                                   if (success && mounted) {
                                     Navigator.of(context).pop();
@@ -334,7 +377,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     );
                                   } else if (mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(_controller.errorMessage ?? 'Thêm thất bại')),
+                                      SnackBar(
+                                        content: Text(
+                                          _controller.errorMessage ??
+                                              'Thêm thất bại',
+                                        ),
+                                      ),
                                     );
                                   }
                                 }
@@ -369,8 +417,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profiles = _controller.sportProfiles ?? [];
     final undeclaredSports = _availableSports
         .where(
-          (sport) =>
-              !profiles.any((profile) => profile.sportId == sport.id),
+          (sport) => !profiles.any((profile) => profile.sportId == sport.id),
         )
         .toList();
 
@@ -394,547 +441,665 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _controller.isLoading && _controller.userProfile == null
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero Profile Card
-              AppCard(
-                padding: const EdgeInsets.all(24.0),
-                backgroundColor: isDark ? null : Colors.white,
-                child: Row(
-                  children: [
-                    // Avatar Badge (No Gradient)
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppTheme.primaryColor,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _controller.userProfile?.fullName.isNotEmpty == true
-                            ? _controller.userProfile!.fullName.substring(0, 1).toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-
-                    // User identity info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _controller.userProfile?.fullName ?? 'Đang tải...',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.2,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              AppBadge(
-                                label: _controller.userProfile?.roleName ?? 'Thành viên',
-                                icon: Icons.shield_outlined,
-                                backgroundColor: isDark
-                                    ? AppTheme.primaryColor.withValues(
-                                        alpha: 0.1,
-                                      )
-                                    : AppTheme.primaryColor.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                textColor: isDark
-                                    ? AppTheme.primaryColor
-                                    : const Color(0xFF007E3A),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.mail_outline_rounded,
-                                size: 14,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  _controller.userProfile?.email ?? 'Chưa cập nhật',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 13,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Đã tham gia: ${_controller.userProfile?.createdAt != null ? _formatDate(_controller.userProfile!.createdAt!) : ''}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : Colors.black38,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 16.0,
                 ),
-              ),
-              const SizedBox(height: 24),
-
-              // Layout grid for larger layout/mobile scroll
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Personal Info Section Card
-                  AppCard(
-                    backgroundColor: isDark ? null : Colors.white,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero Profile Card
+                    AppCard(
+                      padding: const EdgeInsets.all(24.0),
+                      backgroundColor: isDark ? null : Colors.white,
+                      child: Row(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // Avatar Badge
+                          Stack(
                             children: [
-                              const Text(
-                                'Thông tin cá nhân',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppTheme.primaryColor,
+                                  image:
+                                      _controller.userProfile?.avatarFileId !=
+                                              null &&
+                                          _controller
+                                              .userProfile!
+                                              .avatarFileId!
+                                              .isNotEmpty
+                                      ? DecorationImage(
+                                          image: CachedNetworkImageProvider(
+                                            ApiConfig.getFileUrl(
+                                              _controller
+                                                  .userProfile!
+                                                  .avatarFileId!,
+                                            ),
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child:
+                                    _controller.userProfile?.avatarFileId ==
+                                            null ||
+                                        _controller
+                                            .userProfile!
+                                            .avatarFileId!
+                                            .isEmpty
+                                    ? Text(
+                                        _controller
+                                                    .userProfile
+                                                    ?.fullName
+                                                    .isNotEmpty ==
+                                                true
+                                            ? _controller.userProfile!.fullName
+                                                  .substring(0, 1)
+                                                  .toUpperCase()
+                                            : 'U',
+                                        style: const TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: _pickAndUploadAvatar,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppTheme.primaryColor,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 16,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              if (!_isEditingInfo)
-                                TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isEditingInfo = true;
-                                      _nameController.text = _controller.userProfile?.fullName ?? '';
-                                      _phoneController.text = _controller.userProfile?.phoneNumber ?? '';
-                                    });
-                                  },
-                                  icon: const Icon(
-                                    Icons.edit_rounded,
-                                    size: 14,
-                                  ),
-                                  label: const Text('Chỉnh sửa'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: AppTheme.primaryColor,
-                                    minimumSize: const Size(
-                                      48,
-                                      48,
-                                    ), // touch target
-                                  ),
-                                ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(width: 20),
 
-                          if (_isEditingInfo) ...[
-                            // Edit Fields
-                            TextFormField(
-                              controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Tên hiển thị',
-                                prefixIcon: Icon(Icons.person_outline_rounded),
-                              ),
-                              validator: (val) {
-                                if (val == null || val.trim().isEmpty) {
-                                  return 'Tên hiển thị không được để trống';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              initialValue: _controller.userProfile?.email ?? '',
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: Icon(Icons.mail_outline_rounded),
-                              ),
-                              enabled: false, // Read only as email is key login
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              decoration: const InputDecoration(
-                                labelText: 'Số điện thoại',
-                                prefixIcon: Icon(Icons.phone_outlined),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Actions
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: AppButton(
-                                    onPressed: _handleSaveInfo,
-                                    text: 'Lưu thay đổi',
-                                    isLoading: _controller.isLoading,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: AppButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isEditingInfo = false;
-                                      });
-                                    },
-                                    text: 'Hủy',
-                                    type: AppButtonType.secondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ] else ...[
-                            // Display Info Details
-                            _buildInfoItem(
-                              Icons.person_outline_rounded,
-                              'Tên đầy đủ',
-                              _controller.userProfile?.fullName ?? 'Đang tải...',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoItem(
-                              Icons.mail_outline_rounded,
-                              'Địa chỉ email',
-                              _controller.userProfile?.email ?? 'Chưa cập nhật',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoItem(
-                              Icons.phone_outlined,
-                              'Số điện thoại',
-                              _controller.userProfile?.phoneNumber.isNotEmpty == true
-                                  ? _controller.userProfile!.phoneNumber
-                                  : 'Chưa cập nhật',
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sports Level (Taste Skill) Card
-                  AppCard(
-                    backgroundColor: isDark ? null : Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
+                          // User identity info
+                          Expanded(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Icon(
-                                      Icons.fitness_center_rounded,
-                                      size: 18,
-                                      color: AppTheme.primaryColor,
+                                    Flexible(
+                                      child: Text(
+                                        _controller.userProfile?.fullName ??
+                                            'Đang tải...',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.2,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
+                                    AppBadge(
+                                      label:
+                                          _controller.userProfile?.roleName ??
+                                          'Thành viên',
+                                      icon: Icons.shield_outlined,
+                                      backgroundColor: isDark
+                                          ? AppTheme.primaryColor.withValues(
+                                              alpha: 0.1,
+                                            )
+                                          : AppTheme.primaryColor.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                      textColor: isDark
+                                          ? AppTheme.primaryColor
+                                          : const Color(0xFF007E3A),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.mail_outline_rounded,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        _controller.userProfile?.email ??
+                                            'Chưa cập nhật',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 13,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Đã tham gia: ${_controller.userProfile?.createdAt != null ? _formatDate(_controller.userProfile!.createdAt!) : ''}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : Colors.black38,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Layout grid for larger layout/mobile scroll
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Personal Info Section Card
+                        AppCard(
+                          backgroundColor: isDark ? null : Colors.white,
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
                                     const Text(
-                                      'Trình độ thể thao',
+                                      'Thông tin cá nhân',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Độ tương thích khi ghép cặp, đặt sân giao lưu',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (undeclaredSports.isNotEmpty &&
-                                profiles.isNotEmpty)
-                              TextButton.icon(
-                                onPressed: _showAddSportBottomSheet,
-                                icon: const Icon(Icons.add_rounded, size: 16),
-                                label: const Text('Thêm môn'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppTheme.primaryColor,
-                                  minimumSize: const Size(
-                                    48,
-                                    48,
-                                  ), // touch target
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // List of profiles or empty state
-                        if (profiles.isEmpty)
-                          _buildEmptyState()
-                        else ...[
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: profiles.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 16),
-                            itemBuilder: (context, index) {
-                              final profile = profiles[index];
-                              final isEditingThis =
-                                  _editingSportId == profile.sportId;
-
-                              return Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.03)
-                                      : Colors.black.withValues(alpha: 0.02),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.05)
-                                        : Colors.black.withValues(alpha: 0.05),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.primaryColor
-                                                    .withValues(alpha: 0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: const Icon(
-                                                Icons.trending_up_rounded,
-                                                color: AppTheme.primaryColor,
-                                                size: 16,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  profile.sportName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  'Cập nhật: ${profile.updatedAt != null ? _formatDate(profile.updatedAt!) : 'Không rõ'}',
-                                                  style: const TextStyle(
-                                                    fontSize: 9,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        if (!isEditingThis)
-                                          Row(
-                                            children: [
-                                              IconButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _editingSportId =
-                                                        profile.sportId;
-                                                    _editingRankValue =
-                                                        profile.rankValue;
-                                                  });
-                                                },
-                                                icon: const Icon(
-                                                  Icons.edit_outlined,
-                                                  size: 16,
-                                                ),
-                                                color: Colors.grey,
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      minWidth: 48,
-                                                      minHeight: 48,
-                                                    ), // touch target
-                                              ),
-                                              IconButton(
-                                                onPressed: () =>
-                                                    _handleDeleteSport(
-                                                      profile.sportId,
-                                                      profile.sportName,
-                                                    ),
-                                                icon: const Icon(
-                                                  Icons.delete_outline_rounded,
-                                                  size: 16,
-                                                ),
-                                                color: Colors.red[300],
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      minWidth: 48,
-                                                      minHeight: 48,
-                                                    ), // touch target
-                                              ),
-                                            ],
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    if (isEditingThis) ...[
-                                      // Inline Level Selector dropdown
-                                      AppDropdown<int>(
-                                        value: _editingRankValue,
-                                        labelText: 'Chọn cấp độ chơi',
-                                        items: _sportLevels.map((l) {
-                                          return DropdownMenuItem<int>(
-                                            value: l.rankValue,
-                                            child: Text(
-                                              '${l.name} (Rank: ${l.rankValue})',
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChanged: (val) {
+                                    if (!_isEditingInfo)
+                                      TextButton.icon(
+                                        onPressed: () {
                                           setState(() {
-                                            _editingRankValue = val;
+                                            _isEditingInfo = true;
+                                            _nameController.text =
+                                                _controller
+                                                    .userProfile
+                                                    ?.fullName ??
+                                                '';
+                                            _phoneController.text =
+                                                _controller
+                                                    .userProfile
+                                                    ?.phoneNumber ??
+                                                '';
                                           });
                                         },
+                                        icon: const Icon(
+                                          Icons.edit_rounded,
+                                          size: 14,
+                                        ),
+                                        label: const Text('Chỉnh sửa'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              AppTheme.primaryColor,
+                                          minimumSize: const Size(
+                                            48,
+                                            48,
+                                          ), // touch target
+                                        ),
                                       ),
-                                      const SizedBox(height: 12),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                if (_isEditingInfo) ...[
+                                  // Edit Fields
+                                  TextFormField(
+                                    controller: _nameController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Tên hiển thị',
+                                      prefixIcon: Icon(
+                                        Icons.person_outline_rounded,
+                                      ),
+                                    ),
+                                    validator: (val) {
+                                      if (val == null || val.trim().isEmpty) {
+                                        return 'Tên hiển thị không được để trống';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextFormField(
+                                    initialValue:
+                                        _controller.userProfile?.email ?? '',
+                                    decoration: const InputDecoration(
+                                      labelText: 'Email',
+                                      prefixIcon: Icon(
+                                        Icons.mail_outline_rounded,
+                                      ),
+                                    ),
+                                    enabled:
+                                        false, // Read only as email is key login
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextFormField(
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Số điện thoại',
+                                      prefixIcon: Icon(Icons.phone_outlined),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Actions
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: AppButton(
+                                          onPressed: _handleSaveInfo,
+                                          text: 'Lưu thay đổi',
+                                          isLoading: _controller.isLoading,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: AppButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _isEditingInfo = false;
+                                            });
+                                          },
+                                          text: 'Hủy',
+                                          type: AppButtonType.secondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ] else ...[
+                                  // Display Info Details
+                                  _buildInfoItem(
+                                    Icons.person_outline_rounded,
+                                    'Tên đầy đủ',
+                                    _controller.userProfile?.fullName ??
+                                        'Đang tải...',
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildInfoItem(
+                                    Icons.mail_outline_rounded,
+                                    'Địa chỉ email',
+                                    _controller.userProfile?.email ??
+                                        'Chưa cập nhật',
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildInfoItem(
+                                    Icons.phone_outlined,
+                                    'Số điện thoại',
+                                    _controller
+                                                .userProfile
+                                                ?.phoneNumber
+                                                .isNotEmpty ==
+                                            true
+                                        ? _controller.userProfile!.phoneNumber
+                                        : 'Chưa cập nhật',
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Sports Level (Taste Skill) Card
+                        AppCard(
+                          backgroundColor: isDark ? null : Colors.white,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Row(
                                         children: [
-                                          Expanded(
-                                            child: AppButton(
-                                              onPressed: () =>
-                                                  _handleUpdateSportLevel(
-                                                    profile.sportId,
-                                                  ),
-                                              text: 'Lưu',
-                                              height: 40,
-                                            ),
+                                          Icon(
+                                            Icons.fitness_center_rounded,
+                                            size: 18,
+                                            color: AppTheme.primaryColor,
                                           ),
                                           const SizedBox(width: 8),
-                                          Expanded(
-                                            child: AppButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  _editingSportId = null;
-                                                  _editingRankValue = null;
-                                                });
-                                              },
-                                              text: 'Hủy',
-                                              type: AppButtonType.secondary,
-                                              height: 40,
+                                          const Text(
+                                            'Trình độ thể thao',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ] else ...[
-                                      // Display Level Badge
+                                      const SizedBox(height: 2),
                                       const Text(
-                                        'Trình độ hiện tại',
+                                        'Độ tương thích khi ghép cặp, đặt sân giao lưu',
                                         style: TextStyle(
                                           fontSize: 10,
                                           color: Colors.grey,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      AppBadge(
-                                        label: profile.levelName,
-                                        icon: Icons.emoji_events_rounded,
-                                        backgroundColor: AppTheme.primaryColor,
-                                        textColor: Colors.black,
-                                      ),
                                     ],
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-
-                          // Notice banner if all active sports are declared
-                          if (undeclaredSports.isEmpty) ...[
-                            const SizedBox(height: 20),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppTheme.primaryColor.withValues(
-                                    alpha: 0.2,
                                   ),
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.check_circle_outline_rounded,
-                                    color: AppTheme.primaryColor,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Bạn đã khai báo đầy đủ trình độ cho toàn bộ các môn thể thao hoạt động trong hệ thống SmashHub!',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black87,
-                                        height: 1.4,
+                                  if (undeclaredSports.isNotEmpty &&
+                                      profiles.isNotEmpty)
+                                    TextButton.icon(
+                                      onPressed: _showAddSportBottomSheet,
+                                      icon: const Icon(
+                                        Icons.add_rounded,
+                                        size: 16,
                                       ),
+                                      label: const Text('Thêm môn'),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppTheme.primaryColor,
+                                        minimumSize: const Size(
+                                          48,
+                                          48,
+                                        ), // touch target
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // List of profiles or empty state
+                              if (profiles.isEmpty)
+                                _buildEmptyState()
+                              else ...[
+                                ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: profiles.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: 16),
+                                  itemBuilder: (context, index) {
+                                    final profile = profiles[index];
+                                    final isEditingThis =
+                                        _editingSportId == profile.sportId;
+
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.white.withValues(
+                                                alpha: 0.03,
+                                              )
+                                            : Colors.black.withValues(
+                                                alpha: 0.02,
+                                              ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                )
+                                              : Colors.black.withValues(
+                                                  alpha: 0.05,
+                                                ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme
+                                                          .primaryColor
+                                                          .withValues(
+                                                            alpha: 0.1,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.trending_up_rounded,
+                                                      color:
+                                                          AppTheme.primaryColor,
+                                                      size: 16,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        profile.sportName,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        'Cập nhật: ${profile.updatedAt != null ? _formatDate(profile.updatedAt!) : 'Không rõ'}',
+                                                        style: const TextStyle(
+                                                          fontSize: 9,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              if (!isEditingThis)
+                                                Row(
+                                                  children: [
+                                                    IconButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _editingSportId =
+                                                              profile.sportId;
+                                                          _editingRankValue =
+                                                              profile.rankValue;
+                                                        });
+                                                      },
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 16,
+                                                      ),
+                                                      color: Colors.grey,
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            minWidth: 48,
+                                                            minHeight: 48,
+                                                          ), // touch target
+                                                    ),
+                                                    IconButton(
+                                                      onPressed: () =>
+                                                          _handleDeleteSport(
+                                                            profile.sportId,
+                                                            profile.sportName,
+                                                          ),
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .delete_outline_rounded,
+                                                        size: 16,
+                                                      ),
+                                                      color: Colors.red[300],
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            minWidth: 48,
+                                                            minHeight: 48,
+                                                          ), // touch target
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+
+                                          if (isEditingThis) ...[
+                                            // Inline Level Selector dropdown
+                                            AppDropdown<int>(
+                                              value: _editingRankValue,
+                                              labelText: 'Chọn cấp độ chơi',
+                                              items: _sportLevels.map((l) {
+                                                return DropdownMenuItem<int>(
+                                                  value: l.rankValue,
+                                                  child: Text(
+                                                    '${l.name} (Rank: ${l.rankValue})',
+                                                  ),
+                                                );
+                                              }).toList(),
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  _editingRankValue = val;
+                                                });
+                                              },
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: AppButton(
+                                                    onPressed: () =>
+                                                        _handleUpdateSportLevel(
+                                                          profile.sportId,
+                                                        ),
+                                                    text: 'Lưu',
+                                                    height: 40,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: AppButton(
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        _editingSportId = null;
+                                                        _editingRankValue =
+                                                            null;
+                                                      });
+                                                    },
+                                                    text: 'Hủy',
+                                                    type:
+                                                        AppButtonType.secondary,
+                                                    height: 40,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ] else ...[
+                                            // Display Level Badge
+                                            const Text(
+                                              'Trình độ hiện tại',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            AppBadge(
+                                              label: profile.levelName,
+                                              icon: Icons.emoji_events_rounded,
+                                              backgroundColor:
+                                                  AppTheme.primaryColor,
+                                              textColor: Colors.black,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                // Notice banner if all active sports are declared
+                                if (undeclaredSports.isEmpty) ...[
+                                  const SizedBox(height: 20),
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppTheme.primaryColor.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle_outline_rounded,
+                                          color: AppTheme.primaryColor,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Bạn đã khai báo đầy đủ trình độ cho toàn bộ các môn thể thao hoạt động trong hệ thống SmashHub!',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.black87,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                          ],
-                        ],
+                              ],
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 

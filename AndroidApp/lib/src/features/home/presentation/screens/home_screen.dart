@@ -4,10 +4,15 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/network/api_client.dart';
+import '../../../../shared/network/api_response.dart';
+import '../../../../shared/network/api_config.dart';
 import '../../data/data_sources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../data/models/home_models.dart';
 import '../controllers/home_controller.dart';
+import '../../../../features/auth/data/data_sources/profile_remote_data_source.dart';
+import '../../../../features/auth/data/repositories/profile_repository_impl.dart';
+import '../../../../features/auth/presentation/controllers/profile_controller.dart';
 
 /// Màn hình Trang chủ chính (HomeScreen) với phong cách thiết kế thể thao hiện đại, cao cấp.
 /// Tích hợp SliverAppBar, Banners quảng cáo, Lưới hành động nhanh và Bản tin cộng đồng.
@@ -20,7 +25,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _homeController;
-  
+  late final ProfileController _profileController;
+
   List<HomeBanner> _banners = [];
   List<CommunityPost> _posts = [];
   bool _isLoadingBanners = true;
@@ -29,14 +35,34 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Khởi tạo các tầng phụ thuộc (Dependency Injection nội bộ)
     final apiClient = ApiClient();
     final remoteDataSource = HomeRemoteDataSource(apiClient);
     final repository = HomeRepositoryImpl(remoteDataSource);
     _homeController = HomeController(homeRepository: repository);
 
+    final profileRemoteDataSource = ProfileRemoteDataSource(apiClient);
+    final profileRepository = ProfileRepositoryImpl(profileRemoteDataSource);
+    _profileController = ProfileController(
+      profileRepository: profileRepository,
+    );
+    _profileController.addListener(_onProfileControllerUpdate);
+
     _loadData();
+  }
+
+  void _onProfileControllerUpdate() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _profileController.removeListener(_onProfileControllerUpdate);
+    _profileController.dispose();
+    super.dispose();
   }
 
   /// Tải dữ liệu song song từ API thông qua Controller
@@ -46,14 +72,16 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoadingFeed = true;
     });
 
-    // Gọi song song hai API để tăng tốc độ tải trang
+    // Gọi song song các API để tăng tốc độ tải trang
     final results = await Future.wait([
       _homeController.getBanners(),
       _homeController.getCommunityFeed(),
     ]);
 
-    final bannerResponse = results[0];
-    final feedResponse = results[1];
+    _profileController.fetchProfileData();
+
+    final bannerResponse = results[0] as ApiResponse<List<HomeBanner>>;
+    final feedResponse = results[1] as ApiResponse<List<CommunityPost>>;
 
     if (mounted) {
       setState(() {
@@ -75,12 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackgroundColor : AppTheme.lightBackgroundColor,
+      backgroundColor: isDark
+          ? AppTheme.darkBackgroundColor
+          : AppTheme.lightBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadData,
           color: AppTheme.primaryColor,
-          backgroundColor: isDark ? AppTheme.darkBackgroundColor : AppTheme.lightBackgroundColor,
+          backgroundColor: isDark
+              ? AppTheme.darkBackgroundColor
+              : AppTheme.lightBackgroundColor,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -89,31 +121,110 @@ class _HomeScreenState extends State<HomeScreen> {
                 floating: true,
                 snap: true,
                 expandedHeight: 80.0,
-                backgroundColor: isDark ? AppTheme.darkBackgroundColor : AppTheme.lightBackgroundColor,
+                backgroundColor: isDark
+                    ? AppTheme.darkBackgroundColor
+                    : AppTheme.lightBackgroundColor,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 10.0,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Row(
                           children: [
-                            Text(
-                              'Xin chào,',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            // Avatar
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.primaryColor,
+                                  width: 2,
+                                ),
+                                color: AppTheme.primaryColor.withOpacity(0.2),
+                                image:
+                                    _profileController
+                                                .userProfile
+                                                ?.avatarFileId !=
+                                            null &&
+                                        _profileController
+                                            .userProfile!
+                                            .avatarFileId!
+                                            .isNotEmpty
+                                    ? DecorationImage(
+                                        image: CachedNetworkImageProvider(
+                                          ApiConfig.getFileUrl(_profileController.userProfile!.avatarFileId!),
+                                        ),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
                               ),
+                              alignment: Alignment.center,
+                              child:
+                                  _profileController
+                                              .userProfile
+                                              ?.avatarFileId ==
+                                          null ||
+                                      _profileController
+                                          .userProfile!
+                                          .avatarFileId!
+                                          .isEmpty
+                                  ? Text(
+                                      _profileController
+                                                  .userProfile
+                                                  ?.fullName
+                                                  .isNotEmpty ==
+                                              true
+                                          ? _profileController
+                                                .userProfile!
+                                                .fullName
+                                                .substring(0, 1)
+                                                .toUpperCase()
+                                          : 'U',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppTheme.primaryColor,
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Bạn 👋',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 22,
-                              ),
+                            const SizedBox(width: 12),
+                            // Lời chào và Subtitle
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _profileController
+                                              .userProfile
+                                              ?.fullName
+                                              .isNotEmpty ==
+                                          true
+                                      ? 'Hey, ${_profileController.userProfile!.fullName.split(' ').last} 👋'
+                                      : 'Hey, Bạn 👋',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 18,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'SmashHub',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -132,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               hasBadge: true,
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -192,20 +303,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   : SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final post = _posts[index];
-                            return _buildCommunityPostItem(post, isDark);
-                          },
-                          childCount: _posts.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final post = _posts[index];
+                          return _buildCommunityPostItem(post, isDark);
+                        }, childCount: _posts.length),
                       ),
                     ),
 
               // Thêm khoảng đệm ở cuối màn hình
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 32),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           ),
         ),
@@ -229,14 +335,19 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? AppTheme.darkSurfaceColor : Colors.grey[200],
             shape: BoxShape.circle,
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: 1.0,
             ),
           ),
           child: IconButton(
             icon: Icon(icon, size: 22),
             onPressed: onPressed,
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48), // Touch target
+            constraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: 48,
+            ), // Touch target
           ),
         ),
         if (hasBadge)
@@ -251,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: BoxShape.circle,
               ),
             ),
-          )
+          ),
       ],
     );
   }
@@ -264,14 +375,19 @@ class _HomeScreenState extends State<HomeScreen> {
         color: isDark ? AppTheme.darkSurfaceColor : Colors.grey[100],
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.08),
           width: 1.0,
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: isDark ? Colors.white54 : Colors.black45),
+          Icon(
+            Icons.search_rounded,
+            color: isDark ? Colors.white54 : Colors.black45,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -289,7 +405,10 @@ class _HomeScreenState extends State<HomeScreen> {
               style: const TextStyle(fontSize: 14),
             ),
           ),
-          Icon(Icons.tune_rounded, color: isDark ? Colors.white54 : Colors.black45),
+          Icon(
+            Icons.tune_rounded,
+            color: isDark ? Colors.white54 : Colors.black45,
+          ),
         ],
       ),
     );
@@ -321,11 +440,19 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
-              placeholder: (context, url) => _buildShimmerContainer(height: 180, width: double.infinity, isDark: isDark),
+              placeholder: (context, url) => _buildShimmerContainer(
+                height: 180,
+                width: double.infinity,
+                isDark: isDark,
+              ),
               errorWidget: (context, url, error) => Container(
                 height: 180,
                 color: Colors.grey[900],
-                child: const Icon(Icons.broken_image_rounded, size: 50, color: Colors.grey),
+                child: const Icon(
+                  Icons.broken_image_rounded,
+                  size: 50,
+                  color: Colors.grey,
+                ),
               ),
             ),
             // Lớp Gradient phủ tối để hiển thị text rõ nét
@@ -351,11 +478,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppTheme.primaryColor, width: 1.0),
+                      border: Border.all(
+                        color: AppTheme.primaryColor,
+                        width: 1.0,
+                      ),
                     ),
                     child: const Text(
                       'ƯU ĐÃI HOT',
@@ -400,7 +533,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           minimumSize: const Size(80, 32),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -409,7 +545,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Text(
                           banner.actionButtonText ?? 'Xem ngay',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ],
@@ -574,19 +713,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       post.userName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       post.timeAgo,
-                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[600],
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
               ),
               if (post.tag != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -605,10 +753,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 14),
 
           // Nội dung văn bản của bài viết
-          Text(
-            post.content,
-            style: const TextStyle(fontSize: 14, height: 1.4),
-          ),
+          Text(post.content, style: const TextStyle(fontSize: 14, height: 1.4)),
           const SizedBox(height: 14),
 
           // Ảnh đính kèm (Ví dụ ảnh sân đấu cầu lông / tennis)
@@ -620,7 +765,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => _buildShimmerContainer(height: 180, width: double.infinity, isDark: isDark),
+                placeholder: (context, url) => _buildShimmerContainer(
+                  height: 180,
+                  width: double.infinity,
+                  isDark: isDark,
+                ),
                 errorWidget: (context, url, error) => const SizedBox.shrink(),
               ),
             ),
@@ -631,7 +780,9 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildInteractionButton(
-                icon: post.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                icon: post.isLiked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
                 label: post.likeCount.toString(),
                 color: post.isLiked ? Colors.redAccent : Colors.grey,
                 onTap: () {},
@@ -649,7 +800,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {},
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -673,7 +824,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -706,7 +861,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Shimmer cho Banner quảng cáo
   Widget _buildBannerShimmer(bool isDark) {
-    return _buildShimmerContainer(height: 180, width: double.infinity, isDark: isDark, borderRadius: 20.0);
+    return _buildShimmerContainer(
+      height: 180,
+      width: double.infinity,
+      isDark: isDark,
+      borderRadius: 20.0,
+    );
   }
 
   /// Shimmer cho Feed cộng đồng
@@ -720,7 +880,9 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? AppTheme.darkSurfaceColor : Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: 1.0,
             ),
           ),
@@ -729,26 +891,51 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Row(
                 children: [
-                  _buildShimmerContainer(height: 40, width: 40, isDark: isDark, borderRadius: 20),
+                  _buildShimmerContainer(
+                    height: 40,
+                    width: 40,
+                    isDark: isDark,
+                    borderRadius: 20,
+                  ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildShimmerContainer(height: 12, width: 100, isDark: isDark),
+                      _buildShimmerContainer(
+                        height: 12,
+                        width: 100,
+                        isDark: isDark,
+                      ),
                       const SizedBox(height: 6),
-                      _buildShimmerContainer(height: 10, width: 60, isDark: isDark),
+                      _buildShimmerContainer(
+                        height: 10,
+                        width: 60,
+                        isDark: isDark,
+                      ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildShimmerContainer(height: 12, width: double.infinity, isDark: isDark),
+              _buildShimmerContainer(
+                height: 12,
+                width: double.infinity,
+                isDark: isDark,
+              ),
               const SizedBox(height: 6),
-              _buildShimmerContainer(height: 12, width: double.infinity, isDark: isDark),
+              _buildShimmerContainer(
+                height: 12,
+                width: double.infinity,
+                isDark: isDark,
+              ),
               const SizedBox(height: 6),
               _buildShimmerContainer(height: 12, width: 150, isDark: isDark),
               const SizedBox(height: 16),
-              _buildShimmerContainer(height: 180, width: double.infinity, isDark: isDark),
+              _buildShimmerContainer(
+                height: 180,
+                width: double.infinity,
+                isDark: isDark,
+              ),
             ],
           ),
         );

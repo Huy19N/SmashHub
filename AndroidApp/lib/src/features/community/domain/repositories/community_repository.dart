@@ -24,4 +24,24 @@ abstract class CommunityRepository {
 
   /// Giải tán Câu lạc bộ (chỉ Leader).
   Future<ApiResponse<void>> deleteTeam(String teamId);
+
+  /// Lấy danh sách tin nhắn của câu lạc bộ.
+  Future<ApiResponse<PagedResult<TeamMessageResponse>>> getTeamMessages(
+    String teamId, {
+    String? search,
+    required int pageNumber,
+    required int pageSize,
+  });
+
+  /// Gửi tin nhắn mới vào câu lạc bộ.
+  Future<ApiResponse<TeamMessageResponse>> sendMessage(
+    String teamId,
+    SendMessageRequest request,
+  );
+
+  /// Xóa tin nhắn (soft delete).
+  Future<ApiResponse<void>> deleteMessage(String teamId, String messageId);
+
+  /// Xoá thành viên khỏi câu lạc bộ.
+  Future<ApiResponse<void>> removeTeamMember(String teamId, String userId);
 }

@@ -87,9 +87,9 @@ class _MainWrapperState extends State<MainWrapper> {
                     ), // Spacer cho nút tròn nổi bật ở giữa
                     _buildNavItem(
                       2,
-                      Icons.people_outline_rounded,
-                      Icons.people_rounded,
-                      'Tin nhắn',
+                      Icons.groups_outlined,
+                      Icons.groups,
+                      'Nhóm',
                     ),
                     _buildNavItem(
                       3,

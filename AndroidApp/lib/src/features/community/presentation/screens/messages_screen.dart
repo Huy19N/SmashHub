@@ -4,7 +4,7 @@ import '../../../../shared/network/api_client.dart';
 import '../../data/data_sources/community_remote_data_source.dart';
 import '../../data/repositories/community_repository_impl.dart';
 import '../controllers/messages_controller.dart';
-import '../../../../shared/widgets/app_card.dart';
+import 'team_detail_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -47,7 +47,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'TIN NHẮN',
+          'NHÓM',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -67,7 +67,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           ),
                           const SizedBox(height: 20),
                           const Text(
-                            'Chưa có cuộc trò chuyện',
+                            'Chưa có nhóm nào',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -94,9 +94,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         final team = _controller.teams[index];
                         return InkWell(
                           onTap: () {
-                            // Chuyển hướng đến chi tiết tin nhắn câu lạc bộ (Chưa hiện thực)
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Tính năng chat đang được phát triển!')),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TeamDetailScreen(
+                                  teamId: team.teamId,
+                                  teamName: team.teamName,
+                                  memberCount: team.memberCount,
+                                ),
+                              ),
                             );
                           },
                           child: Padding(

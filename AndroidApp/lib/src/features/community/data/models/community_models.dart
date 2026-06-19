@@ -85,6 +85,7 @@ class TeamMemberResponse {
   final int wins;
   final int losses;
   final DateTime? joinedAt;
+  final String? avatarFileId;
 
   TeamMemberResponse({
     required this.userId,
@@ -93,6 +94,7 @@ class TeamMemberResponse {
     required this.wins,
     required this.losses,
     this.joinedAt,
+    this.avatarFileId,
   });
 
   factory TeamMemberResponse.fromJson(Map<String, dynamic> json) {
@@ -105,6 +107,7 @@ class TeamMemberResponse {
       joinedAt: json['joinedAt'] != null
           ? DateTime.parse(json['joinedAt'] as String)
           : null,
+      avatarFileId: json['avatarFileId'] as String?,
     );
   }
 
@@ -164,6 +167,71 @@ class TeamDetailResponse {
       'createdAt': createdAt?.toIso8601String(),
       'isActive': isActive,
       'members': members.map((m) => m.toJson()).toList(),
+    };
+  }
+}
+
+/// DTO phản hồi tin nhắn trong Câu lạc bộ.
+class TeamMessageResponse {
+  final String messageId;
+  final String teamId;
+  final String senderId;
+  final String content;
+  final String? senderName;
+  final int messageType;
+  final String? mediaFileId;
+  final String? mediaUrl;
+  final DateTime? sentAt;
+
+  TeamMessageResponse({
+    required this.messageId,
+    required this.teamId,
+    required this.senderId,
+    required this.content,
+    this.senderName,
+    required this.messageType,
+    this.mediaFileId,
+    this.mediaUrl,
+    this.sentAt,
+  });
+
+  factory TeamMessageResponse.fromJson(Map<String, dynamic> json) {
+    return TeamMessageResponse(
+      messageId: json['messageId'] as String? ?? '',
+      teamId: json['teamId'] as String? ?? '',
+      senderId: json['senderId'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      senderName: json['senderName'] as String?,
+      messageType: json['messageType'] as int? ?? 0,
+      mediaFileId: json['mediaFileId'] as String?,
+      mediaUrl: json['mediaUrl'] as String?,
+      sentAt: json['sentAt'] != null
+          ? DateTime.parse(json['sentAt'] as String)
+          : null,
+    );
+  }
+}
+
+/// DTO gửi đi để tạo tin nhắn mới.
+class SendMessageRequest {
+  final String teamId;
+  final String content;
+  final int messageType;
+  final String? mediaFileId;
+
+  SendMessageRequest({
+    required this.teamId,
+    required this.content,
+    this.messageType = 0,
+    this.mediaFileId,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'teamId': teamId,
+      'content': content,
+      'messageType': messageType,
+      'mediaFileId': mediaFileId,
     };
   }
 }
