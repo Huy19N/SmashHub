@@ -3,6 +3,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
 import '../../features/community/presentation/screens/messages_screen.dart';
+import '../../features/community/presentation/screens/create_team_screen.dart';
 import '../theme/app_theme.dart';
 
 /// Lớp điều khiển giao diện chính chứa thanh điều hướng phía dưới (Bottom Navigation Bar)
@@ -17,20 +18,20 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
-  // Danh sách các màn hình tương ứng với từng Tab
-  late final List<Widget> _screens;
+  /// Biến tăng dần để ép MessagesScreen rebuild lại sau khi tạo nhóm mới.
+  int _messagesKey = 0;
+
+  // Danh sách các màn hình tương ứng với từng Tab (trừ MessagesScreen được tạo động)
+  late final Widget _homeScreen;
+  late final Widget _bookingScreen;
+  late final Widget _profileScreen;
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      const HomeScreen(),
-      const BookingScreen(),
-      const MessagesScreen(),
-      const ProfileScreen(
-        isEmbedded: true,
-      ), // Nhúng ProfileScreen và ẩn nút quay lại
-    ];
+    _homeScreen = const HomeScreen();
+    _bookingScreen = const BookingScreen();
+    _profileScreen = const ProfileScreen(isEmbedded: true);
   }
 
   void _onTabTapped(int index) {
@@ -45,7 +46,15 @@ class _MainWrapperState extends State<MainWrapper> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _homeScreen,
+          _bookingScreen,
+          MessagesScreen(key: ValueKey('messages_$_messagesKey')),
+          _profileScreen,
+        ],
+      ),
       bottomNavigationBar: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -228,9 +237,19 @@ class _MainWrapperState extends State<MainWrapper> {
                 subtitle: 'Xây dựng câu lạc bộ và mời thành viên',
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng tạo nhóm đang phát triển!')),
-                  );
+                  Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const CreateTeamScreen(),
+                    ),
+                  ).then((created) {
+                    // Nếu tạo nhóm thành công → chuyển sang tab Nhóm và ép reload danh sách
+                    if (created == true) {
+                      setState(() {
+                        _currentIndex = 2; // Tab "Nhóm"
+                        _messagesKey++; // Ép MessagesScreen rebuild để fetch lại danh sách
+                      });
+                    }
+                  });
                 },
               ),
               const SizedBox(height: 16),
