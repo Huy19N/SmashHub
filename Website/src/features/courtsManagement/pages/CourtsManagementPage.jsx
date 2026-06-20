@@ -303,7 +303,8 @@ export default function CourtsManagementPage() {
       <SportyWatermarks />
       <Sidebar activeMenu="courts-management" />
 
-      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
+      <div className="flex-1 h-screen overflow-y-auto custom-scrollbar">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-page">
         
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -846,6 +847,7 @@ export default function CourtsManagementPage() {
           </div>
         )}
 
+        </div>
       </div>
 
       {/* MODAL: CHỈNH SỬA SÂN CON */}

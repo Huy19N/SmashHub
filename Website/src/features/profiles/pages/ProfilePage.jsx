@@ -251,7 +251,8 @@ export default function ProfilePage() {
       <SportyWatermarks />
       <Sidebar activeMenu="profile" />
 
-      <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
+      <div className="flex-1 h-screen overflow-y-auto custom-scrollbar">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-page">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white font-display tracking-tight">
@@ -689,6 +690,7 @@ export default function ProfilePage() {
           </div>
         )}
 
+        </div>
       </div>
 
       {/* MODAL: KHAI BÁO TRÌNH ĐỘ MỚI */}

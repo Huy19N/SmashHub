@@ -11,7 +11,7 @@ const ICE_SERVERS = {
   ]
 };
 
-export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose }) {
+export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose, connection }) {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
   const [isAudioMuted, setIsAudioMuted] = useState(false);
@@ -23,7 +23,6 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
 
   // Init SignalR & WebRTC
   useEffect(() => {
-    let connection;
     let stream;
 
     const startCall = async () => {
@@ -35,18 +34,10 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
           localVideoRef.current.srcObject = stream;
         }
 
-        // 2. Connect to Hub — video call methods (SendSignal, StartCall, JoinCall, LeaveCall)
-        //    are all inside ChatHub, so we connect to the same /hub/chat endpoint.
-        const hubUrl = import.meta.env.VITE_CHAT_HUB_URL || (import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') + '/hub/chat');
-
-        connection = new signalR.HubConnectionBuilder()
-          .withUrl(hubUrl, {
-            accessTokenFactory: () => getAccessToken(),
-          })
-          .withAutomaticReconnect()
-          .build();
-
-        connectionRef.current = connection;
+        // 2. Use existing connection
+        if (!connection) {
+          throw new Error('SignalR connection is not provided.');
+        }
 
         // 3. Register Events
         connection.on('UserJoinedCall', async (connId, userId) => {
@@ -91,8 +82,6 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
           });
         });
 
-        await connection.start();
-
         // 4. Join the room
         if (isInitiator) {
           await connection.invoke('StartCall', teamId, roomId);
@@ -115,12 +104,18 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose 
         stream.getTracks().forEach(track => track.stop());
       }
       Object.values(peersRef.current).forEach(peer => peer.close());
-      if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        connection.invoke('LeaveCall', roomId).catch(() => { });
-        connection.stop().catch(() => { });
+      
+      if (connection) {
+        connection.off('UserJoinedCall');
+        connection.off('ReceiveSignal');
+        connection.off('UserLeftCall');
+        
+        if (connection.state === signalR.HubConnectionState.Connected) {
+          connection.invoke('LeaveCall', roomId).catch(() => { });
+        }
       }
     };
-  }, [teamId, roomId, isInitiator, onClose]);
+  }, [teamId, roomId, isInitiator, connection]); // Remove onClose from dependencies to prevent infinite re-mounting loops when TeamChat re-renders
 
   const createPeer = (connId, stream, connection) => {
     const peer = new RTCPeerConnection(ICE_SERVERS);

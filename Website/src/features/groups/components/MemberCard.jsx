@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Award, Calendar, Users, ChevronRight, Trash2, Shield } from 'lucide-react';
 import { getAvatarUrl } from '../../../utils/avatarUtils';
-import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
+import { getAllUserByIdAPI, getUserOnlineAPI } from '../../profiles/api/profiles.api';
 
 const AVATAR_COLORS = [
   'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500',
@@ -24,25 +24,37 @@ function getInitials(name) {
 export default function MemberCard({ member, onRemove, onViewProfile }) {
   const [showMenu, setShowMenu] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [isOnline, setIsOnline] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchAvatar = async () => {
+    const fetchAvatarAndStatus = async () => {
       try {
         const userId = member.userId || member.id;
         if (userId) {
-          const res = await getAllUserByIdAPI(userId);
-          const fileId = res?.data?.avatarFileId || res?.avatarFileId;
-          if (fileId && isMounted) {
-            setAvatarUrl(getAvatarUrl(fileId));
+          const [resAvatar, resOnline] = await Promise.allSettled([
+            getAllUserByIdAPI(userId),
+            getUserOnlineAPI(userId)
+          ]);
+
+          if (isMounted) {
+            if (resAvatar.status === 'fulfilled') {
+              const fileId = resAvatar.value?.data?.avatarFileId || resAvatar.value?.avatarFileId;
+              if (fileId) setAvatarUrl(getAvatarUrl(fileId));
+            }
+            if (resOnline.status === 'fulfilled') {
+              // resOnline.value could be a boolean or an object { isOnline: true }
+              const onlineStatus = typeof resOnline.value === 'object' ? resOnline.value?.isOnline : resOnline.value;
+              setIsOnline(!!onlineStatus);
+            }
           }
         }
       } catch (err) {
         // ignore
       }
     };
-    fetchAvatar();
+    fetchAvatarAndStatus();
     return () => { isMounted = false; };
   }, [member]);
 
@@ -83,12 +95,19 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div className={`h-11 w-11 rounded-full ${getAvatarColor(member.fullName)} flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0 overflow-hidden`}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
-            ) : (
-              getInitials(member.fullName)
-            )}
+          <div className="relative shrink-0">
+            <div className={`h-11 w-11 rounded-full ${getAvatarColor(member.fullName)} flex items-center justify-center text-white font-bold text-sm shadow-sm overflow-hidden`}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
+              ) : (
+                getInitials(member.fullName)
+              )}
+            </div>
+            {/* Online Indicator */}
+            <span
+              className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-card-dark transition-colors duration-300 ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-gray-400'}`}
+              title={isOnline ? "Đang hoạt động" : "Ngoại tuyến"}
+            />
           </div>
           <div className="min-w-0">
             <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate font-display group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">

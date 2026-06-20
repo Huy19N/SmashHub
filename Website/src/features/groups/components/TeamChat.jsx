@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, Plus, Image as ImageIcon, Smile, Send, Loader2, AlertCircle, Trash2, X, Phone, PhoneIncoming } from 'lucide-react';
+import { Info, Plus, Image as ImageIcon, Smile, Send, Loader2, AlertCircle, Trash2, X, Phone, PhoneIncoming, Video } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import { getAccessToken } from '../../../config/axios';
 import { useGetMessages, useSendMessage, useDeleteMessage } from '../hooks/useGroups';
@@ -36,11 +36,27 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   
   // Video Call State
   const [videoCallRoom, setVideoCallRoom] = useState(null); // { roomId, isInitiator }
-  const [incomingCall, setIncomingCall] = useState(null); // { roomId, callerId }
+  const [activeCall, setActiveCall] = useState(null);
+  const activeCallRef = useRef(null);
+
+  const setActiveCallState = useCallback((call) => {
+    activeCallRef.current = call;
+    setActiveCall(call);
+  }, []);
 
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const connectionRef = useRef(null);
+
+  // ─── Auto-close participants if initiator leaves ────────────
+  useEffect(() => {
+    if (videoCallRoom && !videoCallRoom.isInitiator) {
+      if (!activeCall || activeCall.roomId !== videoCallRoom.roomId) {
+        toast.error("Trưởng phòng đã đóng cuộc gọi.");
+        setVideoCallRoom(null);
+      }
+    }
+  }, [activeCall, videoCallRoom]);
 
   // ─── Fetch sender avatars ────────────────────────────────────
   useEffect(() => {
@@ -116,15 +132,41 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
     });
 
     connection.on('CallStarted', (roomId, callerId, connId) => {
-      // Show incoming call if we didn't start it
+      // Show incoming call as a system message in the chat stream
       if (String(callerId) !== String(currentUserId)) {
-        setIncomingCall({ roomId, callerId });
+        setActiveCallState({ roomId, callerId, connId });
+
+        setMessages(prev => {
+          if (prev.some(m => m.messageId === `call_${roomId}`)) return prev;
+          
+          const callerMsg = prev.find(m => String(m.senderId) === String(callerId));
+          const callerName = callerMsg ? callerMsg.senderName : "Đồng đội";
+          
+          const callMsg = {
+            messageId: `call_${roomId}`,
+            senderId: callerId,
+            senderName: callerName,
+            content: "Đã bắt đầu phòng gọi video nhóm.",
+            messageType: 99,
+            roomId: roomId,
+            sentAt: new Date().toISOString(),
+            isEnded: false
+          };
+          return [...prev, callMsg].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+        });
       }
     });
 
     // Register handlers for backend events to suppress warnings
     connection.on('JoinedTeam', () => { });
     connection.on('LeftTeam', () => { });
+    connection.on('UserLeftCall', (connId) => {
+      if (activeCallRef.current && activeCallRef.current.connId === connId) {
+        const endedRoomId = activeCallRef.current.roomId;
+        setActiveCallState(null);
+        setMessages(prev => prev.map(m => m.messageId === `call_${endedRoomId}` ? { ...m, isEnded: true } : m));
+      }
+    });
 
     connection.onreconnecting(() => setConnectionStatus('connecting'));
     connection.onreconnected(() => {
@@ -276,7 +318,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
   // ─── Render ────────────────────────────────────────────────
   return (
-    <div className="flex flex-col bg-white dark:bg-card-dark rounded-2xl border border-gray-200 dark:border-border-dark overflow-hidden h-[680px] shadow-sm font-sans w-full max-w-full transition-all duration-300 ease-in-out">
+    <div className="flex flex-col bg-white dark:bg-card-dark rounded-2xl border border-gray-200 dark:border-border-dark overflow-hidden h-[calc(100vh-180px)] sm:h-[calc(100vh-140px)] shadow-sm font-sans w-full max-w-full transition-all duration-500 ease-in-out">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-250 dark:border-border-dark/60 bg-white dark:bg-card-dark">
         <div className="flex items-center gap-3">
@@ -301,8 +343,27 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
         </div>
         <div className="flex items-center gap-3 text-gray-400 dark:text-gray-500">
           <button 
-            onClick={() => setVideoCallRoom({ roomId: `team_${teamId}`, isInitiator: true })}
-            className="hover:text-emerald-600 dark:hover:text-primary transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer"
+            onClick={() => {
+              if (activeCall) {
+                toast.error("Phòng đang mở bạn không thể mở phòng mới!");
+                return;
+              }
+              const rId = `team_${teamId}_${Date.now()}`;
+              const myConnId = connectionRef.current?.connectionId;
+              setActiveCallState({ roomId: rId, callerId: currentUserId, connId: myConnId });
+              setVideoCallRoom({ roomId: rId, isInitiator: true });
+              setMessages(prev => [...prev, {
+                messageId: `call_${rId}`,
+                senderId: currentUserId,
+                senderName: "Bạn",
+                content: "Đã bắt đầu phòng gọi video nhóm.",
+                messageType: 99,
+                roomId: rId,
+                sentAt: new Date().toISOString(),
+                isEnded: false
+              }]);
+            }}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${activeCall ? 'text-gray-300 dark:text-gray-600' : 'hover:text-emerald-600 dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
             title="Gọi nhóm"
           >
             <Phone className="h-5 w-5" />
@@ -312,37 +373,6 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           </button>
         </div>
       </div>
-
-      {/* Incoming Call Alert */}
-      {incomingCall && !videoCallRoom && (
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] p-3 flex items-center justify-between px-6 animate-in slide-in-from-top shadow-lg shadow-emerald-500/10">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white dark:bg-[#052e14] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white dark:bg-[#052e14]"></span>
-            </span>
-            <span className="font-bold text-sm font-label">Cuộc gọi nhóm đang diễn ra...</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <button 
-              onClick={() => setIncomingCall(null)}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-white/20 text-white dark:text-[#052e14] transition-all cursor-pointer"
-            >
-              Bỏ qua
-            </button>
-            <button 
-              onClick={() => {
-                setVideoCallRoom({ roomId: incomingCall.roomId, isInitiator: false });
-                setIncomingCall(null);
-              }}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-[#052e14] text-emerald-700 dark:text-[#052e14] hover:bg-gray-100 transition-all flex items-center gap-1 shadow-md cursor-pointer"
-            >
-              <PhoneIncoming className="w-4 h-4" />
-              Tham gia
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-gray-50/50 dark:bg-[#0b0f17]">
@@ -420,7 +450,34 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                           </div>
                         ) : null}
                         
-                        {msg.content !== '[Hình ảnh]' && msg.content}
+                        {msg.messageType === 99 ? (
+                          <div className="flex flex-col gap-2 min-w-[180px] sm:min-w-[200px]">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="h-8 w-8 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center">
+                                <Video className="w-4 h-4" />
+                              </div>
+                              <span className="font-bold font-label text-sm">{msg.isEnded ? "Đã đóng phòng" : msg.content}</span>
+                            </div>
+                            {!isMine(msg) && (
+                              <button 
+                                onClick={() => {
+                                  if (msg.isEnded) return;
+                                  setVideoCallRoom({ roomId: msg.roomId, isInitiator: false });
+                                }}
+                                disabled={msg.isEnded}
+                                className={`w-full py-2 px-4 font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 font-label ${
+                                  msg.isEnded 
+                                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 cursor-not-allowed' 
+                                    : 'bg-white text-emerald-600 dark:bg-[#052e14] dark:text-primary hover:scale-[1.02] active:scale-95 cursor-pointer'
+                                }`}
+                              >
+                                {msg.isEnded ? "Cuộc gọi đã kết thúc" : <><PhoneIncoming className="w-4 h-4" /> Tham gia ngay</>}
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          msg.content !== '[Hình ảnh]' && msg.content
+                        )}
                         <div className={`text-[9px] mt-1.5 text-right font-bold uppercase tracking-wide font-label ${isMine(msg) ? 'text-emerald-100/80 dark:text-emerald-950/80' : 'text-gray-400 dark:text-gray-500'}`}>
                           {formatTime(msg.sentAt)}
                         </div>
@@ -450,7 +507,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
       {/* Input Area */}
       <div className="p-3 md:p-4 bg-white dark:bg-card-dark border-t border-gray-150 dark:border-border-dark/60">
-        <div className="flex items-center gap-2 bg-[#F4F6FB] dark:bg-white/5 p-2 rounded-2xl border border-transparent focus-within:border-emerald-500/30 dark:focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-emerald-500/10 dark:focus-within:ring-primary/10 transition-all duration-300">
+      <div className="flex items-center gap-2 sm:gap-3 bg-[#F4F6FB] dark:bg-white/5 p-1.5 sm:p-2 rounded-2xl border border-transparent focus-within:border-emerald-500/30 dark:focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-emerald-500/10 dark:focus-within:ring-primary/10 transition-all duration-300">
           <button className="hidden sm:flex p-2 text-gray-400 hover:text-emerald-600 dark:text-gray-500 dark:hover:text-primary transition-colors rounded-full hover:bg-gray-200/50 dark:hover:bg-white/5 shrink-0">
             <Plus className="h-5 w-5" />
           </button>
@@ -489,22 +546,29 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             <Smile className="h-5 w-5" />
           </button>
           <button
-            className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] p-2.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 disabled:opacity-40 disabled:scale-100 disabled:shadow-none flex items-center justify-center shrink-0 cursor-pointer"
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 disabled:opacity-50 disabled:scale-100 disabled:shadow-none flex items-center justify-center shrink-0 cursor-pointer"
             onClick={() => handleSendMessage(inputValue)}
             disabled={isSending || (!inputValue.trim() && !uploadingImage)}
           >
-            {isSending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4.5 w-4.5" />}
+            {isSending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4 w-4 sm:h-4.5 sm:w-4.5" />}
           </button>
         </div>
       </div>
 
       {/* Video Call Overlay */}
-      {videoCallRoom && (
+      {videoCallRoom && connectionRef.current && (
         <VideoCallOverlay
           teamId={teamId}
           roomId={videoCallRoom.roomId}
           isInitiator={videoCallRoom.isInitiator}
-          onClose={() => setVideoCallRoom(null)}
+          onClose={() => {
+            if (videoCallRoom.isInitiator) {
+              setActiveCallState(null);
+              setMessages(prev => prev.map(m => m.messageId === `call_${videoCallRoom.roomId}` ? { ...m, isEnded: true } : m));
+            }
+            setVideoCallRoom(null);
+          }}
+          connection={connectionRef.current}
         />
       )}
     </div>
