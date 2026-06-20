@@ -44,9 +44,9 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
               if (fileId) setAvatarUrl(getAvatarUrl(fileId));
             }
             if (resOnline.status === 'fulfilled') {
-              // resOnline.value could be a boolean or an object { isOnline: true }
-              const onlineStatus = typeof resOnline.value === 'object' ? resOnline.value?.isOnline : resOnline.value;
-              setIsOnline(!!onlineStatus);
+              const val = resOnline.value;
+              const isUserOnline = val === true || val?.isOnline === true || val?.status === 'online' || val?.status === true;
+              setIsOnline(isUserOnline);
             }
           }
         }
