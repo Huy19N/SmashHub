@@ -19,15 +19,21 @@ const Button = forwardRef(({
   return (
     <button
       ref={ref}
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      className={`relative overflow-hidden group ${baseStyles} ${variants[variant]} ${className}`}
       disabled={isLoading}
       {...props}
     >
-      {isLoading ? (
-        <div className="h-5 w-5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-      ) : (
-        children
+      {/* Sporty diagonal stripe pattern background chìm */}
+      {(variant === 'primary' || variant === 'outline' || variant === 'secondary') && (
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.04)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.04)_50%,rgba(0,0,0,0.04)_75%,transparent_75%,transparent)] bg-[length:10px_10px] pointer-events-none group-hover:scale-105 transition-transform duration-300" />
       )}
+      <span className="relative z-10 flex items-center justify-center gap-2">
+        {isLoading ? (
+          <div className="h-5 w-5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+        ) : (
+          children
+        )}
+      </span>
     </button>
   );
 });

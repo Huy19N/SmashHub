@@ -13,6 +13,7 @@ import {
   ArrowRight,
   LogOut,
   UsersRound,
+  User,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
 import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
@@ -165,56 +166,127 @@ export default function Navbar() {
                     </div>
                   </div>
                   {/* Dropdown Menu */}
-                  {avatarDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-xl shadow-xl overflow-hidden animate-dropdown z-50">
-                      <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">{isAdmin ? 'Quản trị viên SmashHub' : isFacilityOwner ? 'Chủ sân SmashHub' : 'Hội viên SmashHub'}</p>
-                      </div>
-                      <div className="py-1">
-                        {isAdmin ? (
-                          <button
-                            onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.ADMIN_DASHBOARD); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors font-label cursor-pointer"
-                          >
-                            <Layers className="h-4 w-4 text-emerald-600 dark:text-primary" />
-                            Trang quản trị
-                          </button>
-                        ) : isFacilityOwner ? (
-                          <button
-                            onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.COURTS_MANAGEMENT); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors font-label cursor-pointer"
-                          >
-                            <Layers className="h-4 w-4 text-emerald-600 dark:text-primary" />
-                            Quản lý sân
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => { setAvatarDropdownOpen(false); navigate(PATHS.GROUPS); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors font-label cursor-pointer"
-                          >
-                            <UsersRound className="h-4 w-4 text-emerald-600 dark:text-primary" />
-                            Nhóm của tôi
-                          </button>
-                        )}
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/5 transition-colors font-label cursor-pointer"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Đăng xuất
-                        </button>
-                      </div>
+                  <div
+                    className={`absolute right-0 top-full mt-3 flex flex-col items-end gap-3 z-50 w-48 transition-all duration-300 ease-out origin-top-right ${avatarDropdownOpen
+                      ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+                      : 'opacity-0 -translate-y-4 scale-95 pointer-events-none'
+                      }`}
+                  >
+                    {/* Vertical connecting line */}
+                    <div
+                      className={`absolute right-5 top-0 bottom-5 w-px border-l-2 border-dashed border-emerald-500/20 dark:border-primary/20 pointer-events-none z-0 transition-all duration-500 origin-top ${avatarDropdownOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'
+                        }`}
+                    />
+
+                    {/* Header Pill */}
+                    <div
+                      className={`relative z-10 mr-1 bg-white/95 dark:bg-[#0c0f17]/95 text-slate-800 dark:text-white px-3 py-1 rounded-full shadow-md border border-gray-200 dark:border-primary/20 text-[10px] font-black tracking-wider uppercase whitespace-nowrap mb-1 transition-all duration-300 ease-out ${avatarDropdownOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-90'
+                        }`}
+                      style={{ transitionDelay: avatarDropdownOpen ? '50ms' : '0ms' }}
+                    >
+                      {user?.roleName || 'Vận động viên'}
                     </div>
-                  )}
+
+                    {/* Action 1: Dashboard / Management / Groups */}
+                    <div
+                      className={`relative flex items-center justify-end h-10 w-48 group select-none transition-all duration-300 ease-out ${avatarDropdownOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-90'
+                        }`}
+                      style={{ transitionDelay: avatarDropdownOpen ? '100ms' : '0ms' }}
+                    >
+                      <button
+                        onClick={() => {
+                          setAvatarDropdownOpen(false);
+                          if (isAdmin) navigate(PATHS.ADMIN_DASHBOARD);
+                          else if (isFacilityOwner) navigate(PATHS.COURTS_MANAGEMENT);
+                          else navigate(PATHS.GROUPS);
+                        }}
+                        className="absolute right-0 h-10 rounded-full bg-white dark:bg-[#0c0f17] border border-gray-200 dark:border-primary/20 shadow-lg flex items-center pl-4 pr-12 overflow-hidden w-10 opacity-0 group-hover:w-full group-hover:opacity-100 transition-all duration-300 ease-out z-0 pointer-events-none group-hover:pointer-events-auto cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100 font-label">
+                          {isAdmin ? 'Trang quản trị' : isFacilityOwner ? 'Quản lý sân' : 'Nhóm của tôi'}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAvatarDropdownOpen(false);
+                          if (isAdmin) navigate(PATHS.ADMIN_DASHBOARD);
+                          else if (isFacilityOwner) navigate(PATHS.COURTS_MANAGEMENT);
+                          else navigate(PATHS.GROUPS);
+                        }}
+                        className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] flex items-center justify-center shadow-lg border border-white/10 z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-250 hover:rotate-6"
+                        title={isAdmin ? 'Trang quản trị' : isFacilityOwner ? 'Quản lý sân' : 'Nhóm của tôi'}
+                      >
+                        {isAdmin ? (
+                          <Crown className="h-4.5 w-4.5" />
+                        ) : isFacilityOwner ? (
+                          <Layers className="h-4.5 w-4.5" />
+                        ) : (
+                          <UsersRound className="h-4.5 w-4.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Action 2: Trang cá nhân */}
+                    <div
+                      className={`relative flex items-center justify-end h-10 w-48 group select-none transition-all duration-300 ease-out ${avatarDropdownOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-90'
+                        }`}
+                      style={{ transitionDelay: avatarDropdownOpen ? '150ms' : '0ms' }}
+                    >
+                      <button
+                        onClick={() => {
+                          setAvatarDropdownOpen(false);
+                          navigate(PATHS.PROFILE);
+                        }}
+                        className="absolute right-0 h-10 rounded-full bg-white dark:bg-[#0c0f17] border border-gray-200 dark:border-primary/20 shadow-lg flex items-center pl-4 pr-12 overflow-hidden w-10 opacity-0 group-hover:w-full group-hover:opacity-100 transition-all duration-300 ease-out z-0 pointer-events-none group-hover:pointer-events-auto cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-gray-800 dark:text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100 font-label">
+                          Trang cá nhân
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAvatarDropdownOpen(false);
+                          navigate(PATHS.PROFILE);
+                        }}
+                        className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] flex items-center justify-center shadow-lg border border-white/10 z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-250 hover:rotate-6"
+                        title="Trang cá nhân"
+                      >
+                        <User className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+
+                    {/* Action 3: Đăng xuất */}
+                    <div
+                      className={`relative flex items-center justify-end h-10 w-48 group select-none transition-all duration-300 ease-out ${avatarDropdownOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-90'
+                        }`}
+                      style={{ transitionDelay: avatarDropdownOpen ? '200ms' : '0ms' }}
+                    >
+                      <button
+                        onClick={handleLogout}
+                        className="absolute right-0 h-10 rounded-full bg-white dark:bg-[#0c0f17] border border-red-200 dark:border-red-500/20 shadow-lg flex items-center pl-4 pr-12 overflow-hidden w-10 opacity-0 group-hover:w-full group-hover:opacity-100 transition-all duration-300 ease-out z-0 pointer-events-none group-hover:pointer-events-auto cursor-pointer"
+                      >
+                        <span className="text-xs font-black text-red-600 dark:text-red-400 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100 font-label">
+                          Đăng xuất
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="h-10 w-10 rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shadow-lg border border-white/10 z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform duration-250 hover:rotate-6"
+                        title="Đăng xuất"
+                      >
+                        <LogOut className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
               <Link
                 to={PATHS.LOGIN}
-                className="inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold bg-emerald-500 hover:bg-emerald-600 dark:bg-primary dark:hover:bg-primary-dark text-[#052e14] dark:text-white transition-all duration-300 shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 cursor-pointer font-label"
+                className="inline-flex items-center justify-center px-6 py-2 rounded-full text-sm font-bold bg-emerald-500 hover:bg-emerald-600 dark:bg-primary dark:hover:bg-primary-dark text-[#052e14] dark:text-white transition-all duration-300 shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 cursor-pointer font-label relative overflow-hidden group"
               >
-                Đăng nhập
+                <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.04)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.04)_50%,rgba(0,0,0,0.04)_75%,transparent_75%,transparent)] bg-[length:10px_10px] pointer-events-none group-hover:scale-105 transition-transform duration-300" />
+                <span className="relative z-10">Đăng nhập</span>
               </Link>
             )}
           </div>
@@ -283,9 +355,10 @@ export default function Navbar() {
               <div className="pt-4 px-2">
                 <Link
                   to={PATHS.LOGIN}
-                  className="flex justify-center items-center gap-2 w-full py-3 rounded-lg text-base font-bold bg-primary text-[#052e14]"
+                  className="flex justify-center items-center gap-2 w-full py-3 rounded-lg text-base font-bold bg-primary text-[#052e14] relative overflow-hidden group"
                 >
-                  Đăng nhập
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.04)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.04)_50%,rgba(0,0,0,0.04)_75%,transparent_75%,transparent)] bg-[length:10px_10px] pointer-events-none group-hover:scale-105 transition-transform duration-300" />
+                  <span className="relative z-10">Đăng nhập</span>
                 </Link>
               </div>
             )}

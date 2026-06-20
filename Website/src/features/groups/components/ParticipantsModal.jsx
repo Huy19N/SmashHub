@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, UserCheck, UserX, Users, Loader2, Save, AlignLeft, Users as UsersIcon, DollarSign } from 'lucide-react';
 import { useScheduleParticipants, useUpdateSchedule } from '../hooks/useGroups';
+import Button from '../../../components/ui/Button';
 
 /**
  * ParticipantsModal — shows who has voted/joined a schedule, AND allows leader to edit schedule details.
@@ -257,22 +258,23 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
             {activeTab === 'list' ? `Tổng: ${participants.length} người đăng ký` : 'Cập nhật lại thông tin buổi giao lưu'}
           </span>
           {activeTab === 'edit' ? (
-            <button
+            <Button
               type="submit"
               form="edit-schedule-form"
-              disabled={isUpdating}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-colors font-label cursor-pointer flex items-center gap-1.5"
+              isLoading={isUpdating}
+              className="px-4 py-2.5 text-xs"
             >
-              {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </button>
+              <Save className="h-3.5 w-3.5" />
+              Lưu thay đổi
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="primary"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-colors font-label cursor-pointer"
+              className="px-4 py-2.5 text-xs"
             >
               Đóng
-            </button>
+            </Button>
           )}
         </div>
       </div>

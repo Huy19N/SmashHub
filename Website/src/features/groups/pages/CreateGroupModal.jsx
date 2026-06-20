@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Users, Check, AlertCircle, Link2, Copy } from 'lucide-react';
 import { useCreateGroup, useCreateInvite } from '../hooks/useGroups';
+import Button from '../../../components/ui/Button';
 
 const MAX_MEMBERS = 20;
 
@@ -148,20 +149,15 @@ export default function CreateGroupModal({ onClose, onCreated, isDarkMode = fals
               </div>
 
               {/* Submit */}
-              <button
+              <Button
                 type="submit"
-                disabled={createLoading || inviteLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed font-label cursor-pointer"
+                isLoading={createLoading || inviteLoading}
+                variant="primary"
+                className="w-full py-3 text-sm shadow-md"
               >
-                {createLoading || inviteLoading ? (
-                  <div className="h-5 w-5 rounded-full border-2 border-[#052e14] border-t-transparent animate-spin" />
-                ) : (
-                  <>
-                    <Users className="h-4 w-4" />
-                    Tạo nhóm
-                  </>
-                )}
-              </button>
+                <Users className="h-4 w-4" />
+                Tạo nhóm
+              </Button>
             </form>
           ) : (
             /* ── Success Step ── */
@@ -206,15 +202,16 @@ export default function CreateGroupModal({ onClose, onCreated, isDarkMode = fals
               )}
 
               {/* Done Button */}
-              <button
+              <Button
                 onClick={() => {
                   onCreated?.();
                   onClose();
                 }}
-                className="w-full px-4 py-3 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 font-label cursor-pointer"
+                variant="primary"
+                className="w-full py-3 text-sm shadow-md"
               >
                 Hoàn tất
-              </button>
+              </Button>
             </div>
           )}
         </div>

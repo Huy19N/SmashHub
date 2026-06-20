@@ -7,8 +7,10 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { useTheme } from '../../../contexts/ThemeContext';
 import useCourtsManagement from '../hooks/useCourtsManagement';
+import Button from '../../../components/ui/Button';
 
 // Fix for default Leaflet icon not showing in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -297,7 +299,8 @@ export default function CourtsManagementPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex relative overflow-hidden`}>
+      <SportyWatermarks />
       <Sidebar activeMenu="courts-management" />
 
       <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
@@ -524,28 +527,23 @@ export default function CourtsManagementPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
-                <button
+                <Button
                   type="submit"
-                  disabled={isSubmittingFacility}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
+                  isLoading={isSubmittingFacility}
+                  className="flex-1"
                 >
-                  {isSubmittingFacility ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Tạo cơ sở mới
-                    </>
-                  )}
-                </button>
+                  <Plus className="w-4 h-4" />
+                  Tạo cơ sở mới
+                </Button>
                 {facilities.length > 0 && (
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => setActiveTab('list')}
-                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs"
                   >
                     Hủy
-                  </button>
+                  </Button>
                 )}
               </div>
             </form>
@@ -685,27 +683,22 @@ export default function CourtsManagementPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
-                <button
+                <Button
                   type="submit"
-                  disabled={isSubmittingCourt}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
+                  isLoading={isSubmittingCourt}
+                  className="flex-1"
                 >
-                  {isSubmittingCourt ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Tạo sân con
-                    </>
-                  )}
-                </button>
-                <button
+                  <Plus className="w-4 h-4" />
+                  Tạo sân con
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setActiveTab('list')}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs"
                 >
                   Hủy
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -734,12 +727,13 @@ export default function CourtsManagementPage() {
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setActiveTab('add-facility')}
-                  className="px-3.5 py-2 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold font-label transition-colors cursor-pointer w-full sm:w-auto text-center"
+                  className="py-2.5 px-3.5 text-xs w-full sm:w-auto text-center"
                 >
                   + Đăng ký cơ sở mới
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -764,13 +758,14 @@ export default function CourtsManagementPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-label mt-1 max-w-sm mx-auto leading-relaxed">
                   Bấm nút bên dưới để bắt đầu thêm các sân con (sân cầu lông số 1, sân bóng bàn A, v.v...) vào điểm chơi này.
                 </p>
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => setActiveTab('add-court')}
-                  className="mt-4 inline-flex items-center gap-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] px-4 py-2 rounded-xl transition-all shadow-sm hover:-translate-y-0.5 cursor-pointer"
+                  className="mt-4 py-2.5 text-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Thêm sân con ngay
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
@@ -825,13 +820,14 @@ export default function CourtsManagementPage() {
 
                       {/* Card Action footer */}
                       <div className="flex items-center gap-3.5 mt-5 pt-4 border-t border-gray-50 dark:border-white/5">
-                        <button
+                        <Button
+                          variant="outline"
                           onClick={() => openEditModal(court)}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold font-label transition-colors cursor-pointer"
+                          className="flex-1 py-2.5 text-xs"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                           Chỉnh sửa
-                        </button>
+                        </Button>
                         <button
                           onClick={() => handleDeleteCourt(court.courtId, court.courtName)}
                           className="p-2 border border-transparent hover:border-red-150 hover:bg-red-50/20 dark:hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-xl transition-all cursor-pointer"
@@ -1027,27 +1023,22 @@ export default function CourtsManagementPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-2">
-                <button
+                <Button
                   type="submit"
-                  disabled={isSavingEdit}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
+                  isLoading={isSavingEdit}
+                  className="flex-1"
                 >
-                  {isSavingEdit ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Lưu thay đổi
-                    </>
-                  )}
-                </button>
-                <button
+                  <Save className="w-4 h-4" />
+                  Lưu thay đổi
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setEditingCourt(null)}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs"
                 >
                   Hủy
-                </button>
+                </Button>
               </div>
             </form>
           </div>

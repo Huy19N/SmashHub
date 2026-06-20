@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useInviteInfo, useAcceptInvite } from '../hooks/useGroups';
 import { useTheme } from '../../../contexts/ThemeContext';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
+import Button from '../../../components/ui/Button';
 
 export default function JoinGroupPage() {
   const { token } = useParams();
@@ -76,12 +78,13 @@ export default function JoinGroupPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 font-label">
               {error || 'Link mời này đã hết hạn hoặc không tồn tại.'}
             </p>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => navigate(PATHS.HOME)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-border-dark text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-300 font-label cursor-pointer"
+              className="px-5 py-2.5 text-sm"
             >
               Về trang chủ
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -110,12 +113,13 @@ export default function JoinGroupPage() {
                 ? 'Link mời này đã đạt số lượt sử dụng tối đa.'
                 : 'Link mời này đã hết thời gian hiệu lực.'}
             </p>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => navigate(PATHS.HOME)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-border-dark text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-300 font-label cursor-pointer"
+              className="px-5 py-2.5 text-sm"
             >
               Về trang chủ
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -150,7 +154,8 @@ export default function JoinGroupPage() {
   const hoursLeft = Math.max(0, Math.round((expiresAt - new Date()) / (1000 * 60 * 60)));
 
   return (
-    <div className={`flex items-center justify-center min-h-[60vh] ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`flex items-center justify-center min-h-[60vh] ${isDarkMode ? 'dark' : ''} relative overflow-hidden`}>
+      <SportyWatermarks />
       <div className="w-full max-w-md animate-slide-up">
         <div className="rounded-2xl border border-gray-200 dark:border-border-dark bg-white dark:bg-[#0d1117]/90 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden relative">
           {/* Header gradient */}
@@ -209,28 +214,24 @@ export default function JoinGroupPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={handleReject}
                 disabled={accepting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold border border-red-200 dark:border-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-300 dark:hover:border-red-500/50 transition-all duration-300 font-label cursor-pointer disabled:opacity-50"
+                className="flex-1 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border-red-200 dark:border-red-500/30 py-3 text-sm"
               >
                 <X className="h-4 w-4" />
                 Từ chối
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleAccept}
-                disabled={accepting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 font-label cursor-pointer disabled:opacity-50"
+                isLoading={accepting}
+                className="flex-1 py-3 text-sm"
               >
-                {accepting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Chấp nhận
-                  </>
-                )}
-              </button>
+                <CheckCircle2 className="h-4 w-4" />
+                Chấp nhận
+              </Button>
             </div>
           </div>
         </div>

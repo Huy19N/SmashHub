@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Users, Check, AlertCircle } from 'lucide-react';
+import Button from '../../../components/ui/Button';
 import { useUpdateGroup } from '../hooks/useGroups';
 
 export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = false }) {
@@ -88,20 +89,15 @@ export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = 
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={updateLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-primary hover:bg-primary-dark text-[#052e14] transition-all duration-300 shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed font-label cursor-pointer"
+              isLoading={updateLoading}
+              variant="primary"
+              className="w-full py-3 text-sm shadow-md"
             >
-              {updateLoading ? (
-                <div className="h-5 w-5 rounded-full border-2 border-[#052e14] border-t-transparent animate-spin" />
-              ) : (
-                <>
-                  <Users className="h-4 w-4" />
-                  Cập nhật
-                </>
-              )}
-            </button>
+              <Users className="h-4 w-4" />
+              Cập nhật
+            </Button>
           </form>
         </div>
       </div>

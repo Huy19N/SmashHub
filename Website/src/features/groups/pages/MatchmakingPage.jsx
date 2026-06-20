@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useTeams } from '../hooks/useGroups';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -102,7 +103,8 @@ export default function MatchmakingPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300">
+    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300 relative overflow-hidden">
+      <SportyWatermarks />
       <Sidebar activeMenu="matchmaking" />
 
       <main className="flex-1 overflow-y-auto animate-page">
@@ -203,41 +205,60 @@ export default function MatchmakingPage() {
              <div className="text-center py-10 text-gray-500 font-bold">Hiện không có kèo ghép đấu nào!</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {challenges?.map(c => (
+              {challenges?.map(c => {
+                const formatVND = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+                const formatDateTime = (dateStr) => new Date(dateStr).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                const statusColors = {
+                  1: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                  2: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+                  3: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+                  4: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+                };
+                return (
                 <div key={c.challengeId} className="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-border-dark p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                         {c.hostTeamName}
                       </h3>
-                      <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded inline-block mt-1">
-                        Trình độ: {c.level}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="text-xs font-bold px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                          {c.sportName || 'Thể thao'}
+                        </span>
+                        <span className={`text-xs font-bold px-2 py-1 rounded border ${statusColors[c.statusId] || statusColors[1]}`}>
+                          {c.statusName || 'Open'}
+                        </span>
                       </div>
                     </div>
                     <Users className="text-gray-400" size={20}/>
                   </div>
                   
-                  <div className="space-y-2 mb-6">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong>Sân:</strong> {c.facilityName} - {c.courtName}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong>Thời gian:</strong> {new Date(c.startTime).toLocaleString('vi-VN')}
+                  <div className="space-y-3 mb-6 bg-gray-50/50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-border-dark/50">
+                    <div className="text-sm text-gray-600 dark:text-gray-300 flex flex-col gap-1">
+                      <span className="font-bold text-gray-900 dark:text-white">{c.scheduleTitle}</span>
+                      <span>📍 Sân: {c.facilityName} - {c.courtName}</span>
+                      <span>⏰ T.gian: {formatDateTime(c.startTime)} - {formatDateTime(c.endTime).split(' ')[1]}</span>
+                      <span className="flex items-center gap-2">
+                        💰 Phí sân: <strong className="text-emerald-600 dark:text-emerald-400">{formatVND(c.totalCost)}</strong>
+                        {c.isCostSplit && (
+                          <span className="text-[10px] uppercase font-bold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">Chia đôi</span>
+                        )}
+                      </span>
                     </div>
                     {c.message && (
-                      <div className="text-sm text-gray-500 italic mt-2">
+                      <div className="text-sm text-gray-500 italic mt-2 border-t border-gray-200 dark:border-border-dark pt-2">
                         "{c.message}"
                       </div>
                     )}
                   </div>
                   
                   <div className="mt-auto">
-                    <Button onClick={() => handleJoinChallengeClick(c)} className="w-full font-bold">
-                      Bắt kèo ngay
+                    <Button onClick={() => handleJoinChallengeClick(c)} className="w-full font-bold" disabled={c.statusId !== 1}>
+                      {c.statusId === 1 ? 'Bắt kèo ngay' : 'Đã có đội ghép'}
                     </Button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>
@@ -267,18 +288,20 @@ export default function MatchmakingPage() {
               </select>
             </div>
             <div className="flex gap-3 pt-4">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedChallenge(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-gray-300 transition-colors cursor-pointer"
+                className="flex-1 py-2.5 px-4 text-sm"
               >
                 Hủy
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={submitJoinChallenge}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+                className="flex-1 py-2.5 px-4 text-sm"
               >
                 Gửi yêu cầu
-              </button>
+              </Button>
             </div>
           </div>
         </div>

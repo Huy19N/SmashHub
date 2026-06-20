@@ -9,6 +9,7 @@ import SessionCard from '../../groups/components/SessionCard.jsx';
 import MatchRequestsModal from '../../groups/components/MatchRequestsModal.jsx';
 import ParticipantsModal from '../../groups/components/ParticipantsModal.jsx';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function SchedulesPage() {
@@ -184,7 +185,8 @@ export default function SchedulesPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex relative overflow-hidden`}>
+      <SportyWatermarks />
       <Sidebar activeMenu="sessions" />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar relative animate-page">

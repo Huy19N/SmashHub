@@ -4,6 +4,8 @@ import {
   Activity, TrendingUp, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
+import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
 import {
   useGetMyProfile,
@@ -245,7 +247,8 @@ export default function ProfilePage() {
   const sportsNotDeclared = filterSportsNotDeclared();
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex relative overflow-hidden`}>
+      <SportyWatermarks />
       <Sidebar activeMenu="profile" />
 
       <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">
@@ -269,12 +272,13 @@ export default function ProfilePage() {
             <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
             <h3 className="text-base font-bold text-red-800 dark:text-red-400 font-display">Đã xảy ra lỗi</h3>
             <p className="text-sm text-red-600 dark:text-red-400/80 font-label mt-1">{profileError}</p>
-            <button
+            <Button
+              variant="primary"
               onClick={refetchProfile}
-              className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors"
+              className="mt-4 bg-red-600 hover:bg-red-700 text-white border-none shadow-none text-xs"
             >
               Thử lại
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-8 pb-16">
@@ -457,27 +461,23 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="flex items-center gap-3 pt-2">
-                        <button
+                        <Button
                           type="submit"
-                          disabled={isUpdatingUser}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
+                          isLoading={isUpdatingUser}
+                          variant="primary"
+                          className="flex-1 py-2.5 text-xs shadow-md"
                         >
-                          {isUpdatingUser ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Save className="w-4 h-4" />
-                              Lưu thay đổi
-                            </>
-                          )}
-                        </button>
-                        <button
+                          <Save className="w-4 h-4" />
+                          Lưu thay đổi
+                        </Button>
+                        <Button
                           type="button"
+                          variant="secondary"
                           onClick={() => setIsEditingInfo(false)}
-                          className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                          className="py-2.5 text-xs"
                         >
                           Hủy
-                        </button>
+                        </Button>
                       </div>
                     </form>
                   ) : (
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                       <p className="text-[10px] text-gray-400 mt-1 font-label">Độ tương thích khi mở kèo, đặt sân giao lưu</p>
                     </div>
                     {sportsNotDeclared.length > 0 && (
-                      <button
+                      <Button
                         onClick={() => {
                           setShowAddModal(true);
                           setSportError('');
@@ -542,11 +542,12 @@ export default function ProfilePage() {
                           setSelectedAddLevels([]);
                           setSelectedAddRankValue('');
                         }}
-                        className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] py-2 px-3 rounded-xl flex items-center gap-1 transition-all shadow-sm cursor-pointer hover:-translate-y-0.5"
+                        variant="primary"
+                        className="py-2 px-3 text-xs"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         Khai báo trình độ
-                      </button>
+                      </Button>
                     )}
                   </div>
 
@@ -563,13 +564,14 @@ export default function ProfilePage() {
                         Khai báo các bộ môn thể thao bạn chơi kèm trình độ để mọi người dễ dàng ghép cặp ghép sân khi tạo lịch trình giao lưu.
                       </p>
                       {sportsNotDeclared.length > 0 && (
-                        <button
+                        <Button
                           onClick={() => setShowAddModal(true)}
-                          className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-primary hover:text-emerald-700 dark:hover:text-primary-dark px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-primary/5 transition-colors cursor-pointer"
+                          variant="outline"
+                          className="mt-4 py-1.5 px-3 text-xs"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Khai báo ngay
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ) : (
@@ -639,19 +641,21 @@ export default function ProfilePage() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                      <button
+                                      <Button
                                         onClick={() => handleUpdateSportLevel(sport.sportId)}
-                                        className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                                        variant="primary"
+                                        className="flex-1 py-1.5 text-[10px]"
                                       >
                                         <Save className="w-3.5 h-3.5" />
                                         Lưu
-                                      </button>
-                                      <button
+                                      </Button>
+                                      <Button
                                         onClick={() => setEditingSportId(null)}
-                                        className="py-1.5 px-3 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/15 text-gray-700 dark:text-gray-200 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                                        variant="secondary"
+                                        className="py-1.5 px-3 text-[10px]"
                                       >
                                         <X className="w-3.5 h-3.5" />
-                                      </button>
+                                      </Button>
                                     </div>
                                   </div>
                                 ) : (
@@ -764,27 +768,24 @@ export default function ProfilePage() {
               )}
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
-                <button
+                <Button
                   type="submit"
-                  disabled={isCreatingSport || !selectedAddSportId || !selectedAddRankValue}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  isLoading={isCreatingSport}
+                  disabled={!selectedAddSportId || !selectedAddRankValue}
+                  variant="primary"
+                  className="flex-1 py-2.5 text-xs shadow-md"
                 >
-                  {isCreatingSport ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Xác nhận thêm
-                    </>
-                  )}
-                </button>
-                <button
+                  <Plus className="w-4 h-4" />
+                  Xác nhận thêm
+                </Button>
+                <Button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  variant="secondary"
+                  className="py-2.5 text-xs"
                 >
                   Hủy
-                </button>
+                </Button>
               </div>
             </form>
 

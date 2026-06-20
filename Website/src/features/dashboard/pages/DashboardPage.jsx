@@ -3,6 +3,7 @@ import {
   Activity, DollarSign, Award, Target, Trophy, Frown, Loader2, AlertCircle 
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { useTheme } from '../../../contexts/ThemeContext';
 import useStatistics from '../hooks/useStatistics';
 import StatCard from '../components/StatCard';
@@ -19,7 +20,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex relative overflow-hidden`}>
+      <SportyWatermarks />
       <Sidebar activeMenu="dashboard" />
 
       <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-screen overflow-y-auto custom-scrollbar animate-page">

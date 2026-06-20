@@ -18,10 +18,14 @@ import {
   X,
   Mail,
   Phone,
+  Trophy,
+  Activity,
+  Dumbbell,
 } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useTeamDetail, useTeamMembers, useRemoveMember, useCreateInvite, useTeamSchedules, useDeleteSchedule, useAddScheduleParticipant, useRemoveScheduleParticipant } from '../hooks/useGroups';
 import { getScheduleParticipantsAPI } from '../api/groups.api.js';
+import { getActiveChallengesAPI } from '../api/matchmaking.api.js';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import toast from 'react-hot-toast';
 import MemberCard from '../components/MemberCard';
@@ -31,7 +35,10 @@ import CreateScheduleModal from '../components/CreateScheduleModal';
 import ParticipantsModal from '../components/ParticipantsModal';
 import MatchRequestsModal from '../components/MatchRequestsModal';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { getUserIdAPI } from '../../Auth/api/auth.api.js';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
+import Button from '../../../components/ui/Button';
 
 const filterProfileData = (obj) => {
   if (!obj || typeof obj !== 'object') return [];
@@ -157,6 +164,8 @@ export default function TeamManagementPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
   const [viewingChallengeId, setViewingChallengeId] = useState(null);
+  const [teamChallenges, setTeamChallenges] = useState([]);
+  const [challengesLoading, setChallengesLoading] = useState(false);
 
   // Fetch active challenges when schedule tab is active
   useEffect(() => {
@@ -164,6 +173,26 @@ export default function TeamManagementPage() {
       fetchActiveChallenges({});
     }
   }, [activeTab, fetchActiveChallenges]);
+
+  // Fetch challenges related to this team
+  useEffect(() => {
+    if (activeTab === 'challenges' && teamId) {
+      const loadTeamChallenges = async () => {
+        setChallengesLoading(true);
+        try {
+          const response = await getActiveChallengesAPI({});
+          const allChallenges = response?.data || [];
+          const filtered = allChallenges.filter(c => String(c.hostTeamId) === String(teamId));
+          setTeamChallenges(filtered);
+        } catch (err) {
+          console.error('Failed to load team challenges:', err);
+        } finally {
+          setChallengesLoading(false);
+        }
+      };
+      loadTeamChallenges();
+    }
+  }, [activeTab, teamId]);
 
   // Load which schedules the current user has joined
   const currentUserId = localStorage.getItem('userId');
@@ -302,6 +331,7 @@ export default function TeamManagementPage() {
     { id: 'members', label: 'Tất cả thành viên' },
     { id: 'chat', label: 'Trò chuyện' },
     { id: 'schedule', label: 'Lịch Chơi' },
+    { id: 'challenges', label: 'Kèo' },
   ];
 
   // Helper: check if current user is Leader
@@ -321,8 +351,8 @@ export default function TeamManagementPage() {
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
-      <div className="flex min-h-screen bg-gray-50 dark:bg-[#0b0f19] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
-
+      <div className="flex min-h-screen bg-gray-50 dark:bg-[#0b0f19] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans relative overflow-hidden">
+        <SportyWatermarks />
         {/* ── Left Sidebar ── */}
         <Sidebar onCreateGroup={() => navigate('/groups')} activeMenu="teams" />
 
@@ -350,13 +380,14 @@ export default function TeamManagementPage() {
                 </p>
               </div>
 
-              <button
+              <Button
+                variant="primary"
                 onClick={handleAddMember}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-200 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 hover:-translate-y-0.5 font-label cursor-pointer shrink-0"
+                className="shrink-0 py-2.5 px-5 text-sm"
               >
                 <Plus className="h-4 w-4" />
                 Thêm thành viên
-              </button>
+              </Button>
             </div>
 
             {/* Tabs */}
@@ -388,12 +419,13 @@ export default function TeamManagementPage() {
                           Hãy mời bạn bè tham gia nhóm của bạn.
                         </p>
                       </div>
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={handleAddMember}
-                        className="mt-4 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-all font-label cursor-pointer inline-flex items-center gap-2"
+                        className="mt-4 py-2.5 px-5 text-sm"
                       >
                         <Plus className="h-4 w-4" /> Thêm thành viên
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -437,16 +469,17 @@ export default function TeamManagementPage() {
                       <p className="text-sm text-gray-500 font-label">Xem và tham gia các buổi chơi của nhóm.</p>
                     </div>
                     {isLeader && (
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={() => {
                           setScheduleModalKey(prev => prev + 1);
                           setShowCreateSchedule(true);
                         }}
-                        className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all font-label flex items-center gap-2 cursor-pointer"
+                        className="py-2 px-4 text-sm"
                       >
                         <Plus className="w-4 h-4" />
                         Tạo lịch trình
-                      </button>
+                      </Button>
                     )}
                   </div>
 
@@ -500,6 +533,96 @@ export default function TeamManagementPage() {
                   )}
                 </div>
               )}
+              {activeTab === 'challenges' && (
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display">Kèo ghép đấu</h3>
+                      <p className="text-sm text-gray-500 font-label">Xem danh sách kèo của nhóm bạn đã tạo.</p>
+                    </div>
+                  </div>
+
+                  {challengesLoading ? (
+                    <div className="text-center py-20">
+                      <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto mb-4" />
+                      <p className="text-sm text-gray-500">Đang tải danh sách kèo...</p>
+                    </div>
+                  ) : teamChallenges.length === 0 ? (
+                    <div className="text-center py-20 bg-white dark:bg-card-dark/10 rounded-2xl border border-gray-200/80 dark:border-border-dark/60 p-8 space-y-4 animate-fade-in">
+                      <Swords className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto" />
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white font-display">Chưa có kèo nào</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-label">
+                        Nhóm chưa tạo kèo nào hoặc tất cả các kèo đã kết thúc.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+                      {teamChallenges.map(c => {
+                        const formatVND = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+                        const formatDateTime = (dateStr) => new Date(dateStr).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const statusColors = {
+                          1: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                          2: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+                          3: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+                          4: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+                        };
+                        return (
+                          <div key={c.challengeId} className="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-border-dark p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                                  {c.hostTeamName}
+                                  <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700">Chủ nhà</span>
+                                </h3>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <span className="text-xs font-bold px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                                    {c.sportName || 'Thể thao'}
+                                  </span>
+                                  <span className={`text-xs font-bold px-2 py-1 rounded border ${statusColors[c.statusId] || statusColors[1]}`}>
+                                    {c.statusName || 'Open'}
+                                  </span>
+                                </div>
+                              </div>
+                              <Swords className="text-gray-400" size={20}/>
+                            </div>
+                            
+                            <div className="space-y-3 mb-6 bg-gray-50/50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-border-dark/50">
+                              <div className="text-sm text-gray-600 dark:text-gray-300 flex flex-col gap-1">
+                                <span className="font-bold text-gray-900 dark:text-white">{c.scheduleTitle}</span>
+                                <span>📍 Sân: {c.facilityName} - {c.courtName}</span>
+                                <span>⏰ T.gian: {formatDateTime(c.startTime)} - {formatDateTime(c.endTime).split(' ')[1]}</span>
+                                <span className="flex items-center gap-2">
+                                  💰 Phí sân: <strong className="text-emerald-600 dark:text-emerald-400">{formatVND(c.totalCost)}</strong>
+                                  {c.isCostSplit && (
+                                    <span className="text-[10px] uppercase font-bold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">Chia đôi</span>
+                                  )}
+                                </span>
+                              </div>
+                              {c.message && (
+                                <div className="text-sm text-gray-500 italic mt-2 border-t border-gray-200 dark:border-border-dark pt-2">
+                                  "{c.message}"
+                                </div>
+                              )}
+                            </div>
+                            
+                            {c.statusId === 1 && isLeader && (
+                              <div className="mt-auto">
+                                <Button 
+                                  variant="outline"
+                                  onClick={() => setViewingChallengeId(c.challengeId)} 
+                                  className="w-full font-bold py-2 px-4 text-sm"
+                                >
+                                  Xem yêu cầu ghép
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -527,23 +650,21 @@ export default function TeamManagementPage() {
               Bạn có chắc chắn muốn xóa <strong>{removingMember.fullName}</strong> khỏi nhóm? Hành động này không thể hoàn tác.
             </p>
             <div className="flex gap-3 pt-4">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setRemovingMember(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-gray-300 transition-colors font-label cursor-pointer"
+                className="flex-1 py-2.5 px-4 text-sm"
               >
                 Hủy bỏ
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleRemoveMember}
-                disabled={isRemoving}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white dark:bg-red-500 dark:hover:bg-red-600 transition-colors font-label cursor-pointer flex items-center justify-center"
+                isLoading={isRemoving}
+                className="flex-1 py-2.5 px-4 text-sm bg-red-600 hover:bg-red-700 text-white border-none shadow-none"
               >
-                {isRemoving ? (
-                  <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  'Xóa'
-                )}
-              </button>
+                Xóa
+              </Button>
             </div>
           </div>
         </div>
@@ -564,12 +685,13 @@ export default function TeamManagementPage() {
             <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3 border border-gray-200 dark:border-border-dark">
               <p className="text-xs text-gray-600 dark:text-gray-300 font-mono break-all">{inviteLink}</p>
             </div>
-            <button
+            <Button
+              variant="primary"
               onClick={() => setShowInviteSuccess(false)}
-              className="w-full px-4 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-colors font-label cursor-pointer"
+              className="w-full py-2.5 px-4 text-sm"
             >
               Đóng
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -577,20 +699,30 @@ export default function TeamManagementPage() {
       {/* Viewing Profile Modal */}
       {viewingProfileMember && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isDarkMode ? 'dark' : ''}`}>
-          <div className="absolute inset-0 bg-black/55 backdrop-blur-sm transition-opacity duration-300" onClick={() => setViewingProfileMember(null)} />
-          <div className="relative w-full max-w-lg bg-white dark:bg-[#0d1117] rounded-3xl shadow-2xl border border-gray-200/80 dark:border-border-dark overflow-hidden animate-scale-up max-h-[85vh] flex flex-col z-10 transition-colors duration-300">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity duration-300" onClick={() => setViewingProfileMember(null)} />
+          
+          {/* Modal Container with Sporty double border & shadow */}
+          <div className="relative w-full max-w-lg bg-gradient-to-b from-white to-gray-50 dark:from-[#0f141f] dark:to-[#090b10] rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border-2 border-emerald-500/80 dark:border-primary/80 overflow-hidden animate-scale-up max-h-[85vh] flex flex-col z-10 transition-colors duration-300">
+            
+            {/* Watermark Background Symbols */}
+            <Trophy className="absolute -top-10 -left-12 w-48 h-48 text-emerald-500/[0.04] dark:text-primary/[0.02] pointer-events-none transform -rotate-12 select-none" />
+            <Activity className="absolute bottom-16 -right-16 w-64 h-64 text-emerald-500/[0.04] dark:text-primary/[0.02] pointer-events-none transform rotate-12 select-none" />
+            <Swords className="absolute top-1/3 -left-12 w-40 h-40 text-emerald-500/[0.03] dark:text-primary/[0.015] pointer-events-none transform rotate-45 select-none" />
+            <Dumbbell className="absolute bottom-1/3 -right-10 w-36 h-36 text-emerald-500/[0.03] dark:text-primary/[0.015] pointer-events-none transform -rotate-12 select-none" />
+            <Flame className="absolute top-10 right-10 w-32 h-32 text-orange-500/[0.03] dark:text-orange-500/[0.015] pointer-events-none transform rotate-12 select-none" />
 
             {/* Modal Header */}
-            <div className="relative px-6 py-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-primary/10 dark:to-primary/5 border-b border-gray-150 dark:border-border-dark/60 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-primary/20 flex items-center justify-center border border-emerald-500/20 dark:border-primary/30">
-                  <UserCircle className="w-6 h-6 text-emerald-600 dark:text-primary animate-pulse" />
+            <div className="relative px-6 py-5 bg-gradient-to-r from-emerald-600 to-teal-700 dark:from-[#0e1b15] dark:to-[#09110d] border-b border-emerald-500/20 dark:border-primary/20 flex items-center justify-between shrink-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.06)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.06)_50%,rgba(0,0,0,0.06)_75%,transparent_75%,transparent)] bg-[length:12px_12px] opacity-30"></div>
+              <div className="relative flex items-center gap-3 z-10">
+                <div className="h-10 w-10 rounded-xl bg-white/10 dark:bg-primary/20 flex items-center justify-center border border-white/20 dark:border-primary/30">
+                  <Trophy className="w-5 h-5 text-white dark:text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display">
+                  <h3 className="text-lg font-black uppercase tracking-wider text-white font-display">
                     Hồ Sơ Thành Viên
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-label">
+                  <p className="text-xs text-emerald-100 dark:text-primary/70 font-label">
                     Thông tin chi tiết của vận động viên
                   </p>
                 </div>
@@ -598,33 +730,46 @@ export default function TeamManagementPage() {
 
               <button
                 onClick={() => setViewingProfileMember(null)}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-105 dark:hover:bg-white/5 transition-all cursor-pointer"
+                className="relative z-10 p-2 rounded-xl text-emerald-100 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10">
 
               {/* Profile Card Header */}
-              <div className="flex items-center gap-4 bg-gray-50/50 dark:bg-white/5 p-4 rounded-2xl border border-gray-150 dark:border-white/10 shrink-0">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 flex items-center justify-center text-white font-bold text-2xl shadow-md font-display select-none">
-                  {viewingProfileMember.fullName?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'}
+              <div className="flex items-center gap-4 bg-white/40 dark:bg-[#111723]/40 p-4 rounded-2xl border border-gray-200/60 dark:border-white/5 shadow-sm shrink-0">
+                
+                {/* Sporty Avatar Container */}
+                <div className="relative group shrink-0">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 to-teal-500 dark:from-primary dark:to-emerald-400 rounded-2xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative h-16 w-16 rounded-2xl bg-white dark:bg-[#1a202c] p-0.5 border-2 border-emerald-500 dark:border-primary flex items-center justify-center text-emerald-600 dark:text-primary font-bold text-2xl shadow-md font-display select-none overflow-hidden">
+                    {profileDetails?.avatarFileId ? (
+                      <img src={getAvatarUrl(profileDetails.avatarFileId)} alt="avatar" className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <span className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 bg-clip-text text-transparent font-extrabold uppercase">
+                        {viewingProfileMember.fullName?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xl font-extrabold text-gray-900 dark:text-white truncate font-display leading-tight">
+                  <h4 className="text-xl font-black text-gray-900 dark:text-white truncate font-display leading-tight tracking-wide">
                     {viewingProfileMember.fullName}
                   </h4>
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider font-label ${viewingProfileMember.roleName === 'Leader'
-                      ? 'bg-amber-105 text-amber-705 border-amber-205 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
-                      : 'bg-emerald-55 text-emerald-75 border-emerald-25 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
-                      }`}>
-                      {viewingProfileMember.roleName === 'Leader' ? 'Admin' : 'Thành viên'}
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider font-label ${
+                      viewingProfileMember.roleName === 'Leader'
+                        ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
+                        : 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
+                    }`}>
+                      {viewingProfileMember.roleName === 'Leader' ? 'Chủ nhóm' : 'Thành viên'}
                     </span>
                     <span className="text-xs text-gray-400 dark:text-gray-500 font-label">•</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 font-label">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold font-label">
                       Tham gia: {new Date(viewingProfileMember.joinedAt).toLocaleDateString('vi-VN')}
                     </span>
                   </div>
@@ -635,12 +780,12 @@ export default function TeamManagementPage() {
               {profileLoading ? (
                 <div className="py-12 flex flex-col items-center justify-center space-y-4">
                   <div className="h-10 w-10 rounded-full border-2 border-gray-200 dark:border-border-dark border-t-emerald-500 dark:border-t-primary animate-spin" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-label animate-pulse">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-label animate-pulse font-semibold">
                     Đang đồng bộ hồ sơ từ máy chủ...
                   </p>
                 </div>
               ) : profileError ? (
-                <div className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-100 dark:border-red-500/20 flex gap-3 text-red-700 dark:text-red-400">
+                <div className="p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-200 dark:border-red-500/20 flex gap-3 text-red-700 dark:text-red-400">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className="text-sm font-bold font-display">Lỗi tải dữ liệu</p>
@@ -665,17 +810,17 @@ export default function TeamManagementPage() {
                         {/* Information Grid */}
                         {ungrouped.length > 0 && (
                           <div className="space-y-3 animate-fade-in">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-primary font-label flex items-center gap-1.5">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-primary" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-primary font-display flex items-center gap-1.5 border-l-4 border-emerald-500 dark:border-primary pl-2">
                               Thông tin tài khoản
                             </h4>
-                            <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-150 dark:border-white/10 shadow-inner">
+                            <div className="grid grid-cols-2 gap-3.5 bg-gray-50/50 dark:bg-[#111723]/30 rounded-2xl p-4 border border-gray-200/60 dark:border-white/5">
                               {ungrouped.map((f, i) => (
-                                <div key={i} className="space-y-1">
-                                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold font-label uppercase tracking-wide">
+                                <div key={i} className="bg-white/85 dark:bg-[#151c28]/60 p-3.5 rounded-xl border border-gray-200/60 dark:border-white/5 hover:border-emerald-500/30 dark:hover:border-primary/20 transition-all duration-300 group/card relative overflow-hidden shadow-sm">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
+                                  <span className="block text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider font-label">
                                     {f.key}
                                   </span>
-                                  <p className="text-sm text-gray-900 dark:text-white font-bold font-label break-words leading-tight">
+                                  <p className="text-sm text-gray-900 dark:text-white font-extrabold font-display break-words mt-0.5 relative z-10 leading-tight">
                                     {f.value}
                                   </p>
                                 </div>
@@ -687,21 +832,55 @@ export default function TeamManagementPage() {
                         {/* Sport/Custom Profiles Sections */}
                         {Object.entries(groupedMap).map(([groupName, groupFields], i) => (
                           <div key={i} className="space-y-3 animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-primary font-label flex items-center gap-1.5">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-primary" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-primary font-display flex items-center gap-1.5 border-l-4 border-emerald-500 dark:border-primary pl-2">
                               {groupName}
                             </h4>
-                            <div className="grid grid-cols-2 gap-4 bg-emerald-50/20 dark:bg-primary/5 rounded-2xl p-4 border border-emerald-100/30 dark:border-primary/10 shadow-inner">
-                              {groupFields.map((f, j) => (
-                                <div key={j} className="space-y-1">
-                                  <span className="text-[10px] text-emerald-800/60 dark:text-primary/60 font-semibold font-label uppercase tracking-wide">
-                                    {f.key}
-                                  </span>
-                                  <p className="text-sm text-gray-900 dark:text-white font-bold font-label break-words leading-tight">
-                                    {f.value}
-                                  </p>
-                                </div>
-                              ))}
+                            <div className="grid grid-cols-2 gap-3.5 bg-emerald-50/10 dark:bg-primary/5 rounded-2xl p-4 border border-emerald-500/10 dark:border-primary/10">
+                              {groupFields.map((f, j) => {
+                                const isWins = f.key === 'Số trận thắng';
+                                const isLosses = f.key === 'Số trận thua';
+
+                                if (isWins) {
+                                  return (
+                                    <div key={j} className="bg-emerald-500/5 dark:bg-emerald-500/10 p-3.5 rounded-xl border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 relative overflow-hidden group/wins shadow-sm">
+                                      <div className="absolute -right-2 -bottom-2 opacity-10 group-hover/wins:scale-110 transition-transform duration-300">
+                                        <Trophy className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
+                                      </div>
+                                      <span className="block text-[10px] text-emerald-800/80 dark:text-emerald-400/80 font-bold uppercase tracking-wider font-label">
+                                        {f.key}
+                                      </span>
+                                      <p className="text-xl text-emerald-600 dark:text-emerald-400 font-black font-display mt-0.5">
+                                        {f.value}
+                                      </p>
+                                    </div>
+                                  );
+                                }
+
+                                if (isLosses) {
+                                  return (
+                                    <div key={j} className="bg-red-500/5 dark:bg-red-500/10 p-3.5 rounded-xl border border-red-500/20 hover:border-red-500/30 transition-all duration-300 relative overflow-hidden group/losses shadow-sm">
+                                      <span className="block text-[10px] text-red-800/80 dark:text-red-400/80 font-bold uppercase tracking-wider font-label">
+                                        {f.key}
+                                      </span>
+                                      <p className="text-xl text-red-600 dark:text-red-400 font-black font-display mt-0.5">
+                                        {f.value}
+                                      </p>
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div key={j} className="bg-white/85 dark:bg-[#151c28]/60 p-3.5 rounded-xl border border-gray-200/60 dark:border-white/5 hover:border-emerald-500/30 dark:hover:border-primary/20 transition-all duration-300 group/card relative overflow-hidden shadow-sm">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
+                                    <span className="block text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider font-label">
+                                      {f.key}
+                                    </span>
+                                    <p className="text-sm text-gray-900 dark:text-white font-extrabold font-display break-words mt-0.5 relative z-10 leading-tight">
+                                      {f.value}
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
@@ -721,16 +900,17 @@ export default function TeamManagementPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 dark:bg-[#0c0f17] border-t border-gray-150 dark:border-border-dark/60 flex items-center justify-between shrink-0">
-              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-label">
+            <div className="relative px-6 py-4 bg-gray-50 dark:bg-[#0c0f17]/90 border-t border-gray-200 dark:border-border-dark/60 flex items-center justify-between shrink-0 z-10">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider font-label">
                 Hệ cơ sở dữ liệu SmashHub
               </span>
-              <button
+              <Button
+                variant="primary"
                 onClick={() => setViewingProfileMember(null)}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-200 cursor-pointer hover:shadow-md"
+                className="px-6 py-2.5 text-xs uppercase tracking-wider"
               >
                 Đóng hồ sơ
-              </button>
+              </Button>
             </div>
 
           </div>

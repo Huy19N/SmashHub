@@ -13,6 +13,7 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useLogout } from '../../Auth/hooks/useAuth';
 import { PATHS } from '../../../routes/paths';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -72,16 +73,21 @@ export default function AdminLayout() {
                 <button
                   key={item.id}
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:translate-x-1.5 active:scale-95 font-label cursor-pointer border ${isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:translate-x-1.5 active:scale-95 font-label cursor-pointer border relative overflow-hidden group ${isActive
                     ? 'text-emerald-700 bg-emerald-500/10 border-emerald-500/20 dark:text-primary dark:bg-primary/10 dark:border-primary/20 shadow-sm'
                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 border-transparent dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                     }`}
                 >
+                  {/* Subtle sports icon watermark on the right */}
+                  <item.icon className={`absolute -right-3 -bottom-3 w-10 h-10 pointer-events-none transform rotate-12 transition-all duration-300 ${
+                    isActive ? 'text-emerald-500/[0.08] dark:text-primary/[0.08] scale-110' : 'text-gray-400/[0.04] dark:text-gray-500/[0.04] group-hover:text-emerald-500/[0.06] group-hover:scale-105'
+                  }`} />
+                  
                   <item.icon
-                    className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-primary' : 'text-gray-400 dark:text-gray-500'
+                    className={`h-4.5 w-4.5 shrink-0 relative z-10 ${isActive ? 'text-emerald-600 dark:text-primary' : 'text-gray-400 dark:text-gray-500'
                       }`}
                   />
-                  {item.label}
+                  <span className="relative z-10">{item.label}</span>
                 </button>
               );
             })}
@@ -92,23 +98,29 @@ export default function AdminLayout() {
         <div className="p-4 border-t border-gray-150 dark:border-white/5 space-y-1.5 bg-gray-50/20 dark:bg-transparent">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all font-label cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all font-label cursor-pointer relative overflow-hidden group"
           >
-            <div className="flex items-center gap-2.5">
+            <div className="absolute -right-2 -bottom-2 opacity-[0.04] dark:opacity-[0.06] pointer-events-none transform rotate-12 group-hover:scale-110 transition-transform duration-300">
+              {isDarkMode ? <Moon className="w-8 h-8 text-emerald-500" /> : <Sun className="w-8 h-8 text-amber-500" />}
+            </div>
+            <div className="flex items-center gap-2.5 relative z-10">
               {isDarkMode ? <Moon className="h-4 w-4 text-emerald-500 animate-pulse" /> : <Sun className="h-4 w-4 text-amber-500" />}
               Chế độ tối
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200/60 dark:bg-white/10 text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200/60 dark:bg-white/10 text-gray-600 dark:text-gray-400 uppercase tracking-wide relative z-10">
               {isDarkMode ? 'Bật' : 'Tắt'}
             </span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-label cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-label cursor-pointer text-left relative overflow-hidden group"
           >
-            <LogOut className="h-4 w-4" />
-            Đăng xuất
+            <LogOut className="absolute -right-2 -bottom-2 w-8 h-8 text-red-600/[0.04] dark:text-red-400/[0.03] pointer-events-none transform rotate-12 group-hover:scale-110 transition-transform duration-300" />
+            <span className="flex items-center gap-2.5 relative z-10">
+              <LogOut className="h-4 w-4" />
+              Đăng xuất
+            </span>
           </button>
         </div>
       </aside>
@@ -159,7 +171,8 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Nested Content */}
-        <div key={location.pathname} className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-[#0e1322] animate-page">
+        <div key={location.pathname} className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-[#0e1322] animate-page relative overflow-hidden">
+          <SportyWatermarks />
           <Outlet />
         </div>
       </main>

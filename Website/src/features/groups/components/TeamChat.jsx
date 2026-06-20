@@ -6,6 +6,8 @@ import { useGetMessages, useSendMessage, useDeleteMessage } from '../hooks/useGr
 import { uploadFileAPI, getFileUrl } from '../api/files.api.js';
 import toast from 'react-hot-toast';
 import VideoCallOverlay from './VideoCallOverlay';
+import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
 
 /**
  * TeamChat – Real-time group chat powered by SignalR + REST API.
@@ -29,6 +31,8 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   const [inputValue, setInputValue] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected | connecting | connected
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [avatars, setAvatars] = useState({});
+  const fetchedAvatarsRef = useRef(new Set());
   
   // Video Call State
   const [videoCallRoom, setVideoCallRoom] = useState(null); // { roomId, isInitiator }
@@ -37,6 +41,26 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const connectionRef = useRef(null);
+
+  // ─── Fetch sender avatars ────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+    const senderIds = [...new Set(messages.map(m => m.senderId).filter(id => id && String(id) !== String(currentUserId)))];
+    
+    senderIds.forEach(id => {
+      if (!fetchedAvatarsRef.current.has(id)) {
+        fetchedAvatarsRef.current.add(id);
+        getAllUserByIdAPI(id).then(res => {
+          const fileId = res?.data?.avatarFileId || res?.avatarFileId;
+          if (fileId && isMounted) {
+            setAvatars(prev => ({ ...prev, [id]: getAvatarUrl(fileId) }));
+          }
+        }).catch(() => {});
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [messages, currentUserId]);
 
   // ─── Sync API messages into local state ────────────────────
   useEffect(() => {
@@ -361,8 +385,12 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                   {/* Avatar */}
                   {!isMine(msg) && (
                     <div className="flex-shrink-0 mt-1">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
-                        {getInitials(msg.senderName)}
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
+                        {avatars[msg.senderId] ? (
+                          <img src={avatars[msg.senderId]} alt={msg.senderName} className="w-full h-full object-cover" />
+                        ) : (
+                          getInitials(msg.senderName)
+                        )}
                       </div>
                     </div>
                   )}

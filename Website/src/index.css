@@ -33,6 +33,28 @@
   --animate-page: pageTransition 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-tab-panel: tabTransition 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-dropdown: dropdownFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-cascade-down: cascadeDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-grow-line: growDashedLine 0.45s ease-out forwards;
+
+  @keyframes cascadeDown {
+    from {
+      opacity: 0;
+      transform: translateY(-16px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes growDashedLine {
+    from {
+      height: 0;
+    }
+    to {
+      height: calc(100% - 2.5rem);
+    }
+  }
 
   @keyframes shimmer {
     0% {

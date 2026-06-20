@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Award, Calendar, Users, ChevronRight, Trash2, Shield } from 'lucide-react';
+import { getAvatarUrl } from '../../../utils/avatarUtils';
+import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
 
 const AVATAR_COLORS = [
   'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500',
@@ -21,7 +23,28 @@ function getInitials(name) {
 
 export default function MemberCard({ member, onRemove, onViewProfile }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAvatar = async () => {
+      try {
+        const userId = member.userId || member.id;
+        if (userId) {
+          const res = await getAllUserByIdAPI(userId);
+          const fileId = res?.data?.avatarFileId || res?.avatarFileId;
+          if (fileId && isMounted) {
+            setAvatarUrl(getAvatarUrl(fileId));
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchAvatar();
+    return () => { isMounted = false; };
+  }, [member]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -60,8 +83,12 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div className={`h-11 w-11 rounded-full ${getAvatarColor(member.fullName)} flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0`}>
-            {getInitials(member.fullName)}
+          <div className={`h-11 w-11 rounded-full ${getAvatarColor(member.fullName)} flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0 overflow-hidden`}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
+            ) : (
+              getInitials(member.fullName)
+            )}
           </div>
           <div className="min-w-0">
             <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate font-display group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">

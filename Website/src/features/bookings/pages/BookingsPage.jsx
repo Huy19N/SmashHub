@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Filter, CalendarDays, Plus, Grid, List, Activity, Circle, Users, Flame, MapPin, Search, Navigation, ChevronRight, ArrowLeft, Clock, X } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import CourtCard from '../components/CourtCard';
 import Button from '../../../components/ui/Button';
 
@@ -232,7 +233,8 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300">
+    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300 relative overflow-hidden">
+      <SportyWatermarks />
       <Sidebar activeMenu="Bookings" />
 
       <main className="flex-1 overflow-y-auto animate-page">

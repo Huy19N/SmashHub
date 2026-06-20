@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Calendar, DollarSign, Users, Type, AlignLeft } from 'lucide-react';
 import { useCreateSchedule } from '../hooks/useGroups';
 import { useBookings } from '../../bookings/hooks/useBookings';
+import Button from '../../../components/ui/Button';
 
 export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess }) {
   const { createSchedule, isLoading: isCreating } = useCreateSchedule();
@@ -205,25 +206,22 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
 
           {/* Actions */}
           <div className="pt-4 flex gap-3">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
               disabled={isCreating}
-              className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-gray-300 transition-colors font-label cursor-pointer"
+              className="flex-1 py-2.5 text-sm"
             >
               Hủy
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={isCreating}
-              className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary-dark dark:text-[#052e14] transition-colors font-label cursor-pointer flex items-center justify-center"
+              isLoading={isCreating}
+              className="flex-1 py-2.5 text-sm"
             >
-              {isCreating ? (
-                <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              ) : (
-                'Tạo Lịch Trình'
-              )}
-            </button>
+              Tạo Lịch Trình
+            </Button>
           </div>
         </form>
       </div>
