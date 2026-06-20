@@ -7,6 +7,10 @@
         {
             "source": "/hub/:path*",
             "destination": "http://tad-min.io.vn:5000/hub/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
