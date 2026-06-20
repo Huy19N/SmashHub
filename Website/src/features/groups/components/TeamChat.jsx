@@ -65,7 +65,8 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   // ─── Sync API messages into local state ────────────────────
   useEffect(() => {
     if (Array.isArray(apiMessages)) {
-      setMessages(apiMessages);
+      const sortedMessages = [...apiMessages].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+      setMessages(sortedMessages);
     }
   }, [apiMessages]);
 
@@ -105,7 +106,8 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       setMessages((prev) => {
         // Prevent duplicate messages
         if (prev.some((m) => m.messageId === message.messageId)) return prev;
-        return [...prev, message];
+        const newMessages = [...prev, message];
+        return newMessages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
       });
     });
 
@@ -274,38 +276,38 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
   // ─── Render ────────────────────────────────────────────────
   return (
-    <div className="flex flex-col bg-white dark:bg-card-dark rounded-2xl border border-gray-200 dark:border-border-dark overflow-hidden h-[600px] shadow-sm font-sans max-w-4xl mx-auto">
+    <div className="flex flex-col bg-white dark:bg-card-dark rounded-2xl border border-gray-200 dark:border-border-dark overflow-hidden h-[680px] shadow-sm font-sans w-full max-w-full transition-all duration-300 ease-in-out">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-border-dark bg-white dark:bg-card-dark">
+      <div className="flex items-center justify-between p-4 border-b border-gray-250 dark:border-border-dark/60 bg-white dark:bg-card-dark">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#047857] flex items-center justify-center text-white font-bold text-sm">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] flex items-center justify-center font-bold text-sm shadow-md">
             {getInitials(teamName)}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-800 dark:text-white font-display">Trò chuyện Nhóm: {teamName}</h3>
+            <h3 className="text-sm font-black text-gray-900 dark:text-white font-display">Trò chuyện Nhóm: {teamName}</h3>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-[#047857] font-medium">{memberCount} thành viên</p>
+              <p className="text-xs text-emerald-600 dark:text-primary font-bold uppercase tracking-wider font-label">{memberCount} thành viên</p>
               {connectionStatus === 'connected' && (
-                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Đang kết nối" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Đang kết nối" />
               )}
               {connectionStatus === 'connecting' && (
-                <span className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" title="Đang kết nối lại..." />
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" title="Đang kết nối lại..." />
               )}
               {connectionStatus === 'disconnected' && (
-                <span className="h-2 w-2 rounded-full bg-red-400" title="Mất kết nối" />
+                <span className="h-2 w-2 rounded-full bg-red-500" title="Mất kết nối" />
               )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-3 text-gray-400 dark:text-gray-500">
           <button 
             onClick={() => setVideoCallRoom({ roomId: `team_${teamId}`, isInitiator: true })}
-            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+            className="hover:text-emerald-600 dark:hover:text-primary transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer"
             title="Gọi nhóm"
           >
             <Phone className="h-5 w-5" />
           </button>
-          <button className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
+          <button className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer">
             <Info className="h-5 w-5" />
           </button>
         </div>
@@ -313,18 +315,18 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
       {/* Incoming Call Alert */}
       {incomingCall && !videoCallRoom && (
-        <div className="bg-emerald-500 text-white p-3 flex items-center justify-between px-6 animate-in slide-in-from-top">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] p-3 flex items-center justify-between px-6 animate-in slide-in-from-top shadow-lg shadow-emerald-500/10">
           <div className="flex items-center gap-3">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white dark:bg-[#052e14] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-white dark:bg-[#052e14]"></span>
             </span>
-            <span className="font-bold text-sm">Cuộc gọi nhóm đang diễn ra...</span>
+            <span className="font-bold text-sm font-label">Cuộc gọi nhóm đang diễn ra...</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button 
               onClick={() => setIncomingCall(null)}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-white/20 text-white dark:text-[#052e14] transition-all cursor-pointer"
             >
               Bỏ qua
             </button>
@@ -333,7 +335,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 setVideoCallRoom({ roomId: incomingCall.roomId, isInitiator: false });
                 setIncomingCall(null);
               }}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-emerald-600 hover:bg-gray-100 transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-[#052e14] text-emerald-700 dark:text-[#052e14] hover:bg-gray-100 transition-all flex items-center gap-1 shadow-md cursor-pointer"
             >
               <PhoneIncoming className="w-4 h-4" />
               Tham gia
@@ -343,12 +345,12 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       )}
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-white dark:bg-[#0b0f19]">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-gray-50/50 dark:bg-[#0b0f17]">
         {/* Loading state */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Đang tải tin nhắn...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-label">Đang tải tin nhắn...</p>
           </div>
         )}
 
@@ -356,15 +358,15 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
         {fetchError && !isLoading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <AlertCircle className="h-8 w-8 text-red-400" />
-            <p className="text-sm text-red-400">{fetchError}</p>
-            <button onClick={refetch} className="text-xs text-primary hover:underline">Thử lại</button>
+            <p className="text-sm text-red-400 font-label">{fetchError}</p>
+            <button onClick={refetch} className="text-xs text-primary hover:underline cursor-pointer font-label">Thử lại</button>
           </div>
         )}
 
         {/* Empty state */}
         {!isLoading && !fetchError && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-label">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
           </div>
         )}
 
@@ -373,19 +375,19 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           <React.Fragment key={dateLabel}>
             {/* Date Divider */}
             <div className="flex justify-center">
-              <span className="bg-[#F4F6FB] dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs font-semibold px-4 py-1.5 rounded-full">
+              <span className="bg-gray-200/60 dark:bg-white/5 text-gray-600 dark:text-gray-400 text-[10px] font-bold px-4 py-1.5 rounded-xl uppercase tracking-wider font-label shadow-sm">
                 {dateLabel}
               </span>
             </div>
 
             {msgs.map((msg) => (
-              <div key={msg.messageId} className={`flex ${isMine(msg) ? 'justify-end' : 'justify-start'} group`}>
+              <div key={msg.messageId} className={`flex ${isMine(msg) ? 'justify-end' : 'justify-start'} group/msg`}>
                 <div className={`flex gap-3 max-w-[85%] md:max-w-[70%] ${isMine(msg) ? 'flex-row-reverse' : 'flex-row'}`}>
 
                   {/* Avatar */}
                   {!isMine(msg) && (
                     <div className="flex-shrink-0 mt-1">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 flex items-center justify-center text-white dark:text-[#052e14] font-bold text-xs overflow-hidden shadow-sm">
                         {avatars[msg.senderId] ? (
                           <img src={avatars[msg.senderId]} alt={msg.senderName} className="w-full h-full object-cover" />
                         ) : (
@@ -398,28 +400,28 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                   {/* Message Content */}
                   <div className={`flex flex-col ${isMine(msg) ? 'items-end' : 'items-start'}`}>
                     {!isMine(msg) && (
-                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 ml-1">
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 ml-1 font-label">
                         {msg.senderName || 'Thành viên'}
                       </span>
                     )}
 
                     <div className="relative">
-                      <div className={`px-4 py-3 text-sm leading-relaxed ${isMine(msg)
-                        ? 'bg-[#047857] text-white rounded-2xl rounded-tr-sm shadow-sm'
-                        : 'bg-[#EEF2FF] dark:bg-[#1e2532] text-gray-800 dark:text-gray-200 rounded-2xl rounded-tl-sm shadow-sm'
+                      <div className={`px-4 py-3 text-sm leading-relaxed shadow-sm transition-all duration-300 hover:shadow-md ${isMine(msg)
+                        ? 'bg-gradient-to-br from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] rounded-2xl rounded-tr-none shadow-emerald-500/10'
+                        : 'bg-white dark:bg-[#161b22] text-gray-800 dark:text-gray-200 border border-gray-200/50 dark:border-white/5 rounded-2xl rounded-tl-none shadow-gray-200/10'
                         }`}>
                         {msg.messageType === 1 && msg.mediaUrl ? (
                           <div className="mb-2">
-                            <img src={msg.mediaUrl} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(msg.mediaUrl, '_blank')} />
+                            <img src={msg.mediaUrl} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-xl cursor-pointer hover:opacity-90 transition-opacity shadow-sm" onClick={() => window.open(msg.mediaUrl, '_blank')} />
                           </div>
                         ) : msg.messageType === 1 && msg.mediaFileId ? (
                            <div className="mb-2">
-                            <img src={getFileUrl(msg.mediaFileId)} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(getFileUrl(msg.mediaFileId), '_blank')} />
+                            <img src={getFileUrl(msg.mediaFileId)} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-xl cursor-pointer hover:opacity-90 transition-opacity shadow-sm" onClick={() => window.open(getFileUrl(msg.mediaFileId), '_blank')} />
                           </div>
                         ) : null}
                         
                         {msg.content !== '[Hình ảnh]' && msg.content}
-                        <div className={`text-[10px] mt-1.5 text-right font-medium ${isMine(msg) ? 'text-green-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <div className={`text-[9px] mt-1.5 text-right font-bold uppercase tracking-wide font-label ${isMine(msg) ? 'text-emerald-100/80 dark:text-emerald-950/80' : 'text-gray-400 dark:text-gray-500'}`}>
                           {formatTime(msg.sentAt)}
                         </div>
                       </div>
@@ -428,7 +430,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                       {isMine(msg) && (
                         <button
                           onClick={() => handleDeleteMessage(msg.messageId)}
-                          className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-400 hover:text-red-300"
+                          className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/msg:opacity-100 transition-all duration-200 p-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:scale-110 cursor-pointer"
                           title="Xóa tin nhắn"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -447,9 +449,9 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-card-dark border-t border-gray-200 dark:border-border-dark">
-        <div className="flex items-center gap-2 bg-[#F4F6FB] dark:bg-[#1a2130] p-2 rounded-xl border border-transparent focus-within:border-gray-300 dark:focus-within:border-gray-600 transition-colors">
-          <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-white/10">
+      <div className="p-3 md:p-4 bg-white dark:bg-card-dark border-t border-gray-150 dark:border-border-dark/60">
+        <div className="flex items-center gap-2 bg-[#F4F6FB] dark:bg-white/5 p-2 rounded-2xl border border-transparent focus-within:border-emerald-500/30 dark:focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-emerald-500/10 dark:focus-within:ring-primary/10 transition-all duration-300">
+          <button className="hidden sm:flex p-2 text-gray-400 hover:text-emerald-600 dark:text-gray-500 dark:hover:text-primary transition-colors rounded-full hover:bg-gray-200/50 dark:hover:bg-white/5 shrink-0">
             <Plus className="h-5 w-5" />
           </button>
           
@@ -463,7 +465,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingImage}
-            className={`p-2 transition-colors rounded-full ${uploadingImage ? 'text-emerald-500' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10'}`}
+            className={`p-2 transition-colors rounded-full shrink-0 hover:bg-gray-200/50 dark:hover:bg-white/5 ${uploadingImage ? 'text-emerald-500' : 'text-gray-400 hover:text-emerald-600 dark:text-gray-500 dark:hover:text-primary'}`}
           >
             {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImageIcon className="h-5 w-5" />}
           </button>
@@ -471,7 +473,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           <input
             type="text"
             placeholder="Nhập tin nhắn..."
-            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-2"
+            className="flex-1 min-w-0 bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 px-2"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => {
@@ -483,15 +485,15 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             disabled={isSending || uploadingImage}
           />
 
-          <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-white/10">
+          <button className="hidden sm:flex p-2 text-gray-400 hover:text-emerald-600 dark:text-gray-500 dark:hover:text-primary transition-colors rounded-full hover:bg-gray-200/50 dark:hover:bg-white/5 shrink-0">
             <Smile className="h-5 w-5" />
           </button>
           <button
-            className="bg-[#047857] hover:bg-[#065f46] text-white p-2 rounded-lg transition-colors flex items-center justify-center ml-1 shadow-sm disabled:opacity-50"
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-primary dark:to-emerald-500 text-white dark:text-[#052e14] p-2.5 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 disabled:opacity-40 disabled:scale-100 disabled:shadow-none flex items-center justify-center shrink-0 cursor-pointer"
             onClick={() => handleSendMessage(inputValue)}
             disabled={isSending || (!inputValue.trim() && !uploadingImage)}
           >
-            {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {isSending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4.5 w-4.5" />}
           </button>
         </div>
       </div>
