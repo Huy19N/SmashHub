@@ -254,6 +254,13 @@ public class TeamService : ITeamService
         // Increment usage count
         invite.CurrentUses = (invite.CurrentUses ?? 0) + 1;
         await _unitOfWork.TeamInvites.UpdateAsync(invite);
+
+        // Fetch user detail for broadcast
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+        // Broadcast to the team group via SignalR
+        await _hubContext.Clients.Group(invite.TeamId.ToString())
+            .SendAsync("MemberJoined", invite.TeamId, userId, user?.FullName, invite.Team?.TeamName);
     }
 
     #endregion

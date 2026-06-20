@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Award, Calendar, Users, ChevronRight, Trash2, Shield } from 'lucide-react';
 import { getAvatarUrl } from '../../../utils/avatarUtils';
 import { getAllUserByIdAPI, getUserOnlineAPI } from '../../profiles/api/profiles.api';
+import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 
 const AVATAR_COLORS = [
   'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500',
@@ -24,14 +25,17 @@ function getInitials(name) {
 export default function MemberCard({ member, onRemove, onViewProfile }) {
   const [showMenu, setShowMenu] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [isOnline, setIsOnline] = useState(false);
+  const [initialOnlineState, setInitialOnlineState] = useState(false);
+  
+  const userId = member.userId || member.id;
+  const isOnline = usePresenceSignalR(userId, initialOnlineState);
+  
   const menuRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
     const fetchAvatarAndStatus = async () => {
       try {
-        const userId = member.userId || member.id;
         if (userId) {
           const [resAvatar, resOnline] = await Promise.allSettled([
             getAllUserByIdAPI(userId),
@@ -44,9 +48,9 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
               if (fileId) setAvatarUrl(getAvatarUrl(fileId));
             }
             if (resOnline.status === 'fulfilled') {
-              const val = resOnline.value;
+              const val = resOnline.value?.data ?? resOnline.value;
               const isUserOnline = val === true || val?.isOnline === true || val?.status === 'online' || val?.status === true;
-              setIsOnline(isUserOnline);
+              setInitialOnlineState(isUserOnline);
             }
           }
         }
@@ -56,7 +60,7 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
     };
     fetchAvatarAndStatus();
     return () => { isMounted = false; };
-  }, [member]);
+  }, [member, userId]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {

@@ -3,6 +3,8 @@ import { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { router } from './routes';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+
 /**
  * LoadingScreen
  * A high-fidelity, 60fps skeleton screens layout featuring pulsing glow designs.
@@ -52,7 +54,8 @@ function LoadingScreen() {
 export default function App() {
   return (
     <ThemeProvider>
-      <Toaster 
+      <NotificationProvider>
+        <Toaster 
         position="top-center"
         toastOptions={{
           style: {
@@ -82,6 +85,7 @@ export default function App() {
       <Suspense fallback={<LoadingScreen />}>
         <RouterProvider router={router} />
       </Suspense>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }

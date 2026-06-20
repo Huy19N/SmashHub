@@ -18,14 +18,19 @@ import {
 import { PATHS } from '../../routes/paths';
 import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
 import { getAvatarUrl } from '../../utils/avatarUtils';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [avatarDropdownOpen, setAvatarDropdownOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const avatarDropdownRef = useRef(null);
+  const notificationDropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotifications() || { notifications: [], unreadCount: 0, markAsRead: ()=>{}, markAllAsRead: ()=>{}, clearNotification: ()=>{} };
 
   const { user, logout } = useAuth();
   const { user: apiUser } = useGetUserId();
@@ -56,11 +61,14 @@ export default function Navbar() {
     setAvatarDropdownOpen(false);
   }, [location.pathname]);
 
-  // Close avatar dropdown on outside click
+  // Close avatar and notification dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(e.target)) {
         setAvatarDropdownOpen(false);
+      }
+      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(e.target)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,9 +145,76 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                  <Bell className="h-5 w-5" />
-                </button>
+                {/* Notification Bell */}
+                <div className="relative" ref={notificationDropdownRef}>
+                  <button 
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white/95 dark:bg-[#131b2c]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden transform origin-top-right animate-fade-in">
+                      <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">Thông báo ({unreadCount})</h3>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={markAllAsRead}
+                            className="text-xs text-emerald-600 dark:text-primary hover:underline font-semibold"
+                          >
+                            Đánh dấu đã đọc
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                        {notifications.length === 0 ? (
+                          <div className="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                            Chưa có thông báo nào.
+                          </div>
+                        ) : (
+                          <div className="flex flex-col">
+                            {notifications.map(notif => (
+                              <div 
+                                key={notif.id} 
+                                onClick={() => markAsRead(notif.id)}
+                                className={`relative p-4 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${!notif.isRead ? 'bg-emerald-50/50 dark:bg-primary/5' : ''}`}
+                              >
+                                {!notif.isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 dark:bg-primary" />}
+                                <div className="flex justify-between items-start gap-2">
+                                  <div>
+                                    <h4 className={`text-sm ${!notif.isRead ? 'font-bold text-gray-900 dark:text-white' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                                      {notif.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed">
+                                      {notif.message}
+                                    </p>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 block">
+                                      {notif.timestamp.toLocaleTimeString('vi-VN')} - {notif.timestamp.toLocaleDateString('vi-VN')}
+                                    </span>
+                                  </div>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); clearNotification(notif.id); }}
+                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* Avatar with Dropdown */}
                 <div className="relative" ref={avatarDropdownRef}>
                   <div

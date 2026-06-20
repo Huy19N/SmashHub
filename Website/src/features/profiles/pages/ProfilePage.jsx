@@ -20,6 +20,7 @@ import {
 import { getAllSportsAPI, getSportLevelAPI } from '../../bookings/api/bookings.api.js';
 import { getAvatarUrl } from '../../../utils/avatarUtils';
 import toast from 'react-hot-toast';
+import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 
 export default function ProfilePage() {
   const { theme } = useTheme();
@@ -31,7 +32,8 @@ export default function ProfilePage() {
 
   // Online status hooks
   const { userOnline, isLoading: isOnlineLoading } = useGetUserOnline(profileData?.userId || profileData?.id);
-  const isOnline = userOnline === true || userOnline?.isOnline === true || userOnline?.status === 'online' || userOnline?.status === true;
+  const initialIsOnline = userOnline === true || userOnline?.isOnline === true || userOnline?.status === 'online' || userOnline?.status === true;
+  const isOnline = usePresenceSignalR(profileData?.userId || profileData?.id, initialIsOnline);
 
   // Sport profile hooks
   const { userSportProfiles, isLoading: isSportProfilesLoading, refetch: refetchSportProfiles } = useGetAllUserSportProfiles();

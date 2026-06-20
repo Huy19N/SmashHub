@@ -101,19 +101,24 @@ namespace Services.Hubs
                     userConnections.Add(Context.ConnectionId);
                 }
 
+                var context = _unitOfWork.TeamMembers.GetContext();
+                var teamIds = await context.Set<TeamMember>()
+                    .Where(tm => tm.UserId == userId)
+                    .Select(tm => tm.TeamId)
+                    .ToListAsync();
+
+                foreach (var teamId in teamIds)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, teamId.ToString());
+                }
+
                 if (userConnections.Count == 1)
                 {
                     // Lấy các team mà user tham gia để broadcast
-                    var context = _unitOfWork.TeamMembers.GetContext();
-                    var teamIds = await context.Set<TeamMember>()
-                        .Where(tm => tm.UserId == userId)
-                        .Select(tm => tm.TeamId)
-                        .ToListAsync();
-
                     foreach (var teamId in teamIds)
-                      {
-                          await Clients.Group(teamId.ToString()).SendAsync("UserOnline", userId);
-                      }
+                    {
+                        await Clients.Group(teamId.ToString()).SendAsync("UserOnline", userId);
+                    }
                 }
             }
 

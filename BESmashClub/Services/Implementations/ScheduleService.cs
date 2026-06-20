@@ -1,6 +1,8 @@
 using Entites.DTOs.Schedules;
 using Entites.Models;
+using Microsoft.AspNetCore.SignalR;
 using Repositories;
+using Services.Hubs;
 using Services.Interfaces;
 
 namespace Services.Implementations;
@@ -8,10 +10,12 @@ namespace Services.Implementations;
 public class ScheduleService : IScheduleService
 {
     private readonly UnitOfWork _unitOfWork;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public ScheduleService(UnitOfWork unitOfWork)
+    public ScheduleService(UnitOfWork unitOfWork, IHubContext<ChatHub> hubContext)
     {
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     #region Schedule CRUD
@@ -44,7 +48,13 @@ public class ScheduleService : IScheduleService
 
         await _unitOfWork.Schedules.CreateAsync(schedule);
 
-        return await GetScheduleDetailAsync(schedule.ScheduleId);
+        var response = await GetScheduleDetailAsync(schedule.ScheduleId);
+
+        // Broadcast to team members
+        await _hubContext.Clients.Group(teamId.ToString())
+            .SendAsync("ScheduleCreated", response);
+
+        return response;
     }
 
     public async Task<List<ScheduleResponse>> GetSchedulesByTeamAsync(Guid teamId)
