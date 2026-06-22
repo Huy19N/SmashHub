@@ -1,0 +1,246 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "SmashClubContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "IrregularWords": null,
+   "MinimumProductVersion": "2.6.1465",
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PluralRules": null,
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "APIWebApp",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "SingularRules": null,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[Bookings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[BookingStatus]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CourtCosts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Courts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CourtStatus]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[EmailConfirms]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Facilities]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityBankAccounts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityImages]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityOperatingHours]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityPaymentConfigs]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityReviews]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FacilityWallets]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Features]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchAcceptances]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchAcceptanceStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchChallenges]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MatchChallengeStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Notifications]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PaymentGateways]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Payments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PaymentStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PayoutRequests]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Payouts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PayoutStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostLikes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Posts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RefreshTokens]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ScheduleParticipants]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Schedules]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SportLevels]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Sports]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[StoredFiles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SubscriptionPlans]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SubscriptionTiers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TeamInvites]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TeamMembers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TeamMessages]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TeamRoles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Teams]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TierFeatures]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserRoles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Users]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserSportProfiles]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserSubscriptions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoCallParticipants]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoCallSessions]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseInternalAccessModifiersForSprocsAndFunctions": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false,
+   "UseTypedTvpParameters": true
+}

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import axios from '../../../config/axios';
 import toast from 'react-hot-toast';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
+import MediaImage from '../../../components/ui/MediaImage';
 import { useUploadUserAvatar } from '../../profiles/hooks/useProfiles';
 
 export default function AdminProfile() {
@@ -177,8 +177,8 @@ export default function AdminProfile() {
               className="relative group cursor-pointer block h-24 w-24 rounded-full overflow-hidden border border-emerald-500/20"
             >
               {profile.avatarFileId ? (
-                <img
-                  src={getAvatarUrl(profile.avatarFileId)}
+                <MediaImage
+                  fileId={profile.avatarFileId}
                   alt={profile.fullName}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {

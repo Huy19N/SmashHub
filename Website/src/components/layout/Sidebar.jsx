@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
-import { getAvatarUrl } from '../../utils/avatarUtils';
+import MediaImage from '../ui/MediaImage';
 
 export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   const navigate = useNavigate();
@@ -42,6 +42,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'users', label: 'Quản lý User', shortLabel: 'User', icon: Users, path: '/admin/users' },
     { id: 'facilities', label: 'Quản lý Chủ sân', shortLabel: 'Chủ sân', icon: CalendarDays, path: '/admin/facilities' },
     { id: 'payouts', label: 'Yêu cầu rút tiền', shortLabel: 'Rút tiền', icon: DollarSign, path: '/admin/payouts' },
+    { id: 'system-settings', label: 'Cài đặt hệ thống', shortLabel: 'Cài đặt', icon: Settings, path: '/admin/system-settings' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/admin/profile' },
   ] : isFacilityOwner ? [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
@@ -95,8 +96,8 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
               <div className="flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-2.5 p-1 group-hover:p-2.5 rounded-xl bg-transparent group-hover:bg-emerald-50/50 dark:group-hover:bg-white/5 border border-transparent group-hover:border-emerald-100/50 dark:group-hover:border-white/10 shadow-none group-hover:shadow-sm transition-all duration-300 ease-in-out hover:bg-emerald-50/70 dark:hover:bg-white/10">
                 <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 bg-emerald-100 dark:bg-primary/20 flex items-center justify-center relative">
                   {user?.data?.avatarFileId ? (
-                    <img
-                      src={getAvatarUrl(user.data.avatarFileId)}
+                    <MediaImage
+                      fileId={user.data.avatarFileId}
                       alt={user.data.fullName}
                       className="w-full h-full object-cover"
                       onError={(e) => {

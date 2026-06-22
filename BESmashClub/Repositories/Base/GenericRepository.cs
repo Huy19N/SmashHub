@@ -117,5 +117,26 @@ namespace Repositories.Base
         {
             return await _context.Set<T>().FindAsync(code) != null;
         }
+
+        public async Task<List<T>> FindAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().Where(predicate).ToListAsync();
+        }
+
+        public async Task<(List<T> items, int totalCount)> GetPagedAsync(
+            System.Linq.Expressions.Expression<Func<T, bool>> predicate,
+            int pageNumber,
+            int pageSize,
+            Func<IQueryable<T>, IQueryable<T>>? includeFunc = null)
+        {
+            var query = _context.Set<T>().Where(predicate);
+            var totalCount = await query.CountAsync();
+
+            if (includeFunc != null)
+                query = includeFunc(query);
+
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (items, totalCount);
+        }
     }
 }

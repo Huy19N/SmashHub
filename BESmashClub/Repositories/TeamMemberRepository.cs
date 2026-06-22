@@ -36,4 +36,17 @@ public class TeamMemberRepository : GenericRepository<TeamMember>
         return await _context.TeamMembers
             .AnyAsync(tm => tm.TeamId == teamId && tm.UserId == userId);
     }
+
+    public async Task<int> GetJoinedTeamsCountAsync(Guid userId)
+    {
+        return await _context.TeamMembers
+            .CountAsync(tm => tm.UserId == userId);
+    }
+
+    public async Task<Guid?> GetTeamLeaderIdAsync(Guid teamId)
+    {
+        var leader = await _context.TeamMembers
+            .FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.TeamRoleId == 1);
+        return leader?.UserId;
+    }
 }

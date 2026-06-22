@@ -21,4 +21,5 @@ public class MatchChallengeResponse
     public string? CourtName { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
+    public int Priority { get; set; }
 }

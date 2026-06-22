@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { X, UserCheck, UserX, Users, Loader2, Save, AlignLeft, Users as UsersIcon, DollarSign } from 'lucide-react';
 import { useScheduleParticipants, useUpdateSchedule, useUpdateAttendance } from '../hooks/useGroups';
+import toast from 'react-hot-toast';
 import Button from '../../../components/ui/Button';
+import SplitBillModal from './SplitBillModal';
 
 /**
  * ParticipantsModal — shows who has voted/joined a schedule, AND allows leader to edit schedule details.
@@ -14,6 +16,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
   const { updateAttendance } = useUpdateAttendance();
   
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'edit'
+  const [showSplitBill, setShowSplitBill] = useState(false);
   
   // Edit form state
   const [formData, setFormData] = useState({
@@ -46,22 +49,22 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
       await updateAttendance(scheduleId, userId, !currentStatus);
       if (refetchParticipants) refetchParticipants();
     } catch (err) {
-      alert("Không thể điểm danh: " + err);
+      toast.error("Không thể điểm danh: " + err);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (isTimeLocked) {
-      alert("Không thể chỉnh sửa thông tin khi đã tới giờ chơi.");
+      toast.error("Không thể chỉnh sửa thông tin khi đã tới giờ chơi.");
       return;
     }
     if (!formData.title.trim()) {
-      alert("Vui lòng nhập tiêu đề.");
+      toast.error("Vui lòng nhập tiêu đề.");
       return;
     }
     if (!formData.maxParticipants || isNaN(formData.maxParticipants)) {
-      alert("Vui lòng nhập số người tối đa hợp lệ.");
+      toast.error("Vui lòng nhập số người tối đa hợp lệ.");
       return;
     }
 
@@ -291,16 +294,35 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
               Lưu thay đổi
             </Button>
           ) : (
-            <Button
-              variant="primary"
-              onClick={onClose}
-              className="px-4 py-2.5 text-xs"
-            >
-              Đóng
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setShowSplitBill(true)}
+                className="px-4 py-2.5 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 border-none dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+              >
+                <DollarSign className="h-3.5 w-3.5" />
+                Tính tiền
+              </Button>
+              <Button
+                variant="primary"
+                onClick={onClose}
+                className="px-4 py-2.5 text-xs"
+              >
+                Đóng
+              </Button>
+            </div>
           )}
         </div>
       </div>
+      
+      <SplitBillModal 
+        isOpen={showSplitBill}
+        onClose={() => setShowSplitBill(false)}
+        scheduleId={scheduleId}
+        onSuccess={() => {
+          if (refetchParticipants) refetchParticipants();
+        }}
+      />
     </div>
   );
 }

@@ -13,6 +13,10 @@ public partial class ScheduleParticipant
 
     public bool IsAttended { get; set; }
 
+    public decimal CostToPay { get; set; }
+
+    public bool IsPaid { get; set; }
+
     public DateTime? JoinedAt { get; set; }
 
     public virtual Schedule Schedule { get; set; }

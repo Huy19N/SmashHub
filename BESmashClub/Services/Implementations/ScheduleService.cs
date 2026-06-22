@@ -122,7 +122,9 @@ public class ScheduleService : IScheduleService
             UserId = p.UserId,
             FullName = p.User?.FullName,
             IsAttended = p.IsAttended,
-            JoinedAt = p.JoinedAt
+            JoinedAt = p.JoinedAt,
+            CostToPay = p.CostToPay,
+            IsPaid = p.IsPaid
         }).ToList();
     }
 
@@ -173,7 +175,9 @@ public class ScheduleService : IScheduleService
             UserId = userId,
             FullName = user?.FullName,
             IsAttended = false,
-            JoinedAt = participant.JoinedAt
+            JoinedAt = participant.JoinedAt,
+            CostToPay = 0,
+            IsPaid = false
         };
     }
 
@@ -203,6 +207,57 @@ public class ScheduleService : IScheduleService
 
         participant.IsAttended = request.IsAttended;
         await _unitOfWork.ScheduleParticipants.UpdateAsync(participant);
+    }
+
+    public async Task UpdateSplitBillAsync(Guid currentUserId, Guid scheduleId, Guid targetUserId, Entites.DTOs.ScheduleParticipants.UpdateSplitBillRequest request)
+    {
+        var schedule = await _unitOfWork.Schedules.GetByIdAsync(scheduleId);
+        if (schedule == null)
+            throw new KeyNotFoundException("Không tìm thấy lịch chơi.");
+
+        // Only Leader can update bills
+        if (!await _unitOfWork.TeamMembers.IsLeaderAsync(schedule.HostTeamId, currentUserId))
+            throw new UnauthorizedAccessException("Chỉ Leader mới có quyền cập nhật chia tiền.");
+
+        var participant = await _unitOfWork.ScheduleParticipants.GetParticipantAsync(scheduleId, targetUserId);
+        if (participant == null)
+            throw new KeyNotFoundException("Người dùng chưa đăng ký tham gia buổi chơi này.");
+
+        participant.CostToPay = request.CostToPay;
+        participant.IsPaid = request.IsPaid;
+        await _unitOfWork.ScheduleParticipants.UpdateAsync(participant);
+    }
+
+    public async Task CalculateAndSaveSplitBillAsync(Guid currentUserId, Guid scheduleId, CalculateSplitBillRequest request)
+    {
+        var schedule = await _unitOfWork.Schedules.GetByIdAsync(scheduleId);
+        if (schedule == null)
+            throw new KeyNotFoundException("Không tìm thấy lịch chơi.");
+
+        if (!await _unitOfWork.TeamMembers.IsLeaderAsync(schedule.HostTeamId, currentUserId))
+            throw new UnauthorizedAccessException("Chỉ Leader mới có quyền chia tiền.");
+
+        var participants = await _unitOfWork.ScheduleParticipants.GetByScheduleIdAsync(scheduleId);
+        if (!participants.Any())
+            throw new InvalidOperationException("Không có thành viên tham gia để chia tiền.");
+
+        var totalParticipants = participants.Count;
+        var attendedParticipants = participants.Where(p => p.IsAttended).ToList();
+        var attendedCount = attendedParticipants.Count;
+
+        var courtFeePerPerson = totalParticipants > 0 ? schedule.BaseCourtCost / totalParticipants : 0;
+        var extraFeePerPerson = attendedCount > 0 ? request.ExtraFee / attendedCount : 0;
+
+        foreach (var p in participants)
+        {
+            p.CostToPay = p.IsAttended ? (courtFeePerPerson + extraFeePerPerson) : courtFeePerPerson;
+            await _unitOfWork.ScheduleParticipants.UpdateAsync(p);
+        }
+
+        schedule.ExtraFee = request.ExtraFee;
+        schedule.ExtraFeeNote = request.ExtraFeeNote;
+        schedule.TotalCalculatedCost = schedule.BaseCourtCost + request.ExtraFee;
+        await _unitOfWork.Schedules.UpdateAsync(schedule);
     }
 
     #endregion

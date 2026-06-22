@@ -6,4 +6,6 @@ public class ParticipantResponse
     public string FullName { get; set; }
     public bool IsAttended { get; set; }
     public DateTime? JoinedAt { get; set; }
+    public decimal CostToPay { get; set; }
+    public bool IsPaid { get; set; }
 }

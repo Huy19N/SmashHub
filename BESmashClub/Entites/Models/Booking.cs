@@ -13,7 +13,7 @@ public partial class Booking
 
     public Guid? BookedByUserId { get; set; }
 
-    public string BookingType { get; set; }
+    public bool IsBookingOffline { get; set; }
 
     public string CustomerNameOffline { get; set; }
 
@@ -23,7 +23,11 @@ public partial class Booking
 
     public decimal? TotalCost { get; set; }
 
+    public decimal? PlatformFee { get; set; }
+
     public int StatusId { get; set; }
+
+    public string CancellationReason { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 

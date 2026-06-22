@@ -19,6 +19,10 @@ public partial class Payment
 
     public decimal Amount { get; set; }
 
+    public decimal PlatformFee { get; set; }
+
+    public decimal RefundAmount { get; set; }
+
     public string Description { get; set; }
 
     public int StatusId { get; set; }
@@ -44,6 +48,8 @@ public partial class Payment
     public virtual FacilityPaymentConfig FacilityConfig { get; set; }
 
     public virtual PaymentGateway Gateway { get; set; }
+
+    public virtual ICollection<Payout> Payouts { get; set; } = new List<Payout>();
 
     public virtual PaymentStatus Status { get; set; }
 

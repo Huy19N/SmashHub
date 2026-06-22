@@ -82,6 +82,12 @@ export const updateScheduleAPI = async (scheduleId, data) => {
 
 // ─── Schedules Participants ───────────────────────────────────
 
+/** Calculate Split Bill for a Schedule (POST /api/schedules/{scheduleId}/calculate-split-bill) */
+export const calculateSplitBillAPI = async (scheduleId, data) => {
+  const response = await api.post(`/schedules/${scheduleId}/calculate-split-bill`, data);
+  return response.data;
+};
+
 /** Get all participants of a schedule (GET /api/schedules/{scheduleId}/participants) */
 export const getScheduleParticipantsAPI = async (scheduleId) => {
   const response = await api.get(`/schedules/${scheduleId}/participants`);

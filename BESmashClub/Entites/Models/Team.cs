@@ -11,15 +11,21 @@ public partial class Team
 
     public string TeamName { get; set; }
 
+    public Guid? AvatarFileId { get; set; }
+
     public string Description { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public bool IsActive { get; set; }
 
+    public virtual StoredFile AvatarFile { get; set; }
+
     public virtual ICollection<MatchAcceptance> MatchAcceptances { get; set; } = new List<MatchAcceptance>();
 
     public virtual ICollection<MatchChallenge> MatchChallenges { get; set; } = new List<MatchChallenge>();
+
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
 

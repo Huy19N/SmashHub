@@ -7,8 +7,7 @@ import { uploadFileAPI, getFileUrl } from '../api/files.api.js';
 import toast from 'react-hot-toast';
 import VideoCallOverlay from './VideoCallOverlay';
 import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
-
+import MediaImage from '../../../components/ui/MediaImage';
 /**
  * TeamChat – Real-time group chat powered by SignalR + REST API.
  *
@@ -69,7 +68,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
         getAllUserByIdAPI(id).then(res => {
           const fileId = res?.data?.avatarFileId || res?.avatarFileId;
           if (fileId && isMounted) {
-            setAvatars(prev => ({ ...prev, [id]: getAvatarUrl(fileId) }));
+            setAvatars(prev => ({ ...prev, [id]: fileId }));
           }
         }).catch(() => {});
       }
@@ -419,7 +418,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                     <div className="flex-shrink-0 mt-1">
                       <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 flex items-center justify-center text-white dark:text-[#052e14] font-bold text-xs overflow-hidden shadow-sm">
                         {avatars[msg.senderId] ? (
-                          <img src={avatars[msg.senderId]} alt={msg.senderName} className="w-full h-full object-cover" />
+                          <MediaImage fileId={avatars[msg.senderId]} alt={msg.senderName} className="w-full h-full object-cover" />
                         ) : (
                           getInitials(msg.senderName)
                         )}
@@ -446,7 +445,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                           </div>
                         ) : msg.messageType === 1 && msg.mediaFileId ? (
                            <div className="mb-2">
-                            <img src={getFileUrl(msg.mediaFileId)} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-xl cursor-pointer hover:opacity-90 transition-opacity shadow-sm" onClick={() => window.open(getFileUrl(msg.mediaFileId), '_blank')} />
+                            <MediaImage fileId={msg.mediaFileId} alt="Hình ảnh đính kèm" className="max-w-[200px] sm:max-w-[250px] rounded-xl cursor-pointer hover:opacity-90 transition-opacity shadow-sm" onClick={(url) => window.open(url, '_blank')} />
                           </div>
                         ) : null}
                         

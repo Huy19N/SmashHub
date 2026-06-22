@@ -23,6 +23,12 @@ public class TeamService : ITeamService
 
     public async Task<TeamDetailResponse> CreateTeamAsync(Guid userId, CreateTeamRequest request)
     {
+        var (maxTeams, _) = await GetUserLimitsAsync(userId);
+        var joinedTeamsCount = await _unitOfWork.TeamMembers.GetJoinedTeamsCountAsync(userId);
+        
+        if (joinedTeamsCount >= maxTeams)
+            throw new InvalidOperationException($"Bạn đã đạt giới hạn tham gia/tạo nhóm (tối đa {maxTeams} nhóm) theo gói đăng ký hiện tại. Vui lòng nâng cấp gói để tiếp tục.");
+
         var team = new Team
         {
             TeamId = Guid.NewGuid(),
@@ -238,6 +244,22 @@ public class TeamService : ITeamService
         if (await _unitOfWork.TeamMembers.IsMemberAsync(invite.TeamId, userId))
             throw new InvalidOperationException("Bạn đã là thành viên của nhóm này.");
 
+        // Check member's joined teams limit
+        var (maxTeams, _) = await GetUserLimitsAsync(userId);
+        var joinedTeamsCount = await _unitOfWork.TeamMembers.GetJoinedTeamsCountAsync(userId);
+        if (joinedTeamsCount >= maxTeams)
+            throw new InvalidOperationException($"Bạn đã đạt giới hạn tham gia nhóm (tối đa {maxTeams} nhóm) theo gói đăng ký hiện tại.");
+
+        // Check leader's max members limit
+        var leaderId = await _unitOfWork.TeamMembers.GetTeamLeaderIdAsync(invite.TeamId);
+        if (leaderId.HasValue)
+        {
+            var (_, maxMembers) = await GetUserLimitsAsync(leaderId.Value);
+            var currentMembers = (await _unitOfWork.TeamMembers.GetByTeamIdAsync(invite.TeamId)).Count;
+            if (currentMembers >= maxMembers)
+                throw new InvalidOperationException($"Nhóm đã đạt giới hạn thành viên (tối đa {maxMembers} người) theo gói đăng ký của Trưởng nhóm.");
+        }
+
         // Add as Member (TeamRoleId = 2)
         var member = new TeamMember
         {
@@ -271,6 +293,22 @@ public class TeamService : ITeamService
     {
         if (!await _unitOfWork.TeamMembers.IsMemberAsync(teamId, currentUserId))
             throw new InvalidOperationException("Bạn không phải là thành viên của nhóm này.");
+
+        if (request.MessageType == 1 || request.MessageType == 2 || request.MessageType == 3)
+        {
+            var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(currentUserId);
+            var tierName = sub?.Plan?.Tier?.TierName ?? "Free";
+
+            if (tierName == "Free")
+                throw new InvalidOperationException("Gói Free không hỗ trợ gửi file phương tiện. Vui lòng nâng cấp gói Basic hoặc Pro.");
+
+            if (tierName == "Basic")
+            {
+                var todayMediaCount = await _unitOfWork.TeamMessages.GetTodayMediaCountAsync(currentUserId);
+                if (todayMediaCount >= 5)
+                    throw new InvalidOperationException("Gói Basic chỉ cho phép gửi tối đa 5 file phương tiện mỗi ngày. Vui lòng nâng cấp gói Pro để không giới hạn.");
+            }
+        }
 
         var message = new TeamMessage
         {
@@ -388,6 +426,19 @@ public class TeamService : ITeamService
             Wins = tm.Wins,
             Losses = tm.Losses,
             JoinedAt = tm.JoinedAt
+        };
+    }
+
+    private async Task<(int maxTeams, int maxMembers)> GetUserLimitsAsync(Guid userId)
+    {
+        var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(userId);
+        var tierName = sub?.Plan?.Tier?.TierName ?? "Free";
+
+        return tierName switch
+        {
+            "Pro" => (int.MaxValue, 100),
+            "Basic" => (10, 30),
+            _ => (5, 15) // Free
         };
     }
 

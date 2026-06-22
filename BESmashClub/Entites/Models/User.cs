@@ -21,13 +21,15 @@ public partial class User
 
     public Guid? AvatarFileId { get; set; }
 
+    public string Cccd { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime LastPwdChange { get; set; }
 
     public bool? IsActive { get; set; }
 
-    public virtual LocalFile AvatarFile { get; set; }
+    public virtual StoredFile AvatarFile { get; set; }
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
@@ -35,17 +37,27 @@ public partial class User
 
     public virtual ICollection<FacilityReview> FacilityReviews { get; set; } = new List<FacilityReview>();
 
-    public virtual ICollection<LocalFile> LocalFiles { get; set; } = new List<LocalFile>();
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<Payment> PaymentConfirmedByUsers { get; set; } = new List<Payment>();
 
     public virtual ICollection<Payment> PaymentUsers { get; set; } = new List<Payment>();
+
+    public virtual ICollection<Payout> Payouts { get; set; } = new List<Payout>();
+
+    public virtual ICollection<PostComment> PostComments { get; set; } = new List<PostComment>();
+
+    public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();
+
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public virtual UserRole Role { get; set; }
 
     public virtual ICollection<ScheduleParticipant> ScheduleParticipants { get; set; } = new List<ScheduleParticipant>();
+
+    public virtual ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
 
     public virtual ICollection<TeamInvite> TeamInvites { get; set; } = new List<TeamInvite>();
 

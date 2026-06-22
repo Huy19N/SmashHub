@@ -1,5 +1,8 @@
 using Entites.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Minio;
+using Minio.DataModel.Args;
 using Repositories;
 using Services.Interfaces;
 
@@ -8,10 +11,14 @@ namespace Services.Implementations;
 public class FileService : IFileService
 {
     private readonly UnitOfWork _unitOfWork;
+    private readonly IMinioClient _minioClient;
+    private readonly IConfiguration _config;
 
-    public FileService(UnitOfWork unitOfWork)
+    public FileService(UnitOfWork unitOfWork, IMinioClient minioClient, IConfiguration config)
     {
         _unitOfWork = unitOfWork;
+        _minioClient = minioClient;
+        _config = config;
     }
 
     public async Task<Guid> UploadFileAsync(Guid userId, string fileName, byte[] fileData, string fileType, string purpose, string mimeType)
@@ -26,30 +33,66 @@ public class FileService : IFileService
         if (!allowedPurposes.Contains(purpose))
             throw new ArgumentException("Mục đích tải tệp không hợp lệ.");
 
-        var localFile = new LocalFile
+        var bucketName = _config["MinIOSettings:BucketName"] ?? "smashhub2026";
+        var extension = Path.GetExtension(fileName);
+        var objectName = $"{purpose}/{Guid.NewGuid()}{extension}";
+
+        bool found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
+        if (!found)
+        {
+            await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
+        }
+
+        using var stream = new MemoryStream(fileData);
+        await _minioClient.PutObjectAsync(new PutObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(objectName)
+            .WithStreamData(stream)
+            .WithObjectSize(stream.Length)
+            .WithContentType(mimeType));
+
+        var fileTypeId = (byte)(fileType switch { "Image" => 1, "Video" => 2, "Document" => 3, _ => 1 });
+        var purposeId = (byte)(purpose switch { "Avatar" => 1, "FacilityImage" => 2, "ChatMedia" => 3, "PostMedia" => 4, _ => 5 });
+
+        var localFile = new StoredFile
         {
             FileId = Guid.NewGuid(),
             UploadedByUserId = userId,
-            FileName = fileName,
-            FileData = fileData,
-            FileType = fileType,
+            OriginalFileName = fileName,
+            BucketName = bucketName,
+            ObjectName = objectName,
+            FileType = fileTypeId,
             FileSizeBytes = fileData.Length,
             MimeType = mimeType,
-            Purpose = purpose,
+            Purpose = purposeId,
             CreatedAt = DateTime.Now
         };
 
         var context = _unitOfWork.Users.GetContext();
-        await context.Set<LocalFile>().AddAsync(localFile);
+        await context.Set<StoredFile>().AddAsync(localFile);
         await _unitOfWork.SaveChangesAsync();
 
         return localFile.FileId;
     }
 
-    public async Task<LocalFile?> GetFileByIdAsync(Guid fileId)
+    public async Task<StoredFile?> GetFileByIdAsync(Guid fileId)
     {
         var context = _unitOfWork.Users.GetContext();
-        return await context.Set<LocalFile>()
+        return await context.Set<StoredFile>()
             .FirstOrDefaultAsync(lf => lf.FileId == fileId);
+    }
+
+    public async Task<string> GetFileUrlAsync(Guid fileId)
+    {
+        var file = await GetFileByIdAsync(fileId);
+        if (file == null) return string.Empty;
+
+        // Return a presigned URL valid for 1 hour
+        var args = new PresignedGetObjectArgs()
+            .WithBucket(file.BucketName)
+            .WithObject(file.ObjectName)
+            .WithExpiry(60 * 60);
+        
+        return await _minioClient.PresignedGetObjectAsync(args);
     }
 }

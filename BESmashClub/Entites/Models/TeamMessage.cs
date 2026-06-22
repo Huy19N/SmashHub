@@ -23,7 +23,7 @@ public partial class TeamMessage
 
     public bool IsDeleted { get; set; }
 
-    public virtual LocalFile MediaFile { get; set; }
+    public virtual StoredFile MediaFile { get; set; }
 
     public virtual User Sender { get; set; }
 

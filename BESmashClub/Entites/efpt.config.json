@@ -67,15 +67,15 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[FacilityStatuses]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[FacilityWallets]",
          "ObjectType": 0
       },
       {
          "Name": "[dbo].[Features]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[LocalFiles]",
          "ObjectType": 0
       },
       {
@@ -95,6 +95,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[Notifications]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[PaymentGateways]",
          "ObjectType": 0
       },
@@ -108,6 +112,26 @@
       },
       {
          "Name": "[dbo].[PayoutRequests]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Payouts]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PayoutStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostComments]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostLikes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Posts]",
          "ObjectType": 0
       },
       {
@@ -128,6 +152,10 @@
       },
       {
          "Name": "[dbo].[Sports]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[StoredFiles]",
          "ObjectType": 0
       },
       {

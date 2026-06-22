@@ -19,4 +19,7 @@ public class UpdateFacilityRequest
     public decimal? Latitude { get; set; }
 
     public decimal? Longitude { get; set; }
+
+    [MaxLength(100)]
+    public string? BusinessCode { get; set; }
 }

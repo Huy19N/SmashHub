@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Award, Calendar, Users, ChevronRight, Trash2, Shield } from 'lucide-react';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
+import MediaImage from '../../../components/ui/MediaImage';
 import { getAllUserByIdAPI, getUserOnlineAPI } from '../../profiles/api/profiles.api';
 import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 
@@ -24,7 +24,7 @@ function getInitials(name) {
 
 export default function MemberCard({ member, onRemove, onViewProfile }) {
   const [showMenu, setShowMenu] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarFileId, setAvatarFileId] = useState(null);
   const [initialOnlineState, setInitialOnlineState] = useState(false);
   
   const userId = member.userId || member.id;
@@ -45,7 +45,7 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
           if (isMounted) {
             if (resAvatar.status === 'fulfilled') {
               const fileId = resAvatar.value?.data?.avatarFileId || resAvatar.value?.avatarFileId;
-              if (fileId) setAvatarUrl(getAvatarUrl(fileId));
+              if (fileId) setAvatarFileId(fileId);
             }
             if (resOnline.status === 'fulfilled') {
               const val = resOnline.value?.data ?? resOnline.value;
@@ -101,8 +101,8 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
           {/* Avatar */}
           <div className="relative shrink-0">
             <div className={`h-11 w-11 rounded-full ${getAvatarColor(member.fullName)} flex items-center justify-center text-white font-bold text-sm shadow-sm overflow-hidden`}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
+              {avatarFileId ? (
+                <MediaImage fileId={avatarFileId} alt={member.fullName} className="w-full h-full object-cover" />
               ) : (
                 getInitials(member.fullName)
               )}

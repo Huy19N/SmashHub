@@ -34,6 +34,9 @@ public class UserService : IUserService
         if (request.PhoneNumber != null)
             user.PhoneNumber = request.PhoneNumber;
 
+        if (request.Cccd != null)
+            user.Cccd = request.Cccd;
+
         await _unitOfWork.Users.UpdateAsync(user);
 
         return MapToProfileResponse(user);
@@ -92,7 +95,8 @@ public class UserService : IUserService
             RoleName = user.Role?.RoleName,
             CreatedAt = user.CreatedAt,
             IsActive = user.IsActive,
-            AvatarFileId = user.AvatarFileId
+            AvatarFileId = user.AvatarFileId,
+            Cccd = user.Cccd
         };
     }
 }

@@ -17,5 +17,5 @@ public partial class FacilityImage
 
     public virtual Facility Facility { get; set; }
 
-    public virtual LocalFile File { get; set; }
+    public virtual StoredFile File { get; set; }
 }

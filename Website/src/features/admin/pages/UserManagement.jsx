@@ -7,7 +7,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAdminUsers } from '../hooks/useAdmin';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
+import MediaImage from '../../../components/ui/MediaImage';
 import { getAllUserByIdAPI } from '../../profiles/api/profiles.api.js';
 import toast from 'react-hot-toast';
 export default function UserManagement() {
@@ -129,8 +129,8 @@ export default function UserManagement() {
                   <tr key={u.userId} className="bg-white/60 dark:bg-gray-800/40 hover:bg-white dark:hover:bg-gray-700/60 transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-1 rounded-2xl group">
                     <td className="py-3 px-4 rounded-l-2xl whitespace-nowrap">
                       {u.avatarFileId || avatars[u.userId] ? (
-                        <img
-                          src={getAvatarUrl(u.avatarFileId || avatars[u.userId])}
+                        <MediaImage
+                          fileId={u.avatarFileId || avatars[u.userId]}
                           alt={u.fullName}
                           className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-white/10"
                           onError={(e) => {

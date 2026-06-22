@@ -91,4 +91,26 @@ public class ScheduleParticipantsController : ControllerBase
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    /// <summary>
+    /// Cập nhật chia tiền (Leader cập nhật CostToPay, IsPaid).
+    /// </summary>
+    [HttpPatch("{userId:guid}/split-bill")]
+    public async Task<IActionResult> UpdateSplitBill(
+        Guid scheduleId, Guid userId, [FromBody] Entites.DTOs.ScheduleParticipants.UpdateSplitBillRequest request)
+    {
+        try
+        {
+            await _scheduleService.UpdateSplitBillAsync(GetCurrentUserId(), scheduleId, userId, request);
+            return Ok(ApiResponse.SuccessResponse("Cập nhật chia tiền thành công."));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

@@ -29,6 +29,11 @@ public class UnitOfWork : IDisposable
     public UserSubscriptionRepository UserSubscriptions { get; }
     public MatchChallengeRepository MatchChallenges { get; }
     public MatchAcceptanceRepository MatchAcceptances { get; }
+    public SystemSettingRepository SystemSettings { get; }
+    public NotificationRepository Notifications { get; }
+    public PostRepository Posts { get; }
+    public PostCommentRepository PostComments { get; }
+    public PostLikeRepository PostLikes { get; }
 
     public UnitOfWork(SmashClubContext context)
     {
@@ -56,6 +61,11 @@ public class UnitOfWork : IDisposable
         UserSubscriptions = new UserSubscriptionRepository(context);
         MatchChallenges = new MatchChallengeRepository(context);
         MatchAcceptances = new MatchAcceptanceRepository(context);
+        SystemSettings = new SystemSettingRepository(context);
+        Notifications = new NotificationRepository(context);
+        Posts = new PostRepository(context);
+        PostComments = new PostCommentRepository(context);
+        PostLikes = new PostLikeRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

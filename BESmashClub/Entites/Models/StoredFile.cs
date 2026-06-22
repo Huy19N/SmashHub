@@ -5,29 +5,35 @@ using System.Collections.Generic;
 
 namespace Entites.Models;
 
-public partial class LocalFile
+public partial class StoredFile
 {
     public Guid FileId { get; set; }
 
     public Guid UploadedByUserId { get; set; }
 
-    public string FileName { get; set; }
+    public string BucketName { get; set; }
 
-    public byte[] FileData { get; set; }
+    public string ObjectName { get; set; }
 
-    public string FileType { get; set; }
+    public string OriginalFileName { get; set; }
+
+    public byte FileType { get; set; }
 
     public long? FileSizeBytes { get; set; }
 
     public string MimeType { get; set; }
 
-    public string Purpose { get; set; }
+    public byte Purpose { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<FacilityImage> FacilityImages { get; set; } = new List<FacilityImage>();
 
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
+
     public virtual ICollection<TeamMessage> TeamMessages { get; set; } = new List<TeamMessage>();
+
+    public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
 
     public virtual User UploadedByUser { get; set; }
 

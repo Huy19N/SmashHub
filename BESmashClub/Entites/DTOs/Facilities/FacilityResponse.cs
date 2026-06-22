@@ -13,6 +13,9 @@ public class FacilityResponse
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public double? DistanceKm { get; set; }
+    public string? BusinessCode { get; set; }
+    public int StatusId { get; set; }
+    public string? StatusName { get; set; }
     public DateTime? CreatedAt { get; set; }
     public List<SportPriceSummary> SportPrices { get; set; } = new();
 }

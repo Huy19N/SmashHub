@@ -34,10 +34,11 @@ import SessionCard from '../components/SessionCard';
 import CreateScheduleModal from '../components/CreateScheduleModal';
 import ParticipantsModal from '../components/ParticipantsModal';
 import MatchRequestsModal from '../components/MatchRequestsModal';
+import CreateChallengeModal from '../components/CreateChallengeModal';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { getUserIdAPI } from '../../Auth/api/auth.api.js';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
+import MediaImage from '../../../components/ui/MediaImage';
 import Button from '../../../components/ui/Button';
 
 const filterProfileData = (obj) => {
@@ -164,6 +165,7 @@ export default function TeamManagementPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
   const [viewingChallengeId, setViewingChallengeId] = useState(null);
+  const [createChallengeConfig, setCreateChallengeConfig] = useState(null);
   const [teamChallenges, setTeamChallenges] = useState([]);
   const [challengesLoading, setChallengesLoading] = useState(false);
 
@@ -227,28 +229,18 @@ export default function TeamManagementPage() {
       setJoinedScheduleIds(prev => new Set(prev).add(scheduleId));
       refetchSchedules();
     } catch (err) {
-      alert(err || 'Không thể tham gia.');
+      toast.error(err || 'Không thể tham gia.');
     } finally {
       setVotingScheduleId(null);
     }
   };
 
-  const handleCreateChallenge = async (scheduleId, sportId) => {
-    const level = window.prompt('Nhập trình độ yêu cầu (VD: Trung bình, Khá):', 'Trung bình');
-    if (level === null) return;
-    const message = window.prompt('Nhập lời nhắn (VD: Giao lưu vui vẻ, phí chia đôi):', 'Giao lưu vui vẻ, phí sân chia đôi.');
-    if (message === null) return;
-    
+  const handleCreateChallenge = async (config) => {
     try {
-      await createChallenge({ 
-        scheduleId, 
-        hostTeamId: teamId,
-        sportId: sportId || team?.sportId || 1,
-        isCostSplit: true,
-        message: message || '' 
-      });
+      await createChallenge(config);
       toast.success('Đã đăng kèo ghép đấu lên hệ thống thành công!');
-      fetchActiveChallenges({});
+      fetchActiveChallenges({ teamId });
+      setCreateChallengeConfig(null);
     } catch (err) {
       toast.error('Lỗi tạo kèo: ' + (err.message || 'Unknown'));
     }
@@ -265,7 +257,7 @@ export default function TeamManagementPage() {
       });
       refetchSchedules();
     } catch (err) {
-      alert(err || 'Không thể hủy tham gia.');
+      toast.error(err || 'Không thể hủy tham gia.');
     } finally {
       setVotingScheduleId(null);
     }
@@ -510,7 +502,7 @@ export default function TeamManagementPage() {
                             isVoting={votingScheduleId === schedule.scheduleId}
                             onVoteJoin={handleVoteJoin}
                             onVoteLeave={handleVoteLeave}
-                            onCreateChallenge={handleCreateChallenge}
+                            onCreateChallenge={(schedId, spId) => setCreateChallengeConfig({ scheduleId: schedId, sportId: spId || team?.sportId || 1, hostTeamId: teamId })}
                             activeChallengeId={activeChallenge?.challengeId}
                             onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
                             onDelete={async () => {
@@ -520,7 +512,7 @@ export default function TeamManagementPage() {
                                 await deleteSchedule(schedule.scheduleId);
                                 refetchSchedules();
                               } catch (err) {
-                                alert(err || 'Không thể xóa lịch trình.');
+                                toast.error(err || 'Không thể xóa lịch trình.');
                               } finally {
                                 setDeletingScheduleId(null);
                               }
@@ -573,6 +565,11 @@ export default function TeamManagementPage() {
                                 <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                                   {c.hostTeamName}
                                   <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700">Chủ nhà</span>
+                                  {c.priority > 0 && (
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${c.priority === 2 ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}>
+                                      {c.priority === 2 ? 'VIP PRO' : 'VIP'}
+                                    </span>
+                                  )}
                                 </h3>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   <span className="text-xs font-bold px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
@@ -747,7 +744,7 @@ export default function TeamManagementPage() {
                   <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 to-teal-500 dark:from-primary dark:to-emerald-400 rounded-2xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
                   <div className="relative h-16 w-16 rounded-2xl bg-white dark:bg-[#1a202c] p-0.5 border-2 border-emerald-500 dark:border-primary flex items-center justify-center text-emerald-600 dark:text-primary font-bold text-2xl shadow-md font-display select-none overflow-hidden">
                     {profileDetails?.avatarFileId ? (
-                      <img src={getAvatarUrl(profileDetails.avatarFileId)} alt="avatar" className="w-full h-full object-cover rounded-xl" />
+                      <MediaImage fileId={profileDetails.avatarFileId} alt="avatar" className="w-full h-full object-cover rounded-xl" />
                     ) : (
                       <span className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-primary dark:to-emerald-500 bg-clip-text text-transparent font-extrabold uppercase">
                         {viewingProfileMember.fullName?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'}
@@ -942,9 +939,19 @@ export default function TeamManagementPage() {
         isOpen={!!viewingChallengeId}
         onClose={() => {
           setViewingChallengeId(null);
-          fetchActiveChallenges({});
+          fetchActiveChallenges({ teamId });
         }}
         challengeId={viewingChallengeId}
+      />
+
+      <CreateChallengeModal
+        isOpen={!!createChallengeConfig}
+        onClose={() => setCreateChallengeConfig(null)}
+        scheduleId={createChallengeConfig?.scheduleId}
+        sportId={createChallengeConfig?.sportId}
+        hostTeamId={createChallengeConfig?.hostTeamId}
+        onSubmit={handleCreateChallenge}
+        isDarkMode={theme === 'dark'}
       />
     </div>
   );

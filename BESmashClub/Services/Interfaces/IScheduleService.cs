@@ -16,4 +16,6 @@ public interface IScheduleService
     Task<ParticipantResponse> JoinScheduleAsync(Guid userId, Guid scheduleId);
     Task LeaveScheduleAsync(Guid userId, Guid scheduleId);
     Task UpdateAttendanceAsync(Guid currentUserId, Guid scheduleId, Guid targetUserId, UpdateAttendanceRequest request);
+    Task UpdateSplitBillAsync(Guid currentUserId, Guid scheduleId, Guid targetUserId, Entites.DTOs.ScheduleParticipants.UpdateSplitBillRequest request);
+    Task CalculateAndSaveSplitBillAsync(Guid currentUserId, Guid scheduleId, CalculateSplitBillRequest request);
 }

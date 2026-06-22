@@ -47,3 +47,15 @@ export const rejectPayoutAPI = async (payoutId, payoutData) => {
   const response = await axios.put(`/admin/payout-requests/${payoutId}/reject`, payoutData);
   return response.data;
 };
+
+// Fetch all system settings
+export const getSystemSettingsAPI = async () => {
+  const response = await axios.get('/admin/system-settings');
+  return response.data;
+};
+
+// Update a system setting
+export const updateSystemSettingAPI = async (key, value) => {
+  const response = await axios.put(`/admin/system-settings/${key}`, { settingValue: value });
+  return response.data;
+};

@@ -243,7 +243,8 @@ public class MatchmakingService : IMatchmakingService
             FacilityName = m.Schedule?.Booking?.Court?.Facility?.Name,
             CourtName = m.Schedule?.Booking?.Court?.CourtName,
             StartTime = m.Schedule?.Booking?.StartTime ?? default,
-            EndTime = m.Schedule?.Booking?.EndTime ?? default
+            EndTime = m.Schedule?.Booking?.EndTime ?? default,
+            Priority = Repositories.MatchChallengeRepository.GetPriority(m)
         };
     }
 

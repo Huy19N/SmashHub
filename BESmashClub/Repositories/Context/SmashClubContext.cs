@@ -42,11 +42,11 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<FacilityReview> FacilityReviews { get; set; }
 
+    public virtual DbSet<FacilityStatus> FacilityStatuses { get; set; }
+
     public virtual DbSet<FacilityWallet> FacilityWallets { get; set; }
 
     public virtual DbSet<Feature> Features { get; set; }
-
-    public virtual DbSet<LocalFile> LocalFiles { get; set; }
 
     public virtual DbSet<MatchAcceptance> MatchAcceptances { get; set; }
 
@@ -56,13 +56,25 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<MatchChallengeStatus> MatchChallengeStatuses { get; set; }
 
+    public virtual DbSet<Notification> Notifications { get; set; }
+
     public virtual DbSet<Payment> Payments { get; set; }
 
     public virtual DbSet<PaymentGateway> PaymentGateways { get; set; }
 
     public virtual DbSet<PaymentStatus> PaymentStatuses { get; set; }
 
+    public virtual DbSet<Payout> Payouts { get; set; }
+
     public virtual DbSet<PayoutRequest> PayoutRequests { get; set; }
+
+    public virtual DbSet<PayoutStatus> PayoutStatuses { get; set; }
+
+    public virtual DbSet<Post> Posts { get; set; }
+
+    public virtual DbSet<PostComment> PostComments { get; set; }
+
+    public virtual DbSet<PostLike> PostLikes { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -73,6 +85,8 @@ public partial class SmashClubContext : DbContext
     public virtual DbSet<Sport> Sports { get; set; }
 
     public virtual DbSet<SportLevel> SportLevels { get; set; }
+
+    public virtual DbSet<StoredFile> StoredFiles { get; set; }
 
     public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
 
@@ -100,6 +114,8 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<VideoCallSession> VideoCallSessions { get; set; }
 
+    public virtual DbSet<SystemSetting> SystemSettings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Booking>(entity =>
@@ -107,16 +123,14 @@ public partial class SmashClubContext : DbContext
             entity.HasIndex(e => new { e.CourtId, e.StartTime, e.EndTime }, "IX_Bookings_Court_Time");
 
             entity.Property(e => e.BookingId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.BookingType)
-                .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasDefaultValue("Online");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.CustomerNameOffline).HasMaxLength(100);
             entity.Property(e => e.EndTime).HasColumnType("datetime");
+            entity.Property(e => e.PlatformFee)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StartTime).HasColumnType("datetime");
             entity.Property(e => e.TotalCost)
                 .HasDefaultValue(0m)
@@ -218,6 +232,7 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.Address)
                 .IsRequired()
                 .HasMaxLength(255);
+            entity.Property(e => e.BusinessCode).HasMaxLength(100);
             entity.Property(e => e.City)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -227,17 +242,25 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.District)
                 .IsRequired()
                 .HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsDelete).HasDefaultValue(false);
+            entity.Property(e => e.Latitude).HasColumnType("decimal(18, 9)");
+            entity.Property(e => e.Longitude).HasColumnType("decimal(18, 9)");
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(100);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-            entity.Property(e => e.Latitude).HasColumnType("decimal(18, 9)");
-            entity.Property(e => e.Longitude).HasColumnType("decimal(18, 9)");
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
 
             entity.HasOne(d => d.Owner).WithMany(p => p.Facilities)
                 .HasForeignKey(d => d.OwnerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Facilities_Users");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Facilities)
+                .HasForeignKey(d => d.StatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Facilities_Statuses");
         });
 
         modelBuilder.Entity<FacilityBankAccount>(entity =>
@@ -278,7 +301,7 @@ public partial class SmashClubContext : DbContext
             entity.HasOne(d => d.File).WithMany(p => p.FacilityImages)
                 .HasForeignKey(d => d.FileId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_FacilityImages_LocalFiles");
+                .HasConstraintName("FK_FacilityImages_StoredFiles");
         });
 
         modelBuilder.Entity<FacilityOperatingHour>(entity =>
@@ -331,6 +354,16 @@ public partial class SmashClubContext : DbContext
                 .HasConstraintName("FK_FacilityReviews_Users");
         });
 
+        modelBuilder.Entity<FacilityStatus>(entity =>
+        {
+            entity.HasKey(e => e.StatusId);
+
+            entity.Property(e => e.StatusId).ValueGeneratedNever();
+            entity.Property(e => e.StatusName)
+                .IsRequired()
+                .HasMaxLength(50);
+        });
+
         modelBuilder.Entity<FacilityWallet>(entity =>
         {
             entity.HasKey(e => e.FacilityId);
@@ -359,37 +392,6 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.FeatureName)
                 .IsRequired()
                 .HasMaxLength(100);
-        });
-
-        modelBuilder.Entity<LocalFile>(entity =>
-        {
-            entity.HasKey(e => e.FileId);
-
-            entity.Property(e => e.FileId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.FileData).IsRequired();
-            entity.Property(e => e.FileName)
-                .IsRequired()
-                .HasMaxLength(255);
-            entity.Property(e => e.FileType)
-                .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false);
-            entity.Property(e => e.MimeType)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.Purpose)
-                .IsRequired()
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasDefaultValue("General");
-
-            entity.HasOne(d => d.UploadedByUser).WithMany(p => p.LocalFiles)
-                .HasForeignKey(d => d.UploadedByUserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_LocalFiles_Users");
         });
 
         modelBuilder.Entity<MatchAcceptance>(entity =>
@@ -474,6 +476,25 @@ public partial class SmashClubContext : DbContext
                 .HasMaxLength(50);
         });
 
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.Property(e => e.NotificationId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.NotificationType)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.Title)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_Notifications_Users");
+        });
+
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.HasIndex(e => e.OrderCode, "IX_Payments_OrderCode");
@@ -496,9 +517,11 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.PaymentType)
                 .IsRequired()
                 .HasMaxLength(20);
+            entity.Property(e => e.PlatformFee).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ReferenceId)
                 .IsRequired()
                 .HasMaxLength(100);
+            entity.Property(e => e.RefundAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusId).HasDefaultValue(1);
 
             entity.HasOne(d => d.ConfirmedByUser).WithMany(p => p.PaymentConfirmedByUsers)
@@ -550,6 +573,41 @@ public partial class SmashClubContext : DbContext
                 .HasMaxLength(50);
         });
 
+        modelBuilder.Entity<Payout>(entity =>
+        {
+            entity.Property(e => e.PayoutId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.AccountHolder).HasMaxLength(255);
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.BankAccountNo).HasMaxLength(50);
+            entity.Property(e => e.BankName).HasMaxLength(100);
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+
+            entity.HasOne(d => d.Facility).WithMany(p => p.Payouts)
+                .HasForeignKey(d => d.FacilityId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Payouts_Facilities");
+
+            entity.HasOne(d => d.OwnerUser).WithMany(p => p.Payouts)
+                .HasForeignKey(d => d.OwnerUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Payouts_Users");
+
+            entity.HasOne(d => d.Payment).WithMany(p => p.Payouts)
+                .HasForeignKey(d => d.PaymentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Payouts_Payments");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Payouts)
+                .HasForeignKey(d => d.StatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Payouts_PayoutStatuses");
+        });
+
         modelBuilder.Entity<PayoutRequest>(entity =>
         {
             entity.HasKey(e => e.PayoutId);
@@ -573,6 +631,80 @@ public partial class SmashClubContext : DbContext
                 .HasForeignKey(d => d.FacilityId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PayoutRequests_Facilities");
+        });
+
+        modelBuilder.Entity<PayoutStatus>(entity =>
+        {
+            entity.HasKey(e => e.StatusId);
+
+            entity.Property(e => e.StatusId).ValueGeneratedNever();
+            entity.Property(e => e.StatusName)
+                .IsRequired()
+                .HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Post>(entity =>
+        {
+            entity.Property(e => e.PostId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.AuthorUser).WithMany(p => p.Posts)
+                .HasForeignKey(d => d.AuthorUserId)
+                .HasConstraintName("FK_Posts_Users");
+
+            entity.HasOne(d => d.Facility).WithMany(p => p.Posts)
+                .HasForeignKey(d => d.FacilityId)
+                .HasConstraintName("FK_Posts_Facilities");
+
+            entity.HasOne(d => d.MediaFile).WithMany(p => p.Posts)
+                .HasForeignKey(d => d.MediaFileId)
+                .HasConstraintName("FK_Posts_Media");
+
+            entity.HasOne(d => d.Team).WithMany(p => p.Posts)
+                .HasForeignKey(d => d.TeamId)
+                .HasConstraintName("FK_Posts_Teams");
+        });
+
+        modelBuilder.Entity<PostComment>(entity =>
+        {
+            entity.HasKey(e => e.CommentId);
+
+            entity.Property(e => e.CommentId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Content).IsRequired();
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostComments)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_PostComments_Posts");
+
+            entity.HasOne(d => d.User).WithMany(p => p.PostComments)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PostComments_Users");
+        });
+
+        modelBuilder.Entity<PostLike>(entity =>
+        {
+            entity.HasKey(e => new { e.PostId, e.UserId });
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostLikes)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_PostLikes_Posts");
+
+            entity.HasOne(d => d.User).WithMany(p => p.PostLikes)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PostLikes_Users");
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -634,6 +766,7 @@ public partial class SmashClubContext : DbContext
         {
             entity.HasKey(e => new { e.ScheduleId, e.UserId });
 
+            entity.Property(e => e.CostToPay).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.JoinedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -661,6 +794,8 @@ public partial class SmashClubContext : DbContext
         {
             entity.HasKey(e => new { e.SportId, e.RankValue });
 
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsDelete).HasDefaultValue(false);
             entity.Property(e => e.LevelName)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -668,6 +803,36 @@ public partial class SmashClubContext : DbContext
             entity.HasOne(d => d.Sport).WithMany(p => p.SportLevels)
                 .HasForeignKey(d => d.SportId)
                 .HasConstraintName("FK_SportLevels_Sports");
+        });
+
+        modelBuilder.Entity<StoredFile>(entity =>
+        {
+            entity.HasKey(e => e.FileId);
+
+            entity.Property(e => e.FileId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.BucketName)
+                .IsRequired()
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.MimeType)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.ObjectName)
+                .IsRequired()
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.OriginalFileName)
+                .IsRequired()
+                .HasMaxLength(255);
+            entity.Property(e => e.Purpose).HasDefaultValue((byte)4);
+
+            entity.HasOne(d => d.UploadedByUser).WithMany(p => p.StoredFiles)
+                .HasForeignKey(d => d.UploadedByUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_StoredFiles_Users");
         });
 
         modelBuilder.Entity<SubscriptionPlan>(entity =>
@@ -719,13 +884,17 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.TeamName)
                 .IsRequired()
                 .HasMaxLength(255);
+
+            entity.HasOne(d => d.AvatarFile).WithMany(p => p.Teams)
+                .HasForeignKey(d => d.AvatarFileId)
+                .HasConstraintName("FK_Teams_AvatarFile");
         });
 
         modelBuilder.Entity<TeamInvite>(entity =>
         {
             entity.HasKey(e => e.InviteId);
 
-            entity.HasIndex(e => e.InviteToken, "UQ__TeamInvi__AB4795605EC20C8C").IsUnique();
+            entity.HasIndex(e => e.InviteToken, "UQ__TeamInvi__AB479560D8E317AC").IsUnique();
 
             entity.Property(e => e.InviteId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
@@ -798,6 +967,7 @@ public partial class SmashClubContext : DbContext
         modelBuilder.Entity<TeamRole>(entity =>
         {
             entity.Property(e => e.TeamRoleId).ValueGeneratedNever();
+            entity.Property(e => e.IsDelete).HasDefaultValue(false);
             entity.Property(e => e.RoleName)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -808,6 +978,7 @@ public partial class SmashClubContext : DbContext
             entity.HasIndex(e => e.Email, "UQ_Users_Email").IsUnique();
 
             entity.Property(e => e.UserId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Cccd).HasMaxLength(25);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasAnnotation("Relational:DefaultConstraintName", "DF_Users_CreatedAt")
@@ -927,6 +1098,24 @@ public partial class SmashClubContext : DbContext
             entity.HasOne(d => d.Team).WithMany(p => p.VideoCallSessions)
                 .HasForeignKey(d => d.TeamId)
                 .HasConstraintName("FK_VideoCallSessions_Teams");
+        });
+
+        modelBuilder.Entity<SystemSetting>(entity =>
+        {
+            entity.HasKey(e => e.SettingKey);
+
+            entity.Property(e => e.SettingKey)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.SettingValue)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);

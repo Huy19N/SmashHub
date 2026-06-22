@@ -180,3 +180,47 @@ export const useAdminPayouts = () => {
 
   return { requests, isLoading, isSubmitting, fetchPayoutRequests, approvePayout, rejectPayout };
 };
+
+export const useSystemSettings = () => {
+  const [settings, setSettings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await adminApi.getSystemSettingsAPI();
+      if (response.success) {
+        setSettings(response.data);
+      } else {
+        toast.error(response.message || 'Lỗi khi tải cài đặt hệ thống.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Không thể kết nối đến server.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const updateSetting = async (key, value) => {
+    try {
+      const response = await adminApi.updateSystemSettingAPI(key, value);
+      if (response.success) {
+        toast.success(response.message || 'Cập nhật cài đặt thành công.');
+        setSettings(prev => prev.map(s => 
+          s.settingKey === key ? { ...s, settingValue: value } : s
+        ));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi cập nhật cài đặt.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật.');
+      return false;
+    }
+  };
+
+  return { settings, isLoading, fetchSettings, updateSetting };
+};

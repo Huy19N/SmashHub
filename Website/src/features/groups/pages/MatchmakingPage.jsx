@@ -220,6 +220,11 @@ export default function MatchmakingPage() {
                     <div>
                       <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                         {c.hostTeamName}
+                        {c.priority > 0 && (
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${c.priority === 2 ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}>
+                            {c.priority === 2 ? 'VIP PRO' : 'VIP'}
+                          </span>
+                        )}
                       </h3>
                       <div className="flex flex-wrap gap-2 mt-2">
                         <span className="text-xs font-bold px-2 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">

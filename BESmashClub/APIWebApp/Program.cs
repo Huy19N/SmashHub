@@ -1,4 +1,5 @@
 using System.Text;
+using Minio;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,6 +26,14 @@ builder.Services.AddDbContext<SmashClubContext>(options =>
 // ---- Repositories ----
 builder.Services.AddScoped<UnitOfWork>();
 
+// ---- MinIO ----
+var minioConfig = builder.Configuration.GetSection("MinIOSettings");
+builder.Services.AddMinio(configureClient => configureClient
+    .WithEndpoint(minioConfig["Endpoint"])
+    .WithCredentials(minioConfig["AccessKey"], minioConfig["SecretKey"])
+    .WithSSL(minioConfig.GetValue<bool>("UseSSL"))
+    .Build());
+
 // ---- Services ----
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -41,6 +50,9 @@ builder.Services.AddScoped<ICourtCostService, CourtCostService>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IMatchmakingService, MatchmakingService>();
+builder.Services.AddScoped<ISocialService, SocialService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
 
 // ---- Authentication ----
 builder.Services.AddAuthentication(options =>
@@ -146,6 +158,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHub<ChatHub>("/hub/chat");
+app.MapHub<NotificationHub>("/hub/notifications");
 
 app.Run();
 

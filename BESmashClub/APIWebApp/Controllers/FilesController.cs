@@ -72,6 +72,12 @@ public class FilesController : ControllerBase
         if (localFile == null)
             return NotFound(ApiResponse.ErrorResponse("Không tìm thấy tệp tin."));
 
-        return File(localFile.FileData, localFile.MimeType ?? "application/octet-stream", localFile.FileName);
+        var presignedUrl = await _fileService.GetFileUrlAsync(fileId);
+
+        return Ok(ApiResponse<object>.SuccessResponse(new {
+            Url = presignedUrl,
+            OriginalFileName = localFile.OriginalFileName,
+            MimeType = localFile.MimeType
+        }));
     }
 }

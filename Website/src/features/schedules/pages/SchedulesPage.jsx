@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import SessionCard from '../../groups/components/SessionCard.jsx';
 import MatchRequestsModal from '../../groups/components/MatchRequestsModal.jsx';
 import ParticipantsModal from '../../groups/components/ParticipantsModal.jsx';
+import CreateChallengeModal from '../../groups/components/CreateChallengeModal.jsx';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -24,6 +25,7 @@ export default function SchedulesPage() {
   const [userTeams, setUserTeams] = useState([]);
   const [deletingScheduleId, setDeletingScheduleId] = useState(null);
   const [viewingChallengeId, setViewingChallengeId] = useState(null);
+  const [createChallengeConfig, setCreateChallengeConfig] = useState(null);
 
   const { addParticipant } = useAddScheduleParticipant();
   const { removeParticipant } = useRemoveScheduleParticipant();
@@ -135,7 +137,7 @@ export default function SchedulesPage() {
       await addParticipant(scheduleId);
       setJoinedScheduleIds(prev => new Set(prev).add(scheduleId));
     } catch (err) {
-      alert(err || 'Không thể tham gia.');
+      toast.error(err || 'Không thể tham gia.');
     } finally {
       setVotingScheduleId(null);
     }
@@ -151,28 +153,18 @@ export default function SchedulesPage() {
         return next;
       });
     } catch (err) {
-      alert(err || 'Không thể hủy tham gia.');
+      toast.error(err || 'Không thể hủy tham gia.');
     } finally {
       setVotingScheduleId(null);
     }
   };
 
-  const handleCreateChallenge = async (scheduleId, sportId, hostTeamId) => {
-    const level = window.prompt('Nhập trình độ yêu cầu (VD: Trung bình, Khá):', 'Trung bình');
-    if (level === null) return;
-    const message = window.prompt('Nhập lời nhắn (VD: Giao lưu vui vẻ, phí chia đôi):', 'Giao lưu vui vẻ, phí sân chia đôi.');
-    if (message === null) return;
-    
+  const handleCreateChallenge = async (config) => {
     try {
-      await createChallenge({ 
-        scheduleId, 
-        hostTeamId,
-        sportId: sportId || 1,
-        isCostSplit: true,
-        message: message || '' 
-      });
+      await createChallenge(config);
       toast.success('Đã đăng kèo ghép đấu lên hệ thống thành công!');
       fetchActiveChallenges({});
+      setCreateChallengeConfig(null);
     } catch (err) {
       toast.error('Lỗi tạo kèo: ' + (err.message || 'Unknown'));
     }
@@ -247,7 +239,7 @@ export default function SchedulesPage() {
                       isVoting={votingScheduleId === schedule.scheduleId}
                       onVoteJoin={handleVoteJoin}
                       onVoteLeave={handleVoteLeave}
-                      onCreateChallenge={(schedId, spId) => handleCreateChallenge(schedId, spId, schedule.teamId)}
+                      onCreateChallenge={(schedId, spId) => setCreateChallengeConfig({ scheduleId: schedId, sportId: spId, hostTeamId: schedule.teamId })}
                       activeChallengeId={activeChallenge?.challengeId}
                       onViewMatchRequests={(cid) => setViewingChallengeId(cid)}
                       onDelete={async () => {
@@ -257,7 +249,7 @@ export default function SchedulesPage() {
                           await deleteSchedule(schedule.scheduleId);
                           fetchAllData();
                         } catch (err) {
-                          alert(err || 'Không thể xóa lịch trình.');
+                          toast.error(err || 'Không thể xóa lịch trình.');
                         } finally {
                           setDeletingScheduleId(null);
                         }
@@ -291,6 +283,16 @@ export default function SchedulesPage() {
           fetchActiveChallenges({});
         }}
         challengeId={viewingChallengeId}
+      />
+
+      <CreateChallengeModal
+        isOpen={!!createChallengeConfig}
+        onClose={() => setCreateChallengeConfig(null)}
+        scheduleId={createChallengeConfig?.scheduleId}
+        sportId={createChallengeConfig?.sportId}
+        hostTeamId={createChallengeConfig?.hostTeamId}
+        onSubmit={handleCreateChallenge}
+        isDarkMode={theme === 'dark'}
       />
     </div>
   );

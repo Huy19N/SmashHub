@@ -107,4 +107,29 @@ public class SchedulesController : ControllerBase
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    /// <summary>
+    /// Tính toán và chia tiền tự động cho các thành viên tham gia.
+    /// </summary>
+    [HttpPost("api/schedules/{scheduleId:guid}/calculate-split-bill")]
+    public async Task<IActionResult> CalculateSplitBill(Guid scheduleId, [FromBody] CalculateSplitBillRequest request)
+    {
+        try
+        {
+            await _scheduleService.CalculateAndSaveSplitBillAsync(GetCurrentUserId(), scheduleId, request);
+            return Ok(ApiResponse.SuccessResponse("Tính toán và chia tiền thành công."));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

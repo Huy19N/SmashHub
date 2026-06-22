@@ -5,5 +5,6 @@ namespace Services.Interfaces;
 public interface IFileService
 {
     Task<Guid> UploadFileAsync(Guid userId, string fileName, byte[] fileData, string fileType, string purpose, string mimeType);
-    Task<LocalFile?> GetFileByIdAsync(Guid fileId);
+    Task<StoredFile?> GetFileByIdAsync(Guid fileId);
+    Task<string> GetFileUrlAsync(Guid fileId);
 }

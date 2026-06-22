@@ -13,6 +13,10 @@ public partial class SportLevel
 
     public string LevelName { get; set; }
 
+    public string Description { get; set; }
+
+    public bool? IsDelete { get; set; }
+
     public virtual Sport Sport { get; set; }
 
     public virtual ICollection<UserSportProfile> UserSportProfiles { get; set; } = new List<UserSportProfile>();

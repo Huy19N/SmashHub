@@ -20,7 +20,7 @@ import {
 } from '../hooks/useProfiles.js';
 import { useVerifyEmailInProfile, useVerifyEmailRegister } from '../../Auth/hooks/useAuth';
 import { getAllSportsAPI, getSportLevelAPI } from '../../bookings/api/bookings.api.js';
-import { getAvatarUrl } from '../../../utils/avatarUtils';
+import MediaImage from '../../../components/ui/MediaImage';
 import toast from 'react-hot-toast';
 import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 
@@ -409,8 +409,8 @@ export default function ProfilePage() {
                   className="relative group cursor-pointer block"
                 >
                   {profileData?.avatarFileId ? (
-                    <img
-                      src={getAvatarUrl(profileData.avatarFileId)}
+                    <MediaImage
+                      fileId={profileData.avatarFileId}
                       alt={profileData.fullName}
                       className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover shadow-md border-4 border-white dark:border-gray-800 transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {

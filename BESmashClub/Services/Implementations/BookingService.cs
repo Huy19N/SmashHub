@@ -38,6 +38,11 @@ public class BookingService : IBookingService
         // Calculate total cost from CourtCosts
         var totalCost = await CalculateTotalCostAsync(request.CourtId, request.StartTime, request.EndTime);
 
+        // Calculate Platform Fee
+        var platformFeeSetting = await _unitOfWork.SystemSettings.GetByIdAsync("PLATFORM_FEE_PERCENTAGE");
+        decimal feePercentage = platformFeeSetting != null ? decimal.Parse(platformFeeSetting.SettingValue) : 5.0m;
+        decimal platformFee = Math.Round((totalCost * feePercentage) / 100m, 2);
+
         var booking = new Booking
         {
             BookingId = Guid.NewGuid(),
@@ -46,6 +51,7 @@ public class BookingService : IBookingService
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             TotalCost = totalCost,
+            PlatformFee = platformFee,
             StatusId = 1, // Pending
             CreatedAt = DateTime.Now
         };
@@ -123,7 +129,7 @@ public class BookingService : IBookingService
         return await GetBookingDetailAsync(bookingId);
     }
 
-    public async Task CancelBookingAsync(Guid userId, Guid bookingId)
+    public async Task CancelBookingAsync(Guid userId, Guid bookingId, string? reason = null)
     {
         var booking = await _unitOfWork.Booking.GetByIdAsync(bookingId);
         if (booking == null)
@@ -136,6 +142,7 @@ public class BookingService : IBookingService
             throw new InvalidOperationException("Booking đã được hủy trước đó.");
 
         booking.StatusId = 3; // Cancelled
+        booking.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Người dùng tự hủy" : reason;
         await _unitOfWork.Booking.UpdateAsync(booking);
     }
 
@@ -205,8 +212,10 @@ public class BookingService : IBookingService
             StartTime = b.StartTime,
             EndTime = b.EndTime,
             TotalCost = b.TotalCost,
+            PlatformFee = b.PlatformFee ?? 0,
             StatusId = b.StatusId,
             StatusName = b.Status?.StatusName,
+            CancellationReason = b.CancellationReason,
             CreatedAt = b.CreatedAt
         };
     }

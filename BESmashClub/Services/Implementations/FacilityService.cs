@@ -26,6 +26,8 @@ public class FacilityService : IFacilityService
             Address = request.Address,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
+            BusinessCode = request.BusinessCode,
+            StatusId = 1, // Pending as default
             CreatedAt = DateTime.Now
         };
 
@@ -81,6 +83,9 @@ public class FacilityService : IFacilityService
 
         if (request.Longitude.HasValue)
             facility.Longitude = request.Longitude.Value;
+
+        if (request.BusinessCode != null)
+            facility.BusinessCode = request.BusinessCode;
 
         await _unitOfWork.Facilities.UpdateAsync(facility);
 
@@ -261,6 +266,9 @@ public class FacilityService : IFacilityService
             CourtCount = f.Courts?.Count ?? 0,
             Latitude = f.Latitude,
             Longitude = f.Longitude,
+            BusinessCode = f.BusinessCode,
+            StatusId = f.StatusId,
+            StatusName = f.Status?.StatusName,
             CreatedAt = f.CreatedAt
         };
 
@@ -558,6 +566,16 @@ public class FacilityService : IFacilityService
                 Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return r * c;
+    }
+
+    public async Task ApproveRejectFacilityAsync(int facilityId, int statusId)
+    {
+        var facility = await _unitOfWork.Facilities.GetByIdAsync(facilityId);
+        if (facility == null)
+            throw new KeyNotFoundException("Không tìm thấy cơ sở.");
+
+        facility.StatusId = statusId;
+        await _unitOfWork.Facilities.UpdateAsync(facility);
     }
 
     #endregion

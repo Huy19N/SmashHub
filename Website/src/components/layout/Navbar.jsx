@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
 import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
-import { getAvatarUrl } from '../../utils/avatarUtils';
+import MediaImage from '../ui/MediaImage';
 import { useNotifications } from '../../contexts/NotificationContext';
 
 export default function Navbar() {
@@ -223,14 +223,10 @@ export default function Navbar() {
                     className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative"
                   >
                     {apiUser?.data?.avatarFileId ? (
-                      <img
-                        src={getAvatarUrl(apiUser.data.avatarFileId)}
+                      <MediaImage
+                        fileId={apiUser.data.avatarFileId}
                         alt={user?.name || 'Avatar'}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
                       />
                     ) : null}
                     <div
@@ -443,14 +439,10 @@ export default function Navbar() {
                 <div className="flex items-center gap-4 mb-3">
                   <div className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 flex items-center justify-center relative">
                     {apiUser?.data?.avatarFileId ? (
-                      <img
-                        src={getAvatarUrl(apiUser.data.avatarFileId)}
+                      <MediaImage
+                        fileId={apiUser.data.avatarFileId}
                         alt={user?.name || 'Avatar'}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
                       />
                     ) : null}
                     <div

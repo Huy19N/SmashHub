@@ -14,6 +14,8 @@ public class BookingResponse
     public decimal? TotalCost { get; set; }
     public int StatusId { get; set; }
     public string? StatusName { get; set; }
+    public decimal PlatformFee { get; set; }
+    public string? CancellationReason { get; set; }
     public string? PaymentUrl { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

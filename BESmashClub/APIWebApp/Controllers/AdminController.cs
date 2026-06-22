@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Context;
+using Services.Interfaces;
+using Entites.DTOs.SystemSettings;
 
 namespace APIWebApp.Controllers;
 
@@ -17,10 +19,14 @@ namespace APIWebApp.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly SmashClubContext _context;
+    private readonly IFacilityService _facilityService;
+    private readonly ISystemSettingService _systemSettingService;
 
-    public AdminController(SmashClubContext context)
+    public AdminController(SmashClubContext context, IFacilityService facilityService, ISystemSettingService systemSettingService)
     {
         _context = context;
+        _facilityService = facilityService;
+        _systemSettingService = systemSettingService;
     }
 
     #region 1. Statistics & Dashboard
@@ -48,9 +54,8 @@ public class AdminController : ControllerBase
             .Select(b => new
             {
                 b.BookingId,
-                b.BookingType,
-                CustomerName = b.BookingType == "Online" ? b.BookedByUser.FullName : b.CustomerNameOffline,
-                CustomerEmail = b.BookingType == "Online" ? b.BookedByUser.Email : "Khách vãng lai",
+                CustomerName = b.BookedByUserId != null ? b.BookedByUser.FullName : b.CustomerNameOffline,
+                CustomerEmail = b.BookedByUserId != null ? b.BookedByUser.Email : "Khách vãng lai",
                 CourtName = b.Court.CourtName,
                 FacilityName = b.Court.Facility.Name,
                 b.StartTime,
@@ -186,6 +191,34 @@ public class AdminController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(facilities));
     }
 
+    [HttpPut("facilities/{facilityId:int}/approve")]
+    public async Task<IActionResult> ApproveFacility(int facilityId)
+    {
+        try
+        {
+            await _facilityService.ApproveRejectFacilityAsync(facilityId, 2); // 2: Active/Approved
+            return Ok(ApiResponse.SuccessResponse("Phê duyệt cơ sở thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPut("facilities/{facilityId:int}/reject")]
+    public async Task<IActionResult> RejectFacility(int facilityId)
+    {
+        try
+        {
+            await _facilityService.ApproveRejectFacilityAsync(facilityId, 3); // 3: Rejected
+            return Ok(ApiResponse.SuccessResponse("Từ chối cơ sở thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
     #endregion
 
     #region 4. Payout Management
@@ -275,6 +308,31 @@ public class AdminController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(ApiResponse.SuccessResponse("Đã từ chối yêu cầu rút tiền."));
+    }
+
+    #endregion
+
+    #region 5. System Settings
+
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSystemSettings()
+    {
+        var settings = await _systemSettingService.GetAllSettingsAsync();
+        return Ok(ApiResponse<List<SystemSettingDto>>.SuccessResponse(settings));
+    }
+
+    [HttpPut("settings/{key}")]
+    public async Task<IActionResult> UpdateSystemSetting(string key, [FromBody] UpdateSystemSettingRequest request)
+    {
+        try
+        {
+            var setting = await _systemSettingService.UpdateSettingAsync(key, request);
+            return Ok(ApiResponse<SystemSettingDto>.SuccessResponse(setting, "Cập nhật cài đặt thành công."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
     }
 
     #endregion

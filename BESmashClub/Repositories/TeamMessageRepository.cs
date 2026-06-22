@@ -31,6 +31,13 @@ namespace Repositories
             return (items, totalCount);
         }
 
+        public async Task<int> GetTodayMediaCountAsync(Guid userId)
+        {
+            var today = DateTime.Now.Date;
+            return await _context.TeamMessages
+                .CountAsync(m => m.SenderId == userId && m.MessageType != 0 && m.SentAt != null && m.SentAt.Value.Date == today);
+        }
+
         public async Task<TeamMessage?> GetMessageWithSenderAsync(Guid messageId)
         {
             return await _context.TeamMessages

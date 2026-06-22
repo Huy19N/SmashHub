@@ -11,5 +11,7 @@ public partial class TeamRole
 
     public string RoleName { get; set; }
 
+    public bool? IsDelete { get; set; }
+
     public virtual ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
 }
