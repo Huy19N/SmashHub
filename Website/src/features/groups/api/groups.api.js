@@ -112,6 +112,12 @@ export const updateScheduleAttendanceAPI = async (scheduleId, userId, isAttended
   return response.data;
 };
 
+/** Update split bill status of a participant (PATCH /api/schedules/{scheduleId}/participants/{userId}/split-bill) */
+export const updateScheduleSplitBillAPI = async (scheduleId, userId, { costToPay, isPaid }) => {
+  const response = await api.patch(`/schedules/${scheduleId}/participants/${userId}/split-bill`, { costToPay, isPaid });
+  return response.data;
+};
+
 // ─── Team Members ─────────────────────────────────────────────
 
 /** Get all members of a team (GET /api/teams/{teamId}/members) */

@@ -21,6 +21,7 @@ import {
   addScheduleParticipantAPI,
   removeScheduleParticipantAPI,
   updateScheduleAttendanceAPI,
+  updateScheduleSplitBillAPI,
 } from '../api/groups.api.js';
 
 /**
@@ -626,4 +627,28 @@ export const useUpdateAttendance = () => {
   };
 
   return { updateAttendance, isLoading, error };
+};
+
+// ─── useUpdateSplitBill ──────────────────────────────────────────
+
+export const useUpdateSplitBill = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const updateSplitBill = async (scheduleId, userId, { costToPay, isPaid }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await updateScheduleSplitBillAPI(scheduleId, userId, { costToPay, isPaid });
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể cập nhật chia tiền.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateSplitBill, isLoading, error };
 };

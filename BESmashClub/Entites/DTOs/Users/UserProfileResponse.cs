@@ -11,4 +11,5 @@ public class UserProfileResponse
     public bool? IsActive { get; set; }
     public Guid? AvatarFileId { get; set; }
     public string? Cccd { get; set; }
+    public string? SubscriptionTier { get; set; }
 }

@@ -25,7 +25,7 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useTeamDetail, useTeamMembers, useRemoveMember, useCreateInvite, useTeamSchedules, useDeleteSchedule, useAddScheduleParticipant, useRemoveScheduleParticipant } from '../hooks/useGroups';
 import { getScheduleParticipantsAPI } from '../api/groups.api.js';
-import { getActiveChallengesAPI } from '../api/matchmaking.api.js';
+import { getActiveChallengesAPI, getTeamChallengesAPI } from '../api/matchmaking.api.js';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import toast from 'react-hot-toast';
 import MemberCard from '../components/MemberCard';
@@ -182,10 +182,8 @@ export default function TeamManagementPage() {
       const loadTeamChallenges = async () => {
         setChallengesLoading(true);
         try {
-          const response = await getActiveChallengesAPI({});
-          const allChallenges = response?.data || [];
-          const filtered = allChallenges.filter(c => String(c.hostTeamId) === String(teamId));
-          setTeamChallenges(filtered);
+          const response = await getTeamChallengesAPI(teamId);
+          setTeamChallenges(response?.data || []);
         } catch (err) {
           console.error('Failed to load team challenges:', err);
         } finally {
@@ -564,7 +562,22 @@ export default function TeamManagementPage() {
                               <div>
                                 <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                                   {c.hostTeamName}
-                                  <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700">Chủ nhà</span>
+                                  {String(c.hostTeamId) === String(teamId) ? (
+                                    <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700">Chủ nhà</span>
+                                  ) : (
+                                    <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-700">Đội khách</span>
+                                  )}
+                                  {String(c.hostTeamId) !== String(teamId) && c.challengerStatus && (
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                                      c.challengerStatus === 'Accepted'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+                                        : c.challengerStatus === 'Rejected'
+                                          ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
+                                          : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+                                    }`}>
+                                      {c.challengerStatus === 'Accepted' ? 'Đã ghép' : c.challengerStatus === 'Rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                                    </span>
+                                  )}
                                   {c.priority > 0 && (
                                     <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${c.priority === 2 ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}>
                                       {c.priority === 2 ? 'VIP PRO' : 'VIP'}

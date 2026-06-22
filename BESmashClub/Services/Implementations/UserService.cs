@@ -19,7 +19,10 @@ public class UserService : IUserService
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy user.");
 
-        return MapToProfileResponse(user);
+        var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(userId);
+        var tier = sub?.Plan?.Tier?.TierName ?? "Free";
+
+        return MapToProfileResponse(user, tier);
     }
 
     public async Task<UserProfileResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
@@ -39,7 +42,10 @@ public class UserService : IUserService
 
         await _unitOfWork.Users.UpdateAsync(user);
 
-        return MapToProfileResponse(user);
+        var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(userId);
+        var tier = sub?.Plan?.Tier?.TierName ?? "Free";
+
+        return MapToProfileResponse(user, tier);
     }
 
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
@@ -81,10 +87,13 @@ public class UserService : IUserService
         user.AvatarFileId = fileId;
         await _unitOfWork.Users.UpdateAsync(user);
 
-        return MapToProfileResponse(user);
+        var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(userId);
+        var tier = sub?.Plan?.Tier?.TierName ?? "Free";
+
+        return MapToProfileResponse(user, tier);
     }
 
-    private static UserProfileResponse MapToProfileResponse(Entites.Models.User user)
+    private static UserProfileResponse MapToProfileResponse(Entites.Models.User user, string? subscriptionTier)
     {
         return new UserProfileResponse
         {
@@ -96,7 +105,8 @@ public class UserService : IUserService
             CreatedAt = user.CreatedAt,
             IsActive = user.IsActive,
             AvatarFileId = user.AvatarFileId,
-            Cccd = user.Cccd
+            Cccd = user.Cccd,
+            SubscriptionTier = subscriptionTier
         };
     }
 }

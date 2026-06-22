@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   User, Mail, Phone, Shield, Calendar, Edit3, Plus, Trash2, Save, X, Loader2, Award,
-  Activity, TrendingUp, CheckCircle2, AlertCircle
+  Activity, TrendingUp, CheckCircle2, AlertCircle, Crown, CreditCard
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
@@ -63,6 +63,7 @@ export default function ProfilePage() {
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editCccd, setEditCccd] = useState('');
   const [infoError, setInfoError] = useState('');
   const [infoSuccess, setInfoSuccess] = useState('');
 
@@ -128,6 +129,7 @@ export default function ProfilePage() {
     if (profileData) {
       setEditName(profileData.fullName || '');
       setEditPhone(profileData.phoneNumber || '');
+      setEditCccd(profileData.cccd || '');
     }
   }, [profileData]);
 
@@ -219,7 +221,8 @@ export default function ProfilePage() {
     try {
       await updateUser({
         fullName: editName,
-        phoneNumber: editPhone
+        phoneNumber: editPhone,
+        cccd: editCccd
       });
       setInfoSuccess('Cập nhật thông tin thành công!');
       setIsEditingInfo(false);
@@ -567,6 +570,19 @@ export default function ProfilePage() {
                         />
                       </div>
 
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
+                          Số CCCD / Định danh
+                        </label>
+                        <input
+                          type="text"
+                          value={editCccd}
+                          onChange={(e) => setEditCccd(e.target.value)}
+                          placeholder="Nhập số CCCD"
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
+                        />
+                      </div>
+
                       <div className="flex items-center gap-3 pt-2">
                         <Button
                           type="submit"
@@ -624,8 +640,94 @@ export default function ProfilePage() {
                           </p>
                         </div>
                       </div>
+
+                      <div className="flex items-start gap-3.5">
+                        <div className="h-9 w-9 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
+                          <CreditCard className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider font-label">Số CCCD / Định danh</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5 break-words font-label">
+                            {profileData?.cccd || 'Chưa cập nhật'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
+                </div>
+
+                {/* Gói hội viên (Subscription) */}
+                <div className="bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-border-dark/40">
+                    <h3 className="font-bold text-gray-900 dark:text-white font-display flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-amber-500 animate-pulse" />
+                      Gói hội viên (Subscription)
+                    </h3>
+                  </div>
+                  
+                  {(() => {
+                    const tier = profileData?.subscriptionTier || 'Free';
+                    let bgClass = "bg-gray-50 dark:bg-white/5 border-gray-100 dark:border-white/10";
+                    let textClass = "text-gray-600 dark:text-gray-400";
+                    let titleColor = "text-gray-800 dark:text-gray-200";
+                    let tierName = "Thành viên Free";
+                    let description = "Gói cơ bản, giới hạn tính năng nhóm và phương tiện chat.";
+                    let limits = [
+                      "Tạo/Tham gia tối đa 5 nhóm",
+                      "Tối đa 15 thành viên mỗi nhóm",
+                      "Không thể gửi file phương tiện trong Chat"
+                    ];
+
+                    if (tier === 'Basic') {
+                      bgClass = "bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20";
+                      textClass = "text-blue-600 dark:text-blue-400";
+                      titleColor = "text-blue-800 dark:text-blue-300";
+                      tierName = "Hội viên Basic";
+                      description = "Phù hợp cho người chơi phong trào năng động.";
+                      limits = [
+                        "Tạo/Tham gia tối đa 10 nhóm",
+                        "Tối đa 30 thành viên mỗi nhóm",
+                        "Gửi tối đa 5 file phương tiện/ngày trong Chat"
+                      ];
+                    } else if (tier === 'Pro') {
+                      bgClass = "bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 border-amber-500/30 dark:border-amber-500/20";
+                      textClass = "text-amber-600 dark:text-amber-400";
+                      titleColor = "text-amber-800 dark:text-amber-300 font-extrabold";
+                      tierName = "Hội viên PRO ✨";
+                      description = "Trải nghiệm không giới hạn mọi tính năng cao cấp.";
+                      limits = [
+                        "Tạo/Tham gia không giới hạn nhóm",
+                        "Tối đa 100 thành viên mỗi nhóm",
+                        "Không giới hạn file phương tiện trong Chat"
+                      ];
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        <div className={`p-4 rounded-2xl border ${bgClass} flex items-start gap-3`}>
+                          <div className="shrink-0 mt-1">
+                            <Crown className={`w-6 h-6 ${textClass}`} />
+                          </div>
+                          <div>
+                            <h4 className={`text-base font-bold font-display ${titleColor}`}>{tierName}</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider font-label mb-2">Quyền lợi gói của bạn:</p>
+                          <ul className="space-y-2">
+                            {limits.map((limit, idx) => (
+                              <li key={idx} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                                <span>{limit}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

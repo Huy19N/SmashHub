@@ -141,4 +141,14 @@ public class MatchmakingController : ControllerBase
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    /// <summary>
+    /// Lấy danh sách các tin ghép đấu của một đội cụ thể (cả chủ nhà và khách).
+    /// </summary>
+    [HttpGet("teams/{teamId:guid}")]
+    public async Task<IActionResult> GetTeamChallenges(Guid teamId)
+    {
+        var result = await _matchmakingService.GetTeamChallengesAsync(teamId);
+        return Ok(ApiResponse<List<MatchChallengeResponse>>.SuccessResponse(result));
+    }
 }

@@ -215,6 +215,48 @@ public class MatchmakingService : IMatchmakingService
 
     #region Helpers
 
+    public async Task<List<MatchChallengeResponse>> GetTeamChallengesAsync(Guid teamId)
+    {
+        var context = _unitOfWork.MatchChallenges.GetContext();
+        var challenges = await context.Set<MatchChallenge>()
+            .Include(m => m.Schedule).ThenInclude(s => s.Booking).ThenInclude(b => b.Court).ThenInclude(c => c.Facility)
+            .Include(m => m.HostTeam)
+            .Include(m => m.Sport)
+            .Include(m => m.Status)
+            .Include(m => m.MatchAcceptances).ThenInclude(ma => ma.ChallengerTeam)
+            .Include(m => m.MatchAcceptances).ThenInclude(ma => ma.Status)
+            .Where(m => m.HostTeamId == teamId || context.Set<MatchAcceptance>().Any(ma => ma.ChallengeId == m.ChallengeId && ma.ChallengerTeamId == teamId))
+            .ToListAsync();
+            
+        var responses = new List<MatchChallengeResponse>();
+        foreach (var m in challenges)
+        {
+            var resp = MapToResponse(m);
+            
+            MatchAcceptance mainAcc = null;
+            if (m.HostTeamId == teamId)
+            {
+                mainAcc = m.MatchAcceptances?.FirstOrDefault(ma => ma.StatusId == 2)
+                          ?? m.MatchAcceptances?.FirstOrDefault(ma => ma.StatusId == 1);
+            }
+            else
+            {
+                mainAcc = m.MatchAcceptances?.FirstOrDefault(ma => ma.ChallengerTeamId == teamId);
+            }
+            
+            if (mainAcc != null)
+            {
+                resp.ChallengerTeamId = mainAcc.ChallengerTeamId;
+                resp.ChallengerTeamName = mainAcc.ChallengerTeam?.TeamName;
+                resp.ChallengerStatus = mainAcc.Status?.StatusName;
+            }
+            
+            responses.Add(resp);
+        }
+        
+        return responses;
+    }
+
     private async Task<MatchChallengeResponse> GetChallengeDetailResponseAsync(Guid challengeId)
     {
         var challenge = await _unitOfWork.MatchChallenges.GetDetailAsync(challengeId);
@@ -225,6 +267,10 @@ public class MatchmakingService : IMatchmakingService
 
     private static MatchChallengeResponse MapToResponse(MatchChallenge m)
     {
+        var acceptedAcc = m.MatchAcceptances?.FirstOrDefault(ma => ma.StatusId == 2);
+        var pendingAcc = m.MatchAcceptances?.FirstOrDefault(ma => ma.StatusId == 1);
+        var mainAcc = acceptedAcc ?? pendingAcc;
+
         return new MatchChallengeResponse
         {
             ChallengeId = m.ChallengeId,
@@ -244,7 +290,10 @@ public class MatchmakingService : IMatchmakingService
             CourtName = m.Schedule?.Booking?.Court?.CourtName,
             StartTime = m.Schedule?.Booking?.StartTime ?? default,
             EndTime = m.Schedule?.Booking?.EndTime ?? default,
-            Priority = Repositories.MatchChallengeRepository.GetPriority(m)
+            Priority = Repositories.MatchChallengeRepository.GetPriority(m),
+            ChallengerTeamId = mainAcc?.ChallengerTeamId,
+            ChallengerTeamName = mainAcc?.ChallengerTeam?.TeamName,
+            ChallengerStatus = mainAcc?.Status?.StatusName
         };
     }
 

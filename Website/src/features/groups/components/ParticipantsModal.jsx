@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, UserCheck, UserX, Users, Loader2, Save, AlignLeft, Users as UsersIcon, DollarSign } from 'lucide-react';
-import { useScheduleParticipants, useUpdateSchedule, useUpdateAttendance } from '../hooks/useGroups';
+import { useScheduleParticipants, useUpdateSchedule, useUpdateAttendance, useUpdateSplitBill } from '../hooks/useGroups';
 import toast from 'react-hot-toast';
 import Button from '../../../components/ui/Button';
 import SplitBillModal from './SplitBillModal';
@@ -14,6 +14,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
   const { participants, isLoading: participantsLoading, refetch: refetchParticipants } = useScheduleParticipants(isOpen ? scheduleId : null);
   const { updateSchedule, isLoading: isUpdating } = useUpdateSchedule();
   const { updateAttendance } = useUpdateAttendance();
+  const { updateSplitBill } = useUpdateSplitBill();
   
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'edit'
   const [showSplitBill, setShowSplitBill] = useState(false);
@@ -50,6 +51,16 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
       if (refetchParticipants) refetchParticipants();
     } catch (err) {
       toast.error("Không thể điểm danh: " + err);
+    }
+  };
+
+  const handleTogglePaid = async (userId, currentPaidStatus, costToPay) => {
+    try {
+      await updateSplitBill(scheduleId, userId, { costToPay, isPaid: !currentPaidStatus });
+      toast.success("Cập nhật trạng thái đóng tiền thành công.");
+      if (refetchParticipants) refetchParticipants();
+    } catch (err) {
+      toast.error("Không thể cập nhật đóng tiền: " + err);
     }
   };
 
@@ -182,6 +193,11 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                           <p className="text-sm font-bold text-gray-900 dark:text-white font-label">
                             {p.fullName || 'Thành viên'}
                           </p>
+                          {p.costToPay > 0 && (
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold font-label">
+                              Phải đóng: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.costToPay)}
+                            </p>
+                          )}
                           {p.joinedAt && (
                             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-label">
                               Đăng ký: {new Date(p.joinedAt).toLocaleString('vi-VN', {
@@ -192,16 +208,31 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                         </div>
                       </div>
 
-                      {/* Attendance badge/button */}
-                      <button 
-                        onClick={() => handleToggleAttendance(p.userId, p.isAttended)}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
-                        p.isAttended
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
-                          : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
-                      }`}>
-                        {p.isAttended ? 'Đã điểm danh' : 'Chưa điểm danh'}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        {p.costToPay > 0 && (
+                          <button
+                            onClick={() => handleTogglePaid(p.userId, p.isPaid, p.costToPay)}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
+                              p.isPaid
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/25'
+                            }`}
+                          >
+                            {p.isPaid ? 'Đã đóng' : 'Chưa đóng'}
+                          </button>
+                        )}
+
+                        {/* Attendance badge/button */}
+                        <button 
+                          onClick={() => handleToggleAttendance(p.userId, p.isAttended)}
+                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
+                          p.isAttended
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
+                            : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                        }`}>
+                          {p.isAttended ? 'Đã điểm danh' : 'Chưa điểm danh'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
