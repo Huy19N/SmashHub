@@ -73,8 +73,20 @@ export const resetPasswordAPI = async (data) => {
 };
 
 // Verify OTP API
-export const verifyOTPAPI = async (data) => {
+export const verifyOTPInProfileandNoDeleteCodeOTPAPI = async (data) => {
   const response = await axios.post(`/email/verifycodenodelete`, data);
+  return response.data;
+};
+
+export const verifyEmailInProfileAPI = async (data) => {
+  const response = await axios.post(`/email/sendconfirmationemail`, JSON.stringify(data.email), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return response.data;
+}
+
+export const verifyOTPInProfileandDeleteCodeOTPAPI = async (data) => {
+  const response = await axios.post(`/email/verifycode`, data);
   return response.data;
 };
 
@@ -85,7 +97,9 @@ export const verifyEmailRegisterAPI = async (data) => {
 };
 
 // resend verify email code API 
-export const resendVerifyEmailAPI = async (email) => {
-  const response = await axios.post(`/auth/resend-verification-code`, email);
+export const resendVerifyEmailAPI = async (data) => {
+  const response = await axios.post(`/auth/resend-verification-code`, JSON.stringify(data.email), {
+    headers: { 'Content-Type': 'application/json' }
+  });
   return response.data;
 };

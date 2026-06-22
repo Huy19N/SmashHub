@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
-import { useForgotPassword, useVerifyOTP, useResetPassword } from '../hooks/useAuth';
+import { useForgotPassword, useVerifyOTPandNoDeleteCodeOTP, useResetPassword } from '../hooks/useAuth';
 
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
@@ -13,7 +13,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const { forgotPassword, isLoading: isForgotLoading } = useForgotPassword();
-  const { verifyOTP, isLoading: isVerifyLoading } = useVerifyOTP();
+  const { verifyOTP: verifyOTPNoDelete, isLoading: isVerifyLoading } = useVerifyOTPandNoDeleteCodeOTP();
   const { resetPassword, isLoading: isResetLoading } = useResetPassword();
 
   if (!isOpen) return null;
@@ -44,7 +44,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     e.preventDefault();
     if (!code) return toast.error("Vui lòng nhập mã code.");
     try {
-      await verifyOTP(code, email);
+      await verifyOTPNoDelete(code, email);
       toast.success("Mã hợp lệ. Vui lòng đặt mật khẩu mới.");
       setStep(3);
     } catch (err) {

@@ -76,13 +76,7 @@ export default function EmailVerificationModal({ isOpen, email, onClose, onVerif
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-[#1a2130] border border-gray-200 dark:border-gray-700/50 rounded-2xl w-full max-w-md p-6 relative shadow-2xl m-4">
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
-        >
-          <X size={20} />
-        </button>
+
 
         <form onSubmit={handleVerify} className="space-y-5">
           {/* Header */}

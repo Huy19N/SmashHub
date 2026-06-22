@@ -147,13 +147,13 @@ export default function GroupsDashboard() {
                     >
                       <Plus className="h-4 w-4" /> Tạo nhóm mới
                     </Button>
-                    <Button
+                    {/* <Button
                       onClick={() => console.log('Navigate to search')}
                       variant="secondary"
                       className="w-full sm:w-auto py-2.5 px-5 text-sm"
                     >
                       <Search className="h-4 w-4" /> Tìm & Tham gia nhóm
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               ) : (

@@ -16,8 +16,16 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem('userId')) {
-      navigate(PATHS.HOME);
+    const userId = localStorage.getItem('userId');
+    const roleId = localStorage.getItem('roleId');
+    if (userId) {
+      if (roleId === '1') {
+        navigate(PATHS.ADMIN_DASHBOARD);
+      } else if (roleId === '3') {
+        navigate(PATHS.COURTS_MANAGEMENT);
+      } else {
+        navigate(PATHS.GROUPS);
+      }
     }
   }, [navigate]);
 
@@ -26,7 +34,14 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success("Đăng nhập thành công! Chào mừng bạn trở lại.");
-      navigate(PATHS.HOME);
+      const roleId = localStorage.getItem('roleId');
+      if (roleId === '1') {
+        navigate(PATHS.ADMIN_DASHBOARD);
+      } else if (roleId === '3') {
+        navigate(PATHS.COURTS_MANAGEMENT);
+      } else {
+        navigate(PATHS.DASHBOARD);
+      }
     } catch (err) {
       const errMsg = err.message || 'Đăng nhập không thành công.';
       toast.error(errMsg);

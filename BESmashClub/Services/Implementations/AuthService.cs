@@ -57,9 +57,6 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             throw new UnauthorizedAccessException("Email hoặc mật khẩu không đúng.");
 
-        if (user.IsActive != true)
-            throw new UnauthorizedAccessException("Tài khoản đã bị vô hiệu hóa.");
-
         return GenerateTokenResponse(user, ipAddress, userAgent);
     }
 
@@ -172,7 +169,8 @@ public class AuthService : IAuthService
                 3 => "FacilityOwner",
                 _ => "User"
             }),
-            new Claim("RoleId", user.RoleId.ToString())
+            new Claim("RoleId", user.RoleId.ToString()),
+            new Claim("IsActive", (user.IsActive ?? false).ToString())
         };
 
         var token = new JwtSecurityToken(

@@ -4,6 +4,7 @@ import '../../data/models/auth_models.dart';
 /// Repository giao tiếp với ProfileRemoteDataSource.
 abstract class ProfileRepository {
   Future<ApiResponse<UserProfileResponse>> getMyProfile();
+  Future<ApiResponse<UserProfileResponse>> getUserProfile(String userId);
   Future<ApiResponse<UserProfileResponse>> updateMyProfile(UpdateProfileRequest request);
   Future<ApiResponse<List<UserSportProfileResponse>>> getMySportProfiles();
   Future<ApiResponse<UserSportProfileResponse>> createSportProfile(CreateSportProfileRequest request);

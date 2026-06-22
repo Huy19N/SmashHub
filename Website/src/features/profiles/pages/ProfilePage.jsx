@@ -7,6 +7,7 @@ import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   useGetMyProfile,
   useUpdateUser,
@@ -17,6 +18,7 @@ import {
   useGetUserOnline,
   useUploadUserAvatar
 } from '../hooks/useProfiles.js';
+import { useVerifyEmailInProfile, useVerifyEmailRegister } from '../../Auth/hooks/useAuth';
 import { getAllSportsAPI, getSportLevelAPI } from '../../bookings/api/bookings.api.js';
 import { getAvatarUrl } from '../../../utils/avatarUtils';
 import toast from 'react-hot-toast';
@@ -24,6 +26,22 @@ import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 
 export default function ProfilePage() {
   const { theme } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isActiveStr = localStorage.getItem('isActive');
+  const isAccountActive = isActiveStr === 'true' || isActiveStr === 'True' || isActiveStr === null;
+
+  useEffect(() => {
+    if (location.state?.requireActivation) {
+      toast.error('Bạn cần xác thực email để sử dụng chức năng này!', {
+        duration: 4000,
+        position: 'top-center',
+      });
+      // Clear the state so it doesn't show again on reload
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Profile info hooks
   const { user: profileData, isLoading: isProfileLoading, error: profileError, refetch: refetchProfile } = useGetMyProfile();
@@ -48,6 +66,12 @@ export default function ProfilePage() {
   const [infoError, setInfoError] = useState('');
   const [infoSuccess, setInfoSuccess] = useState('');
 
+  // Email Verification State
+  const [isShowingOTPInput, setIsShowingOTPInput] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+
   // Sports database lists
   const [availableSports, setAvailableSports] = useState([]);
   const [isLoadingAvailableSports, setIsLoadingAvailableSports] = useState(false);
@@ -56,6 +80,43 @@ export default function ProfilePage() {
   const [selectedAddRankValue, setSelectedAddRankValue] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [sportError, setSportError] = useState('');
+
+  // Verification hooks
+  const { verifyEmail } = useVerifyEmailInProfile();
+  const { verifyEmailRegister: verifyOTP } = useVerifyEmailRegister();
+
+  // Handlers for Email Verification
+  const handleSendOTP = async () => {
+    setIsSendingOTP(true);
+    try {
+      await verifyEmail(profileData?.email);
+      toast.success('Mã xác nhận đã được gửi đến email của bạn.');
+      setIsShowingOTPInput(true);
+    } catch (err) {
+      toast.error(err || 'Không thể gửi mã xác nhận. Vui lòng thử lại.');
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otpCode.trim()) {
+      toast.error('Vui lòng nhập mã OTP.');
+      return;
+    }
+    setIsVerifyingOTP(true);
+    try {
+      await verifyOTP(profileData?.email, otpCode);
+      toast.success('Xác thực email thành công!');
+      localStorage.setItem('isActive', 'true');
+      setIsShowingOTPInput(false);
+      window.location.reload(); // Reload to refresh protected routes and UI
+    } catch (err) {
+      toast.error(err || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
 
   // Editing sport levels state
   const [editingSportId, setEditingSportId] = useState(null);
@@ -264,6 +325,49 @@ export default function ProfilePage() {
             Quản lý thông tin tài khoản và trình độ thể thao của bạn.
           </p>
         </div>
+
+        {/* Verification Banner */}
+        {!isAccountActive && (
+          <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 font-display">Tài khoản chưa được kích hoạt</h3>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">Bạn cần xác thực email để có thể sử dụng các tính năng đặt sân, tìm trận và quản lý nhóm.</p>
+                
+                {!isShowingOTPInput && (
+                  <Button 
+                    variant="primary" 
+                    className="mt-3 bg-amber-500 hover:bg-amber-600 text-white border-none"
+                    onClick={handleSendOTP}
+                    isLoading={isSendingOTP}
+                  >
+                    Gửi mã xác nhận
+                  </Button>
+                )}
+
+                {isShowingOTPInput && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <input 
+                      type="text" 
+                      placeholder="Nhập mã OTP..." 
+                      className="px-4 py-2 border border-amber-300 rounded-lg dark:bg-amber-900/40 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                    />
+                    <Button 
+                      onClick={handleVerifyOTP} 
+                      isLoading={isVerifyingOTP}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      Xác nhận
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {isProfileLoading ? (
           <div className="flex flex-col items-center justify-center py-20">

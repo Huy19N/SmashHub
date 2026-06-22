@@ -37,6 +37,8 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
 
   String? _currentUserId;
   Timer? _pollingTimer;
+  late final ProfileRepositoryImpl _profileRepository;
+  final Map<String, String?> _userAvatars = {};
 
   @override
   void initState() {
@@ -52,9 +54,9 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
     );
 
     final profileRemoteDataSource = ProfileRemoteDataSource(apiClient);
-    final profileRepository = ProfileRepositoryImpl(profileRemoteDataSource);
+    _profileRepository = ProfileRepositoryImpl(profileRemoteDataSource);
     _profileController = ProfileController(
-      profileRepository: profileRepository,
+      profileRepository: _profileRepository,
     );
 
     _controller.addListener(_onControllerUpdate);
@@ -81,6 +83,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
 
   void _onControllerUpdate() {
     if (mounted) {
+      _fetchMissingAvatars();
       setState(() {});
       // Cuộn xuống dưới cùng khi có tin nhắn mới (sau khi build xong)
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,6 +95,23 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
           );
         }
       });
+    }
+  }
+
+  void _fetchMissingAvatars() {
+    for (final msg in _controller.messages) {
+      if (!_userAvatars.containsKey(msg.senderId)) {
+        _userAvatars[msg.senderId] = null; // Đánh dấu là đang tải/không có
+        _profileRepository.getUserProfile(msg.senderId).then((res) {
+          if (res.success && res.data?.avatarFileId != null) {
+            if (mounted) {
+              setState(() {
+                _userAvatars[msg.senderId] = res.data!.avatarFileId;
+              });
+            }
+          }
+        }).catchError((_) {});
+      }
     }
   }
 
@@ -407,14 +427,22 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: _userAvatars[msg.senderId] == null ? LinearGradient(
                   colors: [
                     Colors.primaries[msg.senderId.hashCode % Colors.primaries.length],
                     Colors.primaries[(msg.senderId.hashCode + 2) % Colors.primaries.length].withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                ),
+                ) : null,
+                image: _userAvatars[msg.senderId] != null && _userAvatars[msg.senderId]!.isNotEmpty
+                    ? DecorationImage(
+                        image: CachedNetworkImageProvider(
+                          ApiConfig.getFileUrl(_userAvatars[msg.senderId]!),
+                        ),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -425,15 +453,17 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                 ],
               ),
               alignment: Alignment.center,
-              child: Text(
-                _getInitials(msg.senderName ?? 'User'),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+              child: _userAvatars[msg.senderId] == null || _userAvatars[msg.senderId]!.isEmpty
+                  ? Text(
+                      _getInitials(msg.senderName ?? 'User'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 8),
           ],

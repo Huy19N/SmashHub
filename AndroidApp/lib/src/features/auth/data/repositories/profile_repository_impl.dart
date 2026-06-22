@@ -14,6 +14,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<ApiResponse<UserProfileResponse>> getUserProfile(String userId) {
+    return _remoteDataSource.getUserProfile(userId);
+  }
+
+  @override
   Future<ApiResponse<UserProfileResponse>> updateMyProfile(UpdateProfileRequest request) {
     return _remoteDataSource.updateMyProfile(request);
   }

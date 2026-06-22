@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI, forgotPasswordAPI, resetPasswordAPI, verifyOTPAPI, verifyEmailRegisterAPI, resendVerifyEmailAPI } from '../api/auth.api.js';
+import { loginAPI, registerAPI, logoutAPI, getUserAPI, updateUserAPI, getUserIdAPI, getUserProfileAPI, updateUserProfileAPI, createUserProfileAPI, deleteUserProfileAPI, forgotPasswordAPI, resetPasswordAPI, verifyOTPInProfileandDeleteCodeOTPAPI, verifyEmailInProfileAPI, verifyOTPInProfileandNoDeleteCodeOTPAPI, verifyEmailRegisterAPI, resendVerifyEmailAPI } from '../api/auth.api.js';
 import api, { setAccessToken, getAccessToken } from '../../../config/axios.js';
 
 export const useLogout = () => {
@@ -52,10 +52,12 @@ export const useLogin = () => {
       const userId = decoded?.sub || decoded?.nameid || decoded?.userId || userData.userId;
       const roleName = decoded?.role || decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
       const roleId = decoded?.RoleId || decoded?.roleId || userData?.roleId;
+      const isActive = decoded?.IsActive || decoded?.isActive || userData?.isActive;
 
       if (userId) localStorage.setItem('userId', userId);
       if (roleName) localStorage.setItem('roleName', roleName);
       if (roleId) localStorage.setItem('roleId', roleId.toString());
+      if (isActive !== undefined) localStorage.setItem('isActive', isActive.toString());
 
       // Save Access Token in memory instead of localStorage
       setAccessToken(accessToken);
@@ -393,7 +395,7 @@ export const useResetPassword = () => {
   };
 };
 
-export const useVerifyOTP = () => {
+export const useVerifyOTPandDeleteCodeOTP = () => {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -401,7 +403,7 @@ export const useVerifyOTP = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await verifyOTPAPI({ code, email });
+      const response = await verifyOTPInProfileandDeleteCodeOTPAPI({ code, email });
       return response;
     } catch (error) {
       setError(error.message);
@@ -415,6 +417,56 @@ export const useVerifyOTP = () => {
     isLoading,
     error,
     verifyOTP,
+  };
+};
+
+export const useVerifyOTPandNoDeleteCodeOTP = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const verifyOTP = async (code, email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await verifyOTPInProfileandNoDeleteCodeOTPAPI({ code, email });
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    verifyOTP,
+  };
+};
+
+export const useVerifyEmailInProfile = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const verifyEmail = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await verifyEmailInProfileAPI({ email });
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error.message;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    error,
+    verifyEmail,
   };
 };
 

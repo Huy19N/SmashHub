@@ -22,6 +22,19 @@ class ProfileRemoteDataSource {
     }
   }
 
+  /// Lấy thông tin cá nhân của một người dùng bất kỳ qua userId
+  Future<ApiResponse<UserProfileResponse>> getUserProfile(String userId) async {
+    try {
+      final response = await _apiClient.get('/api/users/$userId');
+      return ApiResponse<UserProfileResponse>.fromJson(
+        response.data,
+        (json) => UserProfileResponse.fromJson(json as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi lấy thông tin người dùng');
+    }
+  }
+
   /// Cập nhật thông tin cá nhân
   Future<ApiResponse<UserProfileResponse>> updateMyProfile(UpdateProfileRequest request) async {
     try {

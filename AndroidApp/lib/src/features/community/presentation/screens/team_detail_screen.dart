@@ -39,6 +39,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String? _expandedMemberId; // Theo dõi ID của thành viên được mở rộng chi tiết
+  final Map<String, String?> _userAvatars = {}; // Cache avatarFileId của các thành viên
 
   @override
   void initState() {
@@ -72,7 +73,15 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
 
         if (profileRes.success) {
           _currentUserProfile = profileRes.data;
+          if (_currentUserProfile != null && _currentUserProfile!.avatarFileId != null) {
+            _userAvatars[_currentUserProfile!.userId] = _currentUserProfile!.avatarFileId;
+          }
         }
+      }
+
+      // Tải avatar cho các thành viên khác
+      if (_teamDetail != null) {
+        _fetchAvatars();
       }
     } catch (e) {
       if (mounted) {
@@ -83,6 +92,23 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
         setState(() {
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _fetchAvatars() async {
+    for (final member in _teamDetail!.members) {
+      if (!_userAvatars.containsKey(member.userId)) {
+        try {
+          final res = await _profileRepository.getUserProfile(member.userId);
+          if (res.success && res.data != null) {
+            if (mounted) {
+              setState(() {
+                _userAvatars[member.userId] = res.data!.avatarFileId;
+              });
+            }
+          }
+        } catch (_) {}
       }
     }
   }
@@ -372,11 +398,15 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
   }
 
   Widget _buildAvatar(TeamMemberResponse member) {
-    if (member.avatarFileId != null && member.avatarFileId!.isNotEmpty) {
+    final avatarId = member.avatarFileId?.isNotEmpty == true
+        ? member.avatarFileId
+        : _userAvatars[member.userId];
+
+    if (avatarId != null && avatarId.isNotEmpty) {
       return CircleAvatar(
         radius: 24,
         backgroundImage: CachedNetworkImageProvider(
-          ApiConfig.getFileUrl(member.avatarFileId!),
+          ApiConfig.getFileUrl(avatarId),
         ),
         backgroundColor: Colors.transparent,
       );
