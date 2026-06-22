@@ -699,3 +699,4 @@ INSERT INTO SubscriptionPlans (TierId, DurationMonths, Price) VALUES (@FreeId, 0
 INSERT INTO SystemSettings (SettingKey, SettingValue, Description) VALUES (N'PlatformFeePercentage', N'5', N'Phần trăm phí hoa hồng thu từ chủ sân cho mỗi booking');
  
 
+
