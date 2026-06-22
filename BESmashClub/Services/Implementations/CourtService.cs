@@ -107,6 +107,20 @@ public class CourtService : ICourtService
         if (!await _unitOfWork.Facilities.IsOwnerAsync(court.FacilityId, userId))
             throw new UnauthorizedAccessException("Bạn không có quyền xóa sân này.");
 
+        // Check for existing bookings
+        var hasBookings = await _unitOfWork.Courts.GetContext().Set<Booking>()
+            .AnyAsync(b => b.CourtId == courtId);
+        if (hasBookings)
+            throw new InvalidOperationException("Không thể xóa sân này vì đã có lượt đặt sân. Vui lòng chuyển trạng thái sân thành Đóng cửa thay vì xóa.");
+
+        // Remove associated CourtCosts first
+        var courtCosts = await _unitOfWork.Courts.GetContext().Set<CourtCost>()
+            .Where(cc => cc.CourtId == courtId).ToListAsync();
+        if (courtCosts.Any())
+        {
+            _unitOfWork.Courts.GetContext().Set<CourtCost>().RemoveRange(courtCosts);
+        }
+
         await _unitOfWork.Courts.RemoveAsync(court);
         return true;
     }

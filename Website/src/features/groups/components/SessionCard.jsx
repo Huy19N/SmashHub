@@ -76,6 +76,8 @@ export default function SessionCard({
     ? Math.min((session.currentParticipants / session.maxParticipants) * 100, 100)
     : 0;
 
+  const isTimeLocked = session.startTime && new Date() >= new Date(session.startTime);
+
   return (
     <div className="rounded-2xl border border-gray-200/80 dark:border-border-dark/60 bg-white dark:bg-card-dark/30 shadow-sm dark:shadow-none hover:border-emerald-500/40 dark:hover:border-primary/20 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-between p-5 group">
       {/* Top section: Sport badge and Action Menu */}
@@ -156,55 +158,65 @@ export default function SessionCard({
         <div className="flex items-center justify-between pt-1">
           {/* Vote buttons - left side */}
           <div className="flex items-center gap-2">
-            {hasJoined ? (
-              <button
-                onClick={() => onVoteLeave?.(session.scheduleId)}
-                disabled={isVoting}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 transition-all cursor-pointer font-label disabled:opacity-50"
-              >
-                {isVoting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {!isTimeLocked && (
+              <>
+                {hasJoined ? (
+                  <button
+                    onClick={() => onVoteLeave?.(session.scheduleId)}
+                    disabled={isVoting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20 transition-all cursor-pointer font-label disabled:opacity-50"
+                  >
+                    {isVoting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <UserMinus className="h-3.5 w-3.5" />
+                    )}
+                    Hủy tham gia
+                  </button>
                 ) : (
-                  <UserMinus className="h-3.5 w-3.5" />
+                  <button
+                    onClick={() => onVoteJoin?.(session.scheduleId)}
+                    disabled={isVoting || isFull}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer font-label disabled:opacity-50 disabled:cursor-not-allowed ${isFull
+                        ? 'bg-gray-100 text-gray-400 border border-gray-200 dark:bg-white/5 dark:text-gray-500 dark:border-border-dark/40'
+                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20'
+                      }`}
+                  >
+                    {isVoting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-3.5 w-3.5" />
+                    )}
+                    {isFull ? 'Đã đầy' : 'Tham gia'}
+                  </button>
                 )}
-                Hủy tham gia
-              </button>
-            ) : (
-              <button
-                onClick={() => onVoteJoin?.(session.scheduleId)}
-                disabled={isVoting || isFull}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer font-label disabled:opacity-50 disabled:cursor-not-allowed ${isFull
-                    ? 'bg-gray-100 text-gray-400 border border-gray-200 dark:bg-white/5 dark:text-gray-500 dark:border-border-dark/40'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20'
-                  }`}
-              >
-                {isVoting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <UserPlus className="h-3.5 w-3.5" />
-                )}
-                {isFull ? 'Đã đầy' : 'Tham gia'}
-              </button>
-            )}
 
-            {isLeader && (
-              activeChallengeId ? (
-                <button
-                  onClick={() => onViewMatchRequests?.(activeChallengeId)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20 transition-all cursor-pointer font-label"
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  Yêu cầu ghép
-                </button>
-              ) : (
-                <button
-                  onClick={() => onCreateChallenge?.(session.scheduleId, session.sportId)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 dark:hover:bg-amber-500/20 transition-all cursor-pointer font-label"
-                >
-                  <Flame className="h-3.5 w-3.5" />
-                  Bắt kèo
-                </button>
-              )
+                {isLeader && (
+                  activeChallengeId ? (
+                    <button
+                      onClick={() => onViewMatchRequests?.(activeChallengeId)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20 transition-all cursor-pointer font-label"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      Yêu cầu ghép
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onCreateChallenge?.(session.scheduleId, session.sportId)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 dark:hover:bg-amber-500/20 transition-all cursor-pointer font-label"
+                    >
+                      <Flame className="h-3.5 w-3.5" />
+                      Bắt kèo
+                    </button>
+                  )
+                )}
+              </>
+            )}
+            
+            {isTimeLocked && (
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 font-label italic">
+                Đã tới giờ chơi
+              </span>
             )}
           </div>
 

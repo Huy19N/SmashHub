@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, UserCheck, UserX, Users, Loader2, Save, AlignLeft, Users as UsersIcon, DollarSign } from 'lucide-react';
-import { useScheduleParticipants, useUpdateSchedule } from '../hooks/useGroups';
+import { useScheduleParticipants, useUpdateSchedule, useUpdateAttendance } from '../hooks/useGroups';
 import Button from '../../../components/ui/Button';
 
 /**
@@ -9,8 +9,9 @@ import Button from '../../../components/ui/Button';
  */
 export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess }) {
   const scheduleId = schedule?.scheduleId;
-  const { participants, isLoading: participantsLoading } = useScheduleParticipants(isOpen ? scheduleId : null);
+  const { participants, isLoading: participantsLoading, refetch: refetchParticipants } = useScheduleParticipants(isOpen ? scheduleId : null);
   const { updateSchedule, isLoading: isUpdating } = useUpdateSchedule();
+  const { updateAttendance } = useUpdateAttendance();
   
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'edit'
   
@@ -40,8 +41,21 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
   const attended = participants.filter(p => p.isAttended);
   const notAttended = participants.filter(p => !p.isAttended);
 
+  const handleToggleAttendance = async (userId, currentStatus) => {
+    try {
+      await updateAttendance(scheduleId, userId, !currentStatus);
+      if (refetchParticipants) refetchParticipants();
+    } catch (err) {
+      alert("Không thể điểm danh: " + err);
+    }
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (isTimeLocked) {
+      alert("Không thể chỉnh sửa thông tin khi đã tới giờ chơi.");
+      return;
+    }
     if (!formData.title.trim()) {
       alert("Vui lòng nhập tiêu đề.");
       return;
@@ -64,6 +78,8 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
       // Error handled by hook
     }
   };
+
+  const isTimeLocked = schedule?.startTime && new Date() >= new Date(schedule.startTime);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -173,14 +189,16 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                         </div>
                       </div>
 
-                      {/* Attendance badge */}
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold font-label ${
+                      {/* Attendance badge/button */}
+                      <button 
+                        onClick={() => handleToggleAttendance(p.userId, p.isAttended)}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
                         p.isAttended
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
-                          : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
+                          : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
                       }`}>
-                        {p.isAttended ? 'Đã điểm danh' : 'Đã đăng ký'}
-                      </span>
+                        {p.isAttended ? 'Đã điểm danh' : 'Chưa điểm danh'}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -196,9 +214,10 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                   <input
                     type="text"
                     required
+                    disabled={isTimeLocked}
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white"
+                    className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-white/5"
                     placeholder="Vd: Giao lưu đôi nam nữ tối T7"
                   />
                 </div>
@@ -213,9 +232,10 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                       type="number"
                       required
                       min="1"
+                      disabled={isTimeLocked}
                       value={formData.maxParticipants}
                       onChange={e => setFormData({ ...formData, maxParticipants: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white"
+                      className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-white/5"
                       placeholder="Vd: 10"
                     />
                   </div>
@@ -227,9 +247,10 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                     <input
                       type="number"
                       min="0"
+                      disabled={isTimeLocked}
                       value={formData.costPerPerson}
                       onChange={e => setFormData({ ...formData, costPerPerson: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white"
+                      className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-white/5"
                       placeholder="Vd: 50000"
                     />
                   </div>
@@ -241,9 +262,10 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                 <div className="relative">
                   <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <textarea
+                    disabled={isTimeLocked}
                     value={formData.costNote}
                     onChange={e => setFormData({ ...formData, costNote: e.target.value })}
-                    className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-h-[80px] resize-none text-gray-900 dark:text-white"
+                    className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-h-[80px] resize-none text-gray-900 dark:text-white disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-white/5"
                     placeholder="Vd: Tiền sân + nước chia đều"
                   />
                 </div>
@@ -262,6 +284,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
               type="submit"
               form="edit-schedule-form"
               isLoading={isUpdating}
+              disabled={isTimeLocked}
               className="px-4 py-2.5 text-xs"
             >
               <Save className="h-3.5 w-3.5" />

@@ -20,6 +20,7 @@ import {
   getScheduleParticipantsAPI,
   addScheduleParticipantAPI,
   removeScheduleParticipantAPI,
+  updateScheduleAttendanceAPI,
 } from '../api/groups.api.js';
 
 /**
@@ -601,4 +602,28 @@ export const useDeleteMessage = () => {
   };
 
   return { deleteMessage, isLoading, error };
+};
+
+// ─── useUpdateAttendance ──────────────────────────────────────────
+
+export const useUpdateAttendance = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const updateAttendance = async (scheduleId, userId, isAttended) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await updateScheduleAttendanceAPI(scheduleId, userId, isAttended);
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể cập nhật điểm danh.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateAttendance, isLoading, error };
 };

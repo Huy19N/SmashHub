@@ -112,6 +112,39 @@ export default function BookingsPage() {
   const [mapFilterStartTime, setMapFilterStartTime] = useState('');
   const [mapFilterEndTime, setMapFilterEndTime] = useState('');
   const [mapFilterSportId, setMapFilterSportId] = useState('');
+  const [routeCoords, setRouteCoords] = useState(null);
+
+  // Fetch actual road route from OSRM when selected facility changes
+  useEffect(() => {
+    if (userLocation && selectedMapFacility?.latitude && selectedMapFacility?.longitude) {
+      const getRoute = async () => {
+        try {
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${selectedMapFacility.longitude},${selectedMapFacility.latitude}?overview=full&geometries=geojson`);
+          const data = await res.json();
+          if (data.routes && data.routes[0] && data.routes[0].geometry) {
+            // GeoJSON coordinates are [lng, lat], Leaflet Polyline needs [lat, lng]
+            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            setRouteCoords(coords);
+          } else {
+            // Fallback to straight line
+            setRouteCoords([
+              [userLocation.lat, userLocation.lng],
+              [selectedMapFacility.latitude, selectedMapFacility.longitude]
+            ]);
+          }
+        } catch(e) {
+          console.error("OSRM route error:", e);
+          setRouteCoords([
+            [userLocation.lat, userLocation.lng],
+            [selectedMapFacility.latitude, selectedMapFacility.longitude]
+          ]);
+        }
+      };
+      getRoute();
+    } else {
+      setRouteCoords(null);
+    }
+  }, [userLocation, selectedMapFacility]);
 
   // Load facilities and sports on mount
   useEffect(() => {
@@ -316,15 +349,12 @@ export default function BookingsPage() {
                     )}
 
                     {/* Polyline dashed line if a court is selected and userLocation is active */}
-                    {userLocation && selectedMapFacility && selectedMapFacility.latitude && selectedMapFacility.longitude && (
+                    {routeCoords && (
                       <Polyline
-                        positions={[
-                          [userLocation.lat, userLocation.lng],
-                          [selectedMapFacility.latitude, selectedMapFacility.longitude]
-                        ]}
+                        positions={routeCoords}
                         color="#10b981"
                         dashArray="8, 12"
-                        weight={3}
+                        weight={4}
                       />
                     )}
 

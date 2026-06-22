@@ -100,6 +100,12 @@ export const removeScheduleParticipantAPI = async (scheduleId) => {
   return response.data;
 };
 
+/** Update attendance status of a participant (PATCH /api/schedules/{scheduleId}/participants/{userId}/attendance) */
+export const updateScheduleAttendanceAPI = async (scheduleId, userId, isAttended) => {
+  const response = await api.patch(`/schedules/${scheduleId}/participants/${userId}/attendance`, { isAttended });
+  return response.data;
+};
+
 // ─── Team Members ─────────────────────────────────────────────
 
 /** Get all members of a team (GET /api/teams/{teamId}/members) */

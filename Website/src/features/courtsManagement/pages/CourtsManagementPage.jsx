@@ -79,8 +79,8 @@ export default function CourtsManagementPage() {
   const [facCity, setFacCity] = useState('');
   const [facDistrict, setFacDistrict] = useState('');
   const [facAddress, setFacAddress] = useState('');
-  const [facLatitude, setFacLatitude] = useState(10.762622); // Default to HCMC
-  const [facLongitude, setFacLongitude] = useState(106.660172);
+  const [facLatitude, setFacLatitude] = useState(null); // Force user to pick
+  const [facLongitude, setFacLongitude] = useState(null);
   const [operatingHours, setOperatingHours] = useState([
     { dayOfWeek: 2, label: 'Thứ 2', isOpen: true, openTime: '05:00', closeTime: '23:00' },
     { dayOfWeek: 3, label: 'Thứ 3', isOpen: true, openTime: '05:00', closeTime: '23:00' },
@@ -120,6 +120,14 @@ export default function CourtsManagementPage() {
       setFacilityFormError('Vui lòng điền đầy đủ các thông tin bắt buộc.');
       return;
     }
+    if (facLatitude === null || facLongitude === null) {
+      setFacilityFormError('Vui lòng chấm trên bản đồ để chọn vị trí cơ sở của bạn.');
+      return;
+    }
+
+    const confirmCreation = window.confirm("Bạn có chắc chắn muốn tạo cơ sở tại vị trí đã chọn trên bản đồ?");
+    if (!confirmCreation) return;
+
     setIsSubmittingFacility(true);
     try {
       const newFacility = await createFacility({
