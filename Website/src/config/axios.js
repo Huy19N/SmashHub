@@ -33,6 +33,20 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 // Response interceptor để xử lý 401 và tự động gọi refresh token
 api.interceptors.response.use(
     (response) => response,
@@ -48,6 +62,19 @@ api.interceptors.response.use(
                 return Promise.reject(error);
             }
 
+            if (isRefreshing) {
+                return new Promise(function(resolve, reject) {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return api(originalRequest);
+                }).catch(err => {
+                    return Promise.reject(err);
+                });
+            }
+
+            isRefreshing = true;
+
             try {
                 // Gọi API refresh token (Cookie sẽ tự động được gửi đi nhờ withCredentials)
                 const refreshData = await refreshAccessTokenAPI();
@@ -55,16 +82,20 @@ api.interceptors.response.use(
                 
                 if (newAccessToken) {
                     setAccessToken(newAccessToken);
+                    processQueue(null, newAccessToken);
                     // Gắn token mới vào request bị lỗi ban đầu và gọi lại
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     return api(originalRequest);
                 }
             } catch (refreshError) {
+                processQueue(refreshError, null);
                 // Nếu refresh thất bại (ví dụ: cookie hết hạn, không hợp lệ), clear thông tin
                 setAccessToken(null);
                 localStorage.clear(); // Xóa các config khác nếu có
                 window.location.href = '/login'; // Chuyển về trang đăng nhập
                 return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
         

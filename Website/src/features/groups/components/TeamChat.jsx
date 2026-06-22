@@ -514,7 +514,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                       </div>
 
                       {/* Delete button (only for own messages) */}
-                      {isMine(msg) && (
+                      {isMine(msg) && msg.messageType !== 99 && (
                         <button
                           onClick={() => handleDeleteMessage(msg.messageId)}
                           className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/msg:opacity-100 transition-all duration-200 p-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:scale-110 cursor-pointer"
