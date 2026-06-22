@@ -108,7 +108,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => getAccessToken(),
-        // Removed skipNegotiation and transport to allow SignalR to fallback to LongPolling/SSE if WebSockets fail through proxy
+        transport: signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning) // Will log warnings/errors internally

@@ -30,7 +30,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotifications() || { notifications: [], unreadCount: 0, markAsRead: ()=>{}, markAllAsRead: ()=>{}, clearNotification: ()=>{} };
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotifications() || { notifications: [], unreadCount: 0, markAsRead: () => { }, markAllAsRead: () => { }, clearNotification: () => { } };
 
   const { user, logout } = useAuth();
   const { user: apiUser } = useGetUserId();
@@ -147,7 +147,7 @@ export default function Navbar() {
               <>
                 {/* Notification Bell */}
                 <div className="relative" ref={notificationDropdownRef}>
-                  <button 
+                  <button
                     onClick={() => setShowNotifications(!showNotifications)}
                     className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                   >
@@ -166,7 +166,7 @@ export default function Navbar() {
                       <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
                         <h3 className="text-sm font-bold text-gray-900 dark:text-white">Thông báo ({unreadCount})</h3>
                         {unreadCount > 0 && (
-                          <button 
+                          <button
                             onClick={markAllAsRead}
                             className="text-xs text-emerald-600 dark:text-primary hover:underline font-semibold"
                           >
@@ -182,8 +182,8 @@ export default function Navbar() {
                         ) : (
                           <div className="flex flex-col">
                             {notifications.map(notif => (
-                              <div 
-                                key={notif.id} 
+                              <div
+                                key={notif.id}
                                 onClick={() => markAsRead(notif.id)}
                                 className={`relative p-4 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${!notif.isRead ? 'bg-emerald-50/50 dark:bg-primary/5' : ''}`}
                               >
@@ -200,7 +200,7 @@ export default function Navbar() {
                                       {notif.timestamp.toLocaleTimeString('vi-VN')} - {notif.timestamp.toLocaleDateString('vi-VN')}
                                     </span>
                                   </div>
-                                  <button 
+                                  <button
                                     onClick={(e) => { e.stopPropagation(); clearNotification(notif.id); }}
                                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                                   >
@@ -223,10 +223,14 @@ export default function Navbar() {
                     className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative"
                   >
                     {apiUser?.data?.avatarFileId ? (
-                      <MediaImage
-                        fileId={apiUser.data.avatarFileId}
+                      <img
+                        src={getAvatarUrl(apiUser.data.avatarFileId)}
                         alt={user?.name || 'Avatar'}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
                     ) : null}
                     <div
@@ -439,10 +443,14 @@ export default function Navbar() {
                 <div className="flex items-center gap-4 mb-3">
                   <div className="h-10 w-10 rounded-full overflow-hidden shadow-md ring-2 ring-emerald-500/30 flex items-center justify-center relative">
                     {apiUser?.data?.avatarFileId ? (
-                      <MediaImage
-                        fileId={apiUser.data.avatarFileId}
+                      <img
+                        src={getAvatarUrl(apiUser.data.avatarFileId)}
                         alt={user?.name || 'Avatar'}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
                     ) : null}
                     <div

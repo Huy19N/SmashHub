@@ -27,7 +27,8 @@ class PresenceService {
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(this.getHubUrl(), {
-        accessTokenFactory: () => getAccessToken()
+        accessTokenFactory: () => getAccessToken(),
+        transport: signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
