@@ -72,12 +72,38 @@ public class FilesController : ControllerBase
         if (localFile == null)
             return NotFound(ApiResponse.ErrorResponse("Không tìm thấy tệp tin."));
 
-        var presignedUrl = await _fileService.GetFileUrlAsync(fileId);
+        var baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" 
+            ? $"{Request.Scheme}://{Request.Host}" 
+            : "";
 
         return Ok(ApiResponse<object>.SuccessResponse(new {
-            Url = presignedUrl,
+            Url = $"{baseUrl}/api/files/{fileId}/stream",
             OriginalFileName = localFile.OriginalFileName,
             MimeType = localFile.MimeType
         }));
+    }
+
+    /// <summary>
+    /// Proxy tải file trực tiếp (Public) để tránh lỗi CORS/SSL.
+    /// </summary>
+    [HttpGet("{fileId:guid}/stream")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetFileStream(Guid fileId)
+    {
+        var localFile = await _fileService.GetFileByIdAsync(fileId);
+        if (localFile == null)
+            return NotFound("Không tìm thấy tệp tin.");
+
+        try
+        {
+            var bytes = await _fileService.GetFileBytesAsync(fileId);
+            if (bytes == null) return NotFound();
+            
+            return File(bytes, localFile.MimeType, localFile.OriginalFileName);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

@@ -95,4 +95,22 @@ public class FileService : IFileService
         
         return await _minioClient.PresignedGetObjectAsync(args);
     }
+
+    public async Task<byte[]> GetFileBytesAsync(Guid fileId)
+    {
+        var file = await GetFileByIdAsync(fileId);
+        if (file == null) return null;
+
+        using var memoryStream = new MemoryStream();
+        var args = new GetObjectArgs()
+            .WithBucket(file.BucketName)
+            .WithObject(file.ObjectName)
+            .WithCallbackStream((stream) =>
+            {
+                stream.CopyTo(memoryStream);
+            });
+        
+        await _minioClient.GetObjectAsync(args);
+        return memoryStream.ToArray();
+    }
 }
