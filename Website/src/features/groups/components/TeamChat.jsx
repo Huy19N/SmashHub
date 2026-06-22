@@ -129,6 +129,12 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
     connectionRef.current = connection;
 
     // ── Event handlers ──────────────────────────────────────
+    // Suppress warnings from presence hub events
+    connection.on('useronline', () => {});
+    connection.on('UserOnline', () => {});
+    connection.on('useroffline', () => {});
+    connection.on('UserOffline', () => {});
+
     connection.on('ReceiveTeamMessage', (message) => {
       setMessages((prev) => {
         // Prevent duplicate messages
@@ -375,6 +381,10 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
         <div className="flex items-center gap-3 text-gray-400 dark:text-gray-500">
           <button
             onClick={() => {
+              if (connectionStatus !== 'connected') {
+                toast.error("Không thể kết nối đến máy chủ trò chuyện. Vui lòng thử lại sau.");
+                return;
+              }
               if (activeCall) {
                 toast.error("Phòng đang mở bạn không thể mở phòng mới!");
                 return;
@@ -394,8 +404,9 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 isEnded: false
               }]);
             }}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${activeCall ? 'text-gray-300 dark:text-gray-600' : 'hover:text-emerald-600 dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${activeCall || connectionStatus !== 'connected' ? 'text-gray-300 dark:text-gray-600' : 'hover:text-emerald-600 dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
             title="Gọi nhóm"
+            disabled={connectionStatus !== 'connected'}
           >
             <Phone className="h-5 w-5" />
           </button>

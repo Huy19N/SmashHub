@@ -57,6 +57,15 @@ class PresenceService {
       this.notifyListeners(extractUserId(arg), false);
     });
 
+    // Suppress warnings from other team hub events
+    this.connection.on('CallStarted', () => {});
+    this.connection.on('callstarted', () => {});
+    this.connection.on('UserJoinedCall', () => {});
+    this.connection.on('UserLeftCall', () => {});
+    this.connection.on('ReceiveSignal', () => {});
+    this.connection.on('JoinedTeam', () => {});
+    this.connection.on('LeftTeam', () => {});
+
     // Attach all queued handlers BEFORE starting
     this.eventHandlers.forEach(h => {
       this.connection.on(h.eventName, h.callback);
