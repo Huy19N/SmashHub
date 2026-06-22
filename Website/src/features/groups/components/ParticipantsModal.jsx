@@ -15,10 +15,10 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
   const { updateSchedule, isLoading: isUpdating } = useUpdateSchedule();
   const { updateAttendance } = useUpdateAttendance();
   const { updateSplitBill } = useUpdateSplitBill();
-  
+
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'edit'
   const [showSplitBill, setShowSplitBill] = useState(false);
-  
+
   // Edit form state
   const [formData, setFormData] = useState({
     title: '',
@@ -94,19 +94,20 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
   };
 
   const isTimeLocked = schedule?.startTime && new Date() >= new Date(schedule.startTime);
+  const isCostLocked = !!schedule?.bookingId && schedule?.bookingId !== '00000000-0000-0000-0000-000000000000';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full max-w-md bg-white dark:bg-card-dark rounded-2xl shadow-xl overflow-hidden animate-scale-up border border-gray-200 dark:border-border-dark flex flex-col max-h-[85vh]">
-        
+
         {/* Header & Tabs */}
         <div className="shrink-0 bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-border-dark/60">
           <div className="flex items-center justify-between p-5 pb-3">
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white font-display">
-                Quản lý lịch trình
+                Quản lý lịch Chơi
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-label mt-0.5 truncate max-w-[250px]">
                 {schedule.title}
@@ -123,21 +124,19 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
           <div className="flex px-5 gap-4">
             <button
               onClick={() => setActiveTab('list')}
-              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${
-                activeTab === 'list' 
-                  ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
+              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${activeTab === 'list'
+                ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
             >
               Người tham gia
             </button>
             <button
               onClick={() => setActiveTab('edit')}
-              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${
-                activeTab === 'edit' 
-                  ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
+              className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 font-label cursor-pointer active:scale-95 hover:scale-[1.02] ${activeTab === 'edit'
+                ? 'border-emerald-500 text-emerald-600 dark:text-primary dark:border-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
             >
               Chỉnh sửa thông tin
             </button>
@@ -212,24 +211,22 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                         {p.costToPay > 0 && (
                           <button
                             onClick={() => handleTogglePaid(p.userId, p.isPaid, p.costToPay)}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
-                              p.isPaid
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
-                                : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/25'
-                            }`}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${p.isPaid
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
+                              : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/25'
+                              }`}
                           >
                             {p.isPaid ? 'Đã đóng' : 'Chưa đóng'}
                           </button>
                         )}
 
                         {/* Attendance badge/button */}
-                        <button 
+                        <button
                           onClick={() => handleToggleAttendance(p.userId, p.isAttended)}
-                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${
-                          p.isAttended
+                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold font-label transition-colors cursor-pointer active:scale-95 ${p.isAttended
                             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'
                             : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
-                        }`}>
+                            }`}>
                           {p.isAttended ? 'Đã điểm danh' : 'Chưa điểm danh'}
                         </button>
                       </div>
@@ -275,16 +272,19 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300 font-label">Chi phí / người</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300 font-label">Chi phí tiền sân (VNĐ)</label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="number"
                       min="0"
-                      disabled={isTimeLocked}
+                      disabled={isTimeLocked || isCostLocked}
                       value={formData.costPerPerson}
                       onChange={e => setFormData({ ...formData, costPerPerson: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-white/5"
+                      className={`w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-label focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-900 dark:text-white ${isTimeLocked || isCostLocked
+                        ? 'bg-gray-100 dark:bg-white/5 cursor-not-allowed text-gray-500 border-gray-200 dark:border-border-dark/60'
+                        : 'bg-white dark:bg-card-dark border-gray-200 dark:border-border-dark'
+                        }`}
                       placeholder="Vd: 50000"
                     />
                   </div>
@@ -345,8 +345,8 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
           )}
         </div>
       </div>
-      
-      <SplitBillModal 
+
+      <SplitBillModal
         isOpen={showSplitBill}
         onClose={() => setShowSplitBill(false)}
         scheduleId={scheduleId}
