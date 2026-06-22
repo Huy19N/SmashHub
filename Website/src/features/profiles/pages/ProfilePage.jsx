@@ -154,7 +154,9 @@ export default function ProfilePage() {
     try {
       await uploadUserAvatar(formData);
       toast.success('Cập nhật ảnh đại diện thành công!');
-      refetchProfile();
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err) {
       toast.error(err.message || 'Lỗi khi cập nhật ảnh đại diện.');
     }

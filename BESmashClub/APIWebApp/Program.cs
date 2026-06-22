@@ -150,6 +150,8 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
@@ -157,8 +159,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<ChatHub>("/hub/chat");
-app.MapHub<NotificationHub>("/hub/notifications");
+app.MapHub<ChatHub>("/hub/chat", options =>
+{
+    options.LongPolling.PollTimeout = TimeSpan.FromSeconds(8);
+});
+app.MapHub<NotificationHub>("/hub/notifications", options =>
+{
+    options.LongPolling.PollTimeout = TimeSpan.FromSeconds(8);
+});
 
 app.Run();
 
