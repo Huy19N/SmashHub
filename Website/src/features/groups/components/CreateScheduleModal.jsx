@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Calendar, DollarSign, Users, Type, AlignLeft } from 'lucide-react';
 import { useCreateSchedule } from '../hooks/useGroups';
 import { useBookings } from '../../bookings/hooks/useBookings';
+import { getBookingByIdAPI } from '../../bookings/api/bookings.api';
 import Button from '../../../components/ui/Button';
 
 export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess }) {
@@ -14,6 +15,8 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
     costPerPerson: '',
     costNote: ''
   });
+  const [isCostDisabled, setIsCostDisabled] = useState(false);
+  const [isLoadingCost, setIsLoadingCost] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -26,12 +29,40 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
         costPerPerson: '',
         costNote: ''
       });
+      setIsCostDisabled(false);
+      setIsLoadingCost(false);
       setError(null);
     }
   }, [isOpen, fetchBookings]);
 
   // Filter bookings to only show confirmed (statusId = 2) or future bookings
   const validBookings = bookings?.filter(b => b.statusId === 2 || b.statusId === 1) || [];
+
+  const handleBookingChange = async (bookingId) => {
+    setFormData(prev => ({ ...prev, bookingId, costPerPerson: '' }));
+    setIsCostDisabled(false);
+    setError(null);
+
+    if (!bookingId) return;
+
+    setIsLoadingCost(true);
+    try {
+      const res = await getBookingByIdAPI(bookingId);
+      const bookingData = res?.data ?? res;
+      if (bookingData && typeof bookingData.totalCost !== 'undefined' && bookingData.totalCost !== null) {
+        setFormData(prev => ({
+          ...prev,
+          costPerPerson: bookingData.totalCost
+        }));
+        setIsCostDisabled(true);
+      }
+    } catch (err) {
+      console.error('Error fetching booking details:', err);
+      setError('Không thể tự động tải chi phí sân. Vui lòng thử chọn lại hoặc nhập thủ công.');
+    } finally {
+      setIsLoadingCost(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,7 +112,7 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-border-dark/60 bg-gray-50/50 dark:bg-white/5">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white font-display">
-              Tạo Lịch Trình
+              Tạo Lịch Chơi
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 font-label mt-1">
               Mở kèo để các thành viên trong nhóm đăng ký tham gia.
@@ -112,7 +143,7 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
               <select
                 required
                 value={formData.bookingId}
-                onChange={(e) => setFormData({ ...formData, bookingId: e.target.value })}
+                onChange={(e) => handleBookingChange(e.target.value)}
                 className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark/60 bg-white dark:bg-[#0c0f17] text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:ring-primary/20 dark:focus:border-primary transition-all font-label appearance-none"
               >
                 <option value="">-- Chọn sân đã đặt --</option>
@@ -171,18 +202,27 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
             {/* Cost Per Person */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-gray-700 dark:text-gray-300 font-label block">
-                Chi phí / người
+                Chi phí tiền sân (VNĐ)
               </label>
               <div className="relative">
                 <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="number"
                   min="0"
-                  placeholder="Vd: 50000"
+                  placeholder={isLoadingCost ? "Đang tải chi phí..." : "Vd: 50000"}
                   value={formData.costPerPerson}
                   onChange={(e) => setFormData({ ...formData, costPerPerson: e.target.value })}
-                  className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark/60 bg-white dark:bg-[#0c0f17] text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-label"
+                  disabled={isCostDisabled || isLoadingCost}
+                  className={`w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark/60 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-label ${isCostDisabled || isLoadingCost
+                    ? 'bg-gray-100 dark:bg-white/5 cursor-not-allowed text-gray-500'
+                    : 'bg-white dark:bg-[#0c0f17]'
+                    }`}
                 />
+                {isLoadingCost && (
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                    <div className="h-4 w-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -220,7 +260,7 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
               isLoading={isCreating}
               className="flex-1 py-2.5 text-sm"
             >
-              Tạo Lịch Trình
+              Tạo Lịch Chơi
             </Button>
           </div>
         </form>
