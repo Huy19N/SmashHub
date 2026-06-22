@@ -81,6 +81,7 @@ export default function CourtsManagementPage() {
   const [facAddress, setFacAddress] = useState('');
   const [facLatitude, setFacLatitude] = useState(null); // Force user to pick
   const [facLongitude, setFacLongitude] = useState(null);
+  const [isLocationConfirmed, setIsLocationConfirmed] = useState(false);
   const [operatingHours, setOperatingHours] = useState([
     { dayOfWeek: 2, label: 'Thứ 2', isOpen: true, openTime: '05:00', closeTime: '23:00' },
     { dayOfWeek: 3, label: 'Thứ 3', isOpen: true, openTime: '05:00', closeTime: '23:00' },
@@ -124,9 +125,10 @@ export default function CourtsManagementPage() {
       setFacilityFormError('Vui lòng chấm trên bản đồ để chọn vị trí cơ sở của bạn.');
       return;
     }
-
-    const confirmCreation = window.confirm("Bạn có chắc chắn muốn tạo cơ sở tại vị trí đã chọn trên bản đồ?");
-    if (!confirmCreation) return;
+    if (!isLocationConfirmed) {
+      setFacilityFormError('Vui lòng bấm nút "Xác nhận vị trí" dưới bản đồ trước khi tiếp tục.');
+      return;
+    }
 
     setIsSubmittingFacility(true);
     try {
@@ -156,6 +158,9 @@ export default function CourtsManagementPage() {
       setFacCity('');
       setFacDistrict('');
       setFacAddress('');
+      setFacLatitude(null);
+      setFacLongitude(null);
+      setIsLocationConfirmed(false);
       setOperatingHours(prev => prev.map(h => ({ ...h, isOpen: true, openTime: '05:00', closeTime: '23:00' })));
       setActiveTab('list');
     } catch (err) {
@@ -299,6 +304,7 @@ export default function CourtsManagementPage() {
       click(e) {
         setFacLatitude(e.latlng.lat);
         setFacLongitude(e.latlng.lng);
+        setIsLocationConfirmed(false); // require re-confirmation on new selection
       },
     });
     return facLatitude && facLongitude ? (
@@ -528,10 +534,45 @@ export default function CourtsManagementPage() {
                     <LocationPickerMarker />
                   </MapContainer>
                 </div>
-                {facLatitude && facLongitude && (
-                  <p className="text-[10px] text-gray-400 mt-1.5 text-right font-mono">
-                    Tọa độ: {facLatitude.toFixed(6)}, {facLongitude.toFixed(6)}
-                  </p>
+                {facLatitude && facLongitude ? (
+                  <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-150 dark:border-white/10 animate-fade-in">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider font-label">Tọa độ đã chọn</span>
+                      <span className="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
+                        {facLatitude.toFixed(6)}, {facLongitude.toFixed(6)}
+                      </span>
+                    </div>
+                    {isLocationConfirmed ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> Đã xác nhận vị trí
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsLocationConfirmed(false)}
+                          className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
+                        >
+                          Chỉnh sửa
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsLocationConfirmed(true)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary/95 text-white dark:text-[#052e14] text-xs font-black rounded-xl shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Xác nhận vị trí này
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 flex items-center gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0" />
+                    <span className="text-xs text-amber-800 dark:text-amber-400/90 font-bold font-label">
+                      Vui lòng click chọn một vị trí bất kỳ trên bản đồ ở trên.
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -539,7 +580,8 @@ export default function CourtsManagementPage() {
                 <Button
                   type="submit"
                   isLoading={isSubmittingFacility}
-                  className="flex-1"
+                  disabled={!isLocationConfirmed || isSubmittingFacility}
+                  className={`flex-1 ${!isLocationConfirmed ? 'opacity-40 cursor-not-allowed select-none' : ''}`}
                 >
                   <Plus className="w-4 h-4" />
                   Tạo cơ sở mới
