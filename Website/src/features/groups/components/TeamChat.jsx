@@ -6,7 +6,7 @@ import { useGetMessages, useSendMessage, useDeleteMessage } from '../hooks/useGr
 import { uploadFileAPI, getFileUrl } from '../api/files.api.js';
 import toast from 'react-hot-toast';
 import VideoCallOverlay from './VideoCallOverlay';
-import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
+import { getAllUserByIdAPI, getAllUserAPI } from '../../profiles/api/profiles.api';
 import MediaImage from '../../../components/ui/MediaImage';
 /**
  * TeamChat – Real-time group chat powered by SignalR + REST API.
@@ -32,6 +32,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
   const [uploadingImage, setUploadingImage] = useState(false);
   const [avatars, setAvatars] = useState({});
   const fetchedAvatarsRef = useRef(new Set());
+  const [userProfile, setUserProfile] = useState(null);
 
   // Video Call State
   const [videoCallRoom, setVideoCallRoom] = useState(null); // { roomId, isInitiator }
@@ -76,6 +77,17 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
 
     return () => { isMounted = false; };
   }, [messages, currentUserId]);
+
+  // ─── Fetch current user profile for subscription checks ────────
+  useEffect(() => {
+    getAllUserAPI()
+      .then(res => {
+        setUserProfile(res?.data ?? res);
+      })
+      .catch(err => {
+        console.error('Error fetching user profile for chat:', err);
+      });
+  }, []);
 
   // ─── Sync API messages into local state ────────────────────
   useEffect(() => {
@@ -248,6 +260,26 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
     if (!file.type.startsWith('image/')) {
       toast.error('Chỉ hỗ trợ tải lên hình ảnh.');
       return;
+    }
+
+    // Check subscription tier restrictions
+    const tier = userProfile?.subscriptionTier || 'Free';
+    if (tier === 'Free') {
+      toast.error('Gói Free không hỗ trợ gửi file phương tiện. Vui lòng nâng cấp gói để tiếp tục.');
+      return;
+    }
+
+    if (tier === 'Basic') {
+      const todayMediaCount = messages.filter(m => 
+        String(m.senderId) === String(currentUserId) && 
+        (m.messageType === 1 || m.messageType === 2 || m.messageType === 3) &&
+        new Date(m.sentAt).toDateString() === new Date().toDateString()
+      ).length;
+
+      if (todayMediaCount >= 5) {
+        toast.error('Gói Basic chỉ được gửi tối đa 5 hình ảnh/ngày. Hãy nâng cấp gói PRO để không giới hạn.');
+        return;
+      }
     }
 
     setUploadingImage(true);

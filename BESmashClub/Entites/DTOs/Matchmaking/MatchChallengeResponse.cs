@@ -22,4 +22,7 @@ public class MatchChallengeResponse
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public int Priority { get; set; }
+    public Guid? ChallengerTeamId { get; set; }
+    public string? ChallengerTeamName { get; set; }
+    public string? ChallengerStatus { get; set; }
 }

@@ -40,3 +40,9 @@ export const respondToAcceptanceAPI = async (acceptanceId, accept) => {
     });
     return response.data;
 };
+
+// Get challenges for a specific team (both host and guest)
+export const getTeamChallengesAPI = async (teamId) => {
+    const response = await api.get(`/matchmaking/teams/${teamId}`);
+    return response.data;
+};
