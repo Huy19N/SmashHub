@@ -13,6 +13,7 @@ import {
   updateCourtCostAPI,
   deleteCourtCostAPI,
   updateFacilityOperatingHoursAPI,
+  getFacilityOperatingHoursAPI,
   updateCourtAllAPI
 } from '../api/courtsManagement.api';
 
@@ -178,7 +179,7 @@ export const useCourtsManagement = () => {
   };
 
   // --- Court Costs ---
-  const fetchCourtCosts = async (courtId) => {
+  const fetchCourtCosts = useCallback(async (courtId) => {
     try {
       const res = await getCourtCostsAPI(courtId);
       return res?.data ?? res ?? [];
@@ -186,7 +187,17 @@ export const useCourtsManagement = () => {
       console.error('Lỗi khi tải giá sân:', err);
       throw err;
     }
-  };
+  }, []);
+
+  const fetchFacilityHours = useCallback(async (facilityId) => {
+    try {
+      const res = await getFacilityOperatingHoursAPI(facilityId);
+      return res?.data ?? res ?? [];
+    } catch (err) {
+      console.error('Lỗi khi tải giờ hoạt động:', err);
+      throw err;
+    }
+  }, []);
 
   const createCourtCost = async (courtId, costData) => {
     try {
@@ -247,6 +258,7 @@ export const useCourtsManagement = () => {
     updateCourt,
     deleteCourt,
     fetchCourtCosts,
+    fetchFacilityHours,
     createCourtCost,
     updateCourtCost,
     updateCourtAll,

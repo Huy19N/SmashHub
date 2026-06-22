@@ -18,6 +18,12 @@ export const updateFacilityOperatingHoursAPI = async (facilityId, hoursData) => 
   return response.data;
 };
 
+/** Lấy giờ hoạt động của cơ sở (GET /api/facilities/{facilityId}/operating-hours) */
+export const getFacilityOperatingHoursAPI = async (facilityId) => {
+  const response = await api.get(`/facilities/${facilityId}/operating-hours`);
+  return response.data;
+};
+
 /** Lấy danh sách sân theo cơ sở (GET /api/facilities/{facilityId}/courts) */
 export const getCourtsByFacilityAPI = async (facilityId) => {
   const response = await api.get(`/facilities/${facilityId}/courts`);

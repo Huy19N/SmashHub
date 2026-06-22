@@ -5,6 +5,9 @@ namespace Entites.DTOs.CourtCosts;
 public class BulkCourtCostRequest
 {
     [Required]
+    public List<int> DaysOfWeek { get; set; } = new List<int>();
+
+    [Required]
     public TimeOnly StartTime { get; set; }
 
     [Required]

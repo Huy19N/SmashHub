@@ -226,6 +226,7 @@ CREATE TABLE CourtCosts(
     CourtCostId INT IDENTITY(1,1),
     FacilityId INT NOT NULL,
     CourtId INT NOT NULL,
+    DayOfWeek INT NOT NULL,
     StartTime TIME NOT NULL,
     EndTime TIME NOT NULL,
     DurationMinutes INT NOT NULL DEFAULT 60,

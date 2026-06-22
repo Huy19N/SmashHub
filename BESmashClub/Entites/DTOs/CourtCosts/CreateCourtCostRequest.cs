@@ -8,6 +8,9 @@ public class CreateCourtCostRequest
     public int CourtId { get; set; }
 
     [Required]
+    public int DayOfWeek { get; set; }
+
+    [Required]
     public TimeOnly StartTime { get; set; }
 
     [Required]

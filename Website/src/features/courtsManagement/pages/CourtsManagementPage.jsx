@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building, Settings, Plus, Edit3, Trash2, CheckCircle2, AlertTriangle, 
   MapPin, Loader2, Save, X, Activity, ToggleLeft, ToggleRight, Sparkles 
@@ -65,6 +65,7 @@ export default function CourtsManagementPage() {
     updateCourt,
     deleteCourt,
     fetchCourtCosts,
+    fetchFacilityHours,
     createCourtCost,
     updateCourtCost,
     updateCourtAll,
@@ -72,7 +73,34 @@ export default function CourtsManagementPage() {
   } = useCourtsManagement();
 
   // Active tab: 'list' | 'add-court' | 'add-facility'
-  const [activeTab, setActiveTab] = useState('list');
+    const [activeTab, setActiveTab] = useState('list');
+
+    useEffect(() => {
+      if (activeTab === 'add-court' && selectedFacilityId) {
+         fetchFacilityHours(selectedFacilityId).then(hours => {
+            setFacilityHours(hours);
+            const groups = {};
+            hours.forEach(h => {
+               const key = `${h.openTime}-${h.closeTime}`;
+               if (!groups[key]) groups[key] = { openTime: h.openTime, closeTime: h.closeTime, daysOfWeek: [], label: '' };
+               groups[key].daysOfWeek.push(h.dayOfWeek);
+            });
+            const parsedGroups = Object.values(groups).map((g, idx) => {
+               g.label = g.daysOfWeek.map(d => d === 8 ? 'CN' : `T${d}`).join(', ');
+               return {
+                  id: Date.now() + Math.random() + idx,
+                  groupId: `${g.openTime}-${g.closeTime}-${g.daysOfWeek.join(',')}`,
+                  daysOfWeek: g.daysOfWeek,
+                  label: g.label,
+                  openTime: g.openTime,
+                  closeTime: g.closeTime,
+                  costs: [{ id: Date.now() + Math.random() + idx * 10, startTime: g.openTime.substring(0, 5), endTime: g.closeTime.substring(0, 5), durationMinutes: '60', cost: '' }]
+               };
+            });
+            setGroupedCourtCosts(parsedGroups);
+         }).catch(err => console.error(err));
+      }
+    }, [activeTab, selectedFacilityId, fetchFacilityHours]);
 
   // Add facility form state
   const [facName, setFacName] = useState('');
@@ -97,9 +125,8 @@ export default function CourtsManagementPage() {
   // Add court form state
   const [courtNameInput, setCourtNameInput] = useState('');
   const [courtSportId, setCourtSportId] = useState('');
-  const [courtCosts, setCourtCosts] = useState([
-    { id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }
-  ]);
+  const [groupedCourtCosts, setGroupedCourtCosts] = useState([]);
+    const [facilityHours, setFacilityHours] = useState([]);
   const [isSubmittingCourt, setIsSubmittingCourt] = useState(false);
   const [courtFormError, setCourtFormError] = useState('');
 
@@ -109,9 +136,58 @@ export default function CourtsManagementPage() {
   const [editSportId, setEditSportId] = useState('');
   const [editStatusId, setEditStatusId] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
-  const [editCosts, setEditCosts] = useState([]);
+  const [groupedEditCosts, setGroupedEditCosts] = useState([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState('');
+
+  const addCostRow = (groupIndex, isEdit = false) => {
+    const setFn = isEdit ? setGroupedEditCosts : setGroupedCourtCosts;
+    setFn(prev => prev.map((group, idx) => {
+      if (idx !== groupIndex) return group;
+      const lastCost = group.costs[group.costs.length - 1];
+      const defaultStart = lastCost ? lastCost.endTime : group.openTime.substring(0, 5);
+      return {
+        ...group,
+        costs: [
+          ...group.costs,
+          {
+            id: Date.now() + Math.random(),
+            startTime: defaultStart,
+            endTime: group.closeTime.substring(0, 5),
+            durationMinutes: '60',
+            cost: ''
+          }
+        ]
+      };
+    }));
+  };
+
+  const removeCostRow = (groupIndex, costIndex, isEdit = false) => {
+    const setFn = isEdit ? setGroupedEditCosts : setGroupedCourtCosts;
+    setFn(prev => prev.map((group, idx) => {
+      if (idx !== groupIndex) return group;
+      const newCosts = [...group.costs];
+      newCosts.splice(costIndex, 1);
+      return {
+        ...group,
+        costs: newCosts
+      };
+    }));
+  };
+
+  const updateCostField = (groupIndex, costIndex, field, value, isEdit = false) => {
+    const setFn = isEdit ? setGroupedEditCosts : setGroupedCourtCosts;
+    setFn(prev => prev.map((group, idx) => {
+      if (idx !== groupIndex) return group;
+      return {
+        ...group,
+        costs: group.costs.map((c, cIdx) => {
+          if (cIdx !== costIndex) return c;
+          return { ...c, [field]: value };
+        })
+      };
+    }));
+  };
 
   // Handle Create Facility
   const handleCreateFacility = async (e) => {
@@ -190,21 +266,29 @@ export default function CourtsManagementPage() {
         courtName: courtNameInput
       });
 
-      const validCosts = courtCosts.filter(c => c.cost !== '' && c.cost !== null);
-      if (validCosts.length > 0) {
+      
+        const bulkData = [];
         const formatTime = (t) => t && t.length === 5 ? `${t}:00` : t;
-        const bulkData = validCosts.map(c => ({
-           startTime: formatTime(c.startTime),
-           endTime: formatTime(c.endTime),
-           durationMinutes: parseInt(c.durationMinutes),
-           cost: parseFloat(c.cost)
-        }));
-        await updateCourtAll(newCourt.courtId, bulkData);
-      }
+        groupedCourtCosts.forEach(group => {
+          group.costs.forEach(c => {
+            if (c.cost !== '' && c.cost !== null) {
+              bulkData.push({
+                 daysOfWeek: group.daysOfWeek,
+                 startTime: formatTime(c.startTime),
+                 endTime: formatTime(c.endTime),
+                 durationMinutes: parseInt(c.durationMinutes),
+                 cost: parseFloat(c.cost)
+              });
+            }
+          });
+        });
+        if (bulkData.length > 0) {
+          await updateCourtAll(newCourt.courtId, bulkData);
+        }
 
       setCourtNameInput('');
       setCourtSportId('');
-      setCourtCosts([{ id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }]);
+      setGroupedCourtCosts([]);
       setActiveTab('list');
     } catch (err) {
       const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
@@ -215,6 +299,7 @@ export default function CourtsManagementPage() {
   };
 
   // Open edit modal
+  // Open edit modal
   const openEditModal = async (court) => {
     setEditingCourt(court);
     setEditName(court.courtName);
@@ -222,24 +307,61 @@ export default function CourtsManagementPage() {
     setEditStatusId(court.statusId);
     setEditIsActive(court.isActive);
     setEditError('');
-    setEditCosts([]);
+    setGroupedEditCosts([]);
 
     try {
+      const hours = await fetchFacilityHours(court.facilityId);
       const costs = await fetchCourtCosts(court.courtId);
-      if (costs && costs.length > 0) {
-        setEditCosts(costs.map(c => ({
-          id: c.courtCostId || Date.now() + Math.random(),
-          startTime: c.startTime || '00:00:00',
-          endTime: c.endTime || '23:59:00',
-          durationMinutes: c.durationMinutes ? c.durationMinutes.toString() : '60',
-          cost: c.cost ? c.cost.toString() : ''
-        })));
-      } else {
-        setEditCosts([{ id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }]);
-      }
+      
+      const groups = {};
+      hours.forEach(h => {
+         const key = `${h.openTime}-${h.closeTime}`;
+         if (!groups[key]) groups[key] = { openTime: h.openTime, closeTime: h.closeTime, daysOfWeek: [], label: '' };
+         groups[key].daysOfWeek.push(h.dayOfWeek);
+      });
+
+      const parsedGroups = Object.values(groups).map((g, idx) => {
+         g.label = g.daysOfWeek.map(d => d === 8 ? 'CN' : `T${d}`).join(', ');
+         
+         const firstRepresentedDay = g.daysOfWeek.find(d => costs.some(c => c.dayOfWeek === d));
+         let groupCostsList = [];
+         if (firstRepresentedDay) {
+           groupCostsList = costs
+             .filter(c => c.dayOfWeek === firstRepresentedDay)
+             .map(c => ({
+               id: c.courtCostId || Date.now() + Math.random() + idx * 100,
+               startTime: c.startTime.substring(0, 5),
+               endTime: c.endTime.substring(0, 5),
+               durationMinutes: c.durationMinutes.toString(),
+               cost: c.cost.toString()
+             }));
+         }
+
+         if (groupCostsList.length === 0) {
+           groupCostsList = [{
+             id: Date.now() + Math.random() + idx * 100,
+             startTime: g.openTime.substring(0, 5),
+             endTime: g.closeTime.substring(0, 5),
+             durationMinutes: '60',
+             cost: ''
+           }];
+         }
+
+         return {
+            id: Date.now() + Math.random() + idx,
+            groupId: `${g.openTime}-${g.closeTime}-${g.daysOfWeek.join(',')}`,
+            daysOfWeek: g.daysOfWeek,
+            label: g.label,
+            openTime: g.openTime,
+            closeTime: g.closeTime,
+            costs: groupCostsList
+         };
+      });
+
+      setGroupedEditCosts(parsedGroups);
     } catch (e) {
       console.warn("Could not load court costs", e);
-      setEditCosts([{ id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }]);
+      setGroupedEditCosts([]);
     }
   };
 
@@ -253,20 +375,24 @@ export default function CourtsManagementPage() {
     }
     setIsSavingEdit(true);
     try {
-      const validCosts = editCosts.filter(c => c.cost !== '' && c.cost !== null);
-      if (validCosts.length > 0) {
-        const formatTime = (t) => t && t.length === 5 ? `${t}:00` : t;
-        const bulkData = validCosts.map(c => ({
-          startTime: formatTime(c.startTime),
-          endTime: formatTime(c.endTime),
-          durationMinutes: parseInt(c.durationMinutes),
-          cost: parseFloat(c.cost),
-          isActive: true
-        }));
-        await updateCourtAll(editingCourt.courtId, bulkData);
-      } else {
-        await updateCourtAll(editingCourt.courtId, []); // Xóa tất cả nếu rỗng
-      }
+      const bulkData = [];
+      const formatTime = (t) => t && t.length === 5 ? `${t}:00` : t;
+      
+      groupedEditCosts.forEach(group => {
+        group.costs.forEach(c => {
+          if (c.cost !== '' && c.cost !== null) {
+            bulkData.push({
+               daysOfWeek: group.daysOfWeek,
+               startTime: formatTime(c.startTime),
+               endTime: formatTime(c.endTime),
+               durationMinutes: parseInt(c.durationMinutes),
+               cost: parseFloat(c.cost)
+            });
+          }
+        });
+      });
+
+      await updateCourtAll(editingCourt.courtId, bulkData);
 
       await updateCourt(editingCourt.courtId, {
         courtName: editName,
@@ -276,6 +402,7 @@ export default function CourtsManagementPage() {
       });
 
       setEditingCourt(null);
+      refetchCourts();
     } catch (err) {
       const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
       setEditError(backendMessage || 'Lỗi khi lưu thay đổi sân.');
@@ -655,82 +782,93 @@ export default function CourtsManagementPage() {
                 </select>
               </div>
 
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label">
-                    Bảng giá theo khung giờ <span className="text-red-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCourtCosts([...courtCosts, { id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }]);
-                    }}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Thêm khung giờ
-                  </button>
-                </div>
+              <div className="mb-4 space-y-6">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label">
+                  Bảng giá theo khung giờ hoạt động <span className="text-red-500">*</span>
+                </label>
                 
-                <div className="space-y-3">
-                  {courtCosts.map((c, index) => (
-                    <div key={c.id} className="p-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-border-dark/60 rounded-xl relative group">
-                      {courtCosts.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCosts = [...courtCosts];
-                            newCosts.splice(index, 1);
-                            setCourtCosts(newCosts);
-                          }}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all cursor-pointer z-10"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giờ bắt đầu</label>
-                          <input
-                            type="time" required value={c.startTime}
-                            onChange={(e) => { const newCosts = [...courtCosts]; newCosts[index].startTime = e.target.value; setCourtCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giờ kết thúc</label>
-                          <input
-                            type="time" required value={c.endTime}
-                            onChange={(e) => { const newCosts = [...courtCosts]; newCosts[index].endTime = e.target.value; setCourtCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
+                {groupedCourtCosts.map((group, groupIdx) => (
+                  <div key={group.id} className="p-4 bg-gray-50/50 dark:bg-white/5 border border-gray-200 dark:border-border-dark/60 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-200/65 dark:border-border-dark/40 pb-2">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-gray-900 dark:text-white font-display">
+                          Nhóm ngày: {group.label}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-semibold font-label">
+                          Giờ hoạt động: {group.openTime.substring(0, 5)} - {group.closeTime.substring(0, 5)}
+                        </span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Block (phút)</label>
-                          <select
-                            required value={c.durationMinutes}
-                            onChange={(e) => { const newCosts = [...courtCosts]; newCosts[index].durationMinutes = e.target.value; setCourtCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs"
-                          >
-                            <option value="30">30</option>
-                            <option value="60">60</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giá tiền (VNĐ)</label>
-                          <input
-                            type="number" required min="0" placeholder="VD: 100000" value={c.cost}
-                            onChange={(e) => { const newCosts = [...courtCosts]; newCosts[index].cost = e.target.value; setCourtCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addCostRow(groupIdx, false)}
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark px-2.5 py-1.5 rounded-lg shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Thêm khung giờ
+                      </button>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="space-y-3">
+                      {group.costs.map((c, costIdx) => (
+                        <div key={c.id} className="p-3 bg-white dark:bg-card-dark border border-gray-100 dark:border-border-dark/30 rounded-xl relative group">
+                          {group.costs.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeCostRow(groupIdx, costIdx, false)}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all cursor-pointer z-10"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giờ bắt đầu</label>
+                              <input
+                                type="time" required value={c.startTime}
+                                min={group.openTime.substring(0, 5)}
+                                max={group.closeTime.substring(0, 5)}
+                                onChange={(e) => updateCostField(groupIdx, costIdx, 'startTime', e.target.value, false)}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giờ kết thúc</label>
+                              <input
+                                type="time" required value={c.endTime}
+                                min={group.openTime.substring(0, 5)}
+                                max={group.closeTime.substring(0, 5)}
+                                onChange={(e) => updateCostField(groupIdx, costIdx, 'endTime', e.target.value, false)}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Block (phút)</label>
+                              <select
+                                required value={c.durationMinutes}
+                                onChange={(e) => updateCostField(groupIdx, costIdx, 'durationMinutes', e.target.value, false)}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs"
+                              >
+                                <option value="30">30</option>
+                                <option value="60">60</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giá tiền (VNĐ)</label>
+                              <input
+                                type="number" required min="0" placeholder="VD: 100000" value={c.cost}
+                                onChange={(e) => updateCostField(groupIdx, costIdx, 'cost', e.target.value, false)}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
@@ -976,78 +1114,91 @@ export default function CourtsManagementPage() {
                 </select>
               </div>
 
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label">
-                    Bảng giá theo khung giờ
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditCosts([...editCosts, { id: Date.now(), startTime: '00:00:00', endTime: '23:59:00', durationMinutes: '60', cost: '' }]);
-                    }}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Thêm khung giờ
-                  </button>
-                </div>
+              <div className="mb-4 space-y-4">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label">
+                  Bảng giá theo khung giờ hoạt động
+                </label>
                 
-                <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                  {editCosts.map((c, index) => (
-                    <div key={c.id} className="p-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-border-dark/60 rounded-xl relative group">
-                      {editCosts.length > 1 && (
+                <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {groupedEditCosts.map((group, groupIdx) => (
+                    <div key={group.id} className="p-3.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-border-dark/60 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between border-b border-gray-200/60 dark:border-border-dark/30 pb-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-gray-900 dark:text-white font-display">
+                            Nhóm ngày: {group.label}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-semibold font-label">
+                            Giờ hoạt động: {group.openTime.substring(0, 5)} - {group.closeTime.substring(0, 5)}
+                          </span>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            const newCosts = [...editCosts];
-                            newCosts.splice(index, 1);
-                            setEditCosts(newCosts);
-                          }}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all cursor-pointer z-10"
+                          onClick={() => addCostRow(groupIdx, true)}
+                          className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark px-2 py-1 rounded-lg shadow-sm"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <Plus className="w-3 h-3" /> Thêm
                         </button>
-                      )}
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giờ bắt đầu</label>
-                          <input
-                            type="time" required value={c.startTime}
-                            onChange={(e) => { const newCosts = [...editCosts]; newCosts[index].startTime = e.target.value; setEditCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giờ kết thúc</label>
-                          <input
-                            type="time" required value={c.endTime}
-                            onChange={(e) => { const newCosts = [...editCosts]; newCosts[index].endTime = e.target.value; setEditCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Block (phút)</label>
-                          <select
-                            required value={c.durationMinutes}
-                            onChange={(e) => { const newCosts = [...editCosts]; newCosts[index].durationMinutes = e.target.value; setEditCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs"
-                          >
-                            <option value="30">30</option>
-                            <option value="60">60</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Giá tiền (VNĐ)</label>
-                          <input
-                            type="number" required min="0" placeholder="VD: 100000" value={c.cost}
-                            onChange={(e) => { const newCosts = [...editCosts]; newCosts[index].cost = e.target.value; setEditCosts(newCosts); }}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
+
+                      <div className="space-y-3">
+                        {group.costs.map((c, costIdx) => (
+                          <div key={c.id} className="p-3 bg-white dark:bg-card-dark border border-gray-150 dark:border-border-dark/30 rounded-xl relative group">
+                            {group.costs.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeCostRow(groupIdx, costIdx, true)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-all cursor-pointer z-10"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giờ bắt đầu</label>
+                                <input
+                                  type="time" required value={c.startTime}
+                                  min={group.openTime.substring(0, 5)}
+                                  max={group.closeTime.substring(0, 5)}
+                                  onChange={(e) => updateCostField(groupIdx, costIdx, 'startTime', e.target.value, true)}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giờ kết thúc</label>
+                                <input
+                                  type="time" required value={c.endTime}
+                                  min={group.openTime.substring(0, 5)}
+                                  max={group.closeTime.substring(0, 5)}
+                                  onChange={(e) => updateCostField(groupIdx, costIdx, 'endTime', e.target.value, true)}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Block (phút)</label>
+                                <select
+                                  required value={c.durationMinutes}
+                                  onChange={(e) => updateCostField(groupIdx, costIdx, 'durationMinutes', e.target.value, true)}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs"
+                                >
+                                  <option value="30">30</option>
+                                  <option value="60">60</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-1">Giá tiền (VNĐ)</label>
+                                <input
+                                  type="number" required min="0" placeholder="VD: 100000" value={c.cost}
+                                  onChange={(e) => updateCostField(groupIdx, costIdx, 'cost', e.target.value, true)}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}

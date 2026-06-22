@@ -29,10 +29,11 @@ public class CourtCostRepository : GenericRepository<CourtCost>
     /// <summary>
     /// Lấy các CourtCost active có overlap với khung giờ [startTime, endTime).
     /// </summary>
-    public async Task<List<CourtCost>> GetCostsForTimeRangeAsync(int courtId, TimeOnly startTime, TimeOnly endTime)
+    public async Task<List<CourtCost>> GetCostsForTimeRangeAsync(int courtId, int dayOfWeek, TimeOnly startTime, TimeOnly endTime)
     {
         return await _context.CourtCosts
             .Where(cc => cc.CourtId == courtId
+                && cc.DayOfWeek == dayOfWeek
                 && cc.IsActive
                 && cc.StartTime < endTime
                 && cc.EndTime > startTime)
@@ -43,10 +44,11 @@ public class CourtCostRepository : GenericRepository<CourtCost>
     /// <summary>
     /// Kiểm tra xem khung giờ mới có bị overlap với CourtCost khác trên cùng court không.
     /// </summary>
-    public async Task<bool> HasOverlapAsync(int courtId, TimeOnly startTime, TimeOnly endTime, int? excludeCourtCostId = null)
+    public async Task<bool> HasOverlapAsync(int courtId, int dayOfWeek, TimeOnly startTime, TimeOnly endTime, int? excludeCourtCostId = null)
     {
         var query = _context.CourtCosts
             .Where(cc => cc.CourtId == courtId
+                && cc.DayOfWeek == dayOfWeek
                 && cc.IsActive
                 && cc.StartTime < endTime
                 && cc.EndTime > startTime);

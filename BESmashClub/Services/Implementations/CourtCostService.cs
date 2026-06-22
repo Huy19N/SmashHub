@@ -31,13 +31,14 @@ public class CourtCostService : ICourtCostService
             throw new InvalidOperationException("Giờ bắt đầu phải trước giờ kết thúc.");
 
         // Check overlap with existing CourtCosts on same court
-        if (await _unitOfWork.CourtCosts.HasOverlapAsync(request.CourtId, request.StartTime, request.EndTime))
+        if (await _unitOfWork.CourtCosts.HasOverlapAsync(request.CourtId, request.DayOfWeek, request.StartTime, request.EndTime))
             throw new InvalidOperationException("Khung giờ này bị trùng với bảng giá đã có.");
 
         var courtCost = new CourtCost
         {
             FacilityId = court.FacilityId,
             CourtId = request.CourtId,
+            DayOfWeek = request.DayOfWeek,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             DurationMinutes = request.DurationMinutes,
@@ -75,7 +76,7 @@ public class CourtCostService : ICourtCostService
         // Check overlap if time changed
         if (request.StartTime.HasValue || request.EndTime.HasValue)
         {
-            if (await _unitOfWork.CourtCosts.HasOverlapAsync(courtCost.CourtId, newStart, newEnd, courtCostId))
+            if (await _unitOfWork.CourtCosts.HasOverlapAsync(courtCost.CourtId, courtCost.DayOfWeek, newStart, newEnd, courtCostId))
                 throw new InvalidOperationException("Khung giờ này bị trùng với bảng giá đã có.");
         }
 
@@ -120,23 +121,6 @@ public class CourtCostService : ICourtCostService
         if (requests == null || !requests.Any())
             throw new InvalidOperationException("Danh sách bảng giá không được trống.");
 
-        // Validate individual items
-        foreach (var req in requests)
-        {
-            if (req.StartTime >= req.EndTime)
-                throw new InvalidOperationException($"Khung giờ {req.StartTime} - {req.EndTime} không hợp lệ.");
-        }
-
-        // Sort requests
-        requests = requests.OrderBy(r => r.StartTime).ToList();
-
-        // Check for overlaps internally in the request
-        for (int i = 0; i < requests.Count - 1; i++)
-        {
-            if (requests[i].EndTime > requests[i + 1].StartTime)
-                throw new InvalidOperationException("Các khung giờ gửi lên bị trùng lặp với nhau.");
-        }
-
         var context = _unitOfWork.CourtCosts.GetContext();
         var hours = await context.Set<FacilityOperatingHour>()
             .Where(oh => oh.FacilityId == court.FacilityId)
@@ -145,20 +129,45 @@ public class CourtCostService : ICourtCostService
         if (!hours.Any())
             throw new InvalidOperationException("Bạn phải cấu hình Giờ hoạt động cho cơ sở trước khi cài đặt giá sân.");
 
-        var minOpenTime = hours.Min(h => h.OpenTime);
-        var maxCloseTime = hours.Max(h => h.CloseTime);
+        var newCosts = new List<CourtCost>();
 
-        // Validate full coverage
-        if (requests.First().StartTime > minOpenTime)
-            throw new InvalidOperationException($"Bảng giá phải bắt đầu từ {minOpenTime:HH:mm} (giờ mở cửa sớm nhất của cơ sở).");
-        
-        if (requests.Last().EndTime < maxCloseTime)
-            throw new InvalidOperationException($"Bảng giá phải kéo dài đến {maxCloseTime:HH:mm} (giờ đóng cửa muộn nhất của cơ sở).");
-
-        for (int i = 0; i < requests.Count - 1; i++)
+        foreach (var hour in hours)
         {
-            if (requests[i].EndTime < requests[i + 1].StartTime)
-                throw new InvalidOperationException($"Bảng giá bị hở ở khoảng {requests[i].EndTime:HH:mm} đến {requests[i + 1].StartTime:HH:mm}. Bạn phải cấu hình kín giờ.");
+            var dayOfWeek = hour.DayOfWeek;
+            
+            var dayRequests = requests
+                .Where(r => r.DaysOfWeek.Contains(dayOfWeek))
+                .OrderBy(r => r.StartTime)
+                .ToList();
+
+            if (!dayRequests.Any())
+                throw new InvalidOperationException($"Bạn chưa thiết lập bảng giá cho Thứ {dayOfWeek}.");
+
+            if (dayRequests.First().StartTime > hour.OpenTime)
+                throw new InvalidOperationException($"Bảng giá Thứ {dayOfWeek} phải bắt đầu từ {hour.OpenTime:HH:mm} (giờ mở cửa).");
+            
+            if (dayRequests.Last().EndTime < hour.CloseTime)
+                throw new InvalidOperationException($"Bảng giá Thứ {dayOfWeek} phải kéo dài đến {hour.CloseTime:HH:mm} (giờ đóng cửa).");
+
+            for (int i = 0; i < dayRequests.Count - 1; i++)
+            {
+                if (dayRequests[i].EndTime > dayRequests[i + 1].StartTime)
+                    throw new InvalidOperationException($"Các khung giờ Thứ {dayOfWeek} bị trùng lặp.");
+                if (dayRequests[i].EndTime < dayRequests[i + 1].StartTime)
+                    throw new InvalidOperationException($"Bảng giá Thứ {dayOfWeek} bị hở ở khoảng {dayRequests[i].EndTime:HH:mm} đến {dayRequests[i + 1].StartTime:HH:mm}. Bạn phải cấu hình kín giờ.");
+            }
+
+            newCosts.AddRange(dayRequests.Select(r => new CourtCost
+            {
+                FacilityId = court.FacilityId,
+                CourtId = courtId,
+                DayOfWeek = dayOfWeek,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+                DurationMinutes = r.DurationMinutes,
+                Cost = r.Cost,
+                IsActive = true
+            }));
         }
 
         // Delete old
@@ -166,17 +175,6 @@ public class CourtCostService : ICourtCostService
         context.Set<CourtCost>().RemoveRange(oldCosts);
 
         // Insert new
-        var newCosts = requests.Select(r => new CourtCost
-        {
-            FacilityId = court.FacilityId,
-            CourtId = courtId,
-            StartTime = r.StartTime,
-            EndTime = r.EndTime,
-            DurationMinutes = r.DurationMinutes,
-            Cost = r.Cost,
-            IsActive = true
-        }).ToList();
-
         await context.Set<CourtCost>().AddRangeAsync(newCosts);
         await context.SaveChangesAsync();
 
@@ -196,27 +194,27 @@ public class CourtCostService : ICourtCostService
         if (!hours.Any())
             throw new InvalidOperationException("Bạn phải cấu hình Giờ hoạt động cho cơ sở trước khi kích hoạt sân.");
 
-        var minOpenTime = hours.Min(h => h.OpenTime);
-        var maxCloseTime = hours.Max(h => h.CloseTime);
-
         var activeCosts = await context.Set<CourtCost>()
             .Where(cc => cc.CourtId == courtId && cc.IsActive)
-            .OrderBy(cc => cc.StartTime)
             .ToListAsync();
 
-        if (!activeCosts.Any())
-            throw new InvalidOperationException("Sân chưa có bảng giá nào. Vui lòng thiết lập bảng giá kín giờ hoạt động trước khi kích hoạt.");
-
-        if (activeCosts.First().StartTime > minOpenTime)
-            throw new InvalidOperationException($"Bảng giá của sân chưa bắt đầu từ {minOpenTime:HH:mm} (giờ mở cửa sớm nhất).");
-
-        if (activeCosts.Last().EndTime < maxCloseTime)
-            throw new InvalidOperationException($"Bảng giá của sân chưa kéo dài đến {maxCloseTime:HH:mm} (giờ đóng cửa muộn nhất).");
-
-        for (int i = 0; i < activeCosts.Count - 1; i++)
+        foreach (var hour in hours)
         {
-            if (activeCosts[i].EndTime < activeCosts[i + 1].StartTime)
-                throw new InvalidOperationException($"Bảng giá của sân bị hở ở khoảng {activeCosts[i].EndTime:HH:mm} đến {activeCosts[i + 1].StartTime:HH:mm}. Bạn phải thiết lập giá kín giờ.");
+            var dayCosts = activeCosts.Where(c => c.DayOfWeek == hour.DayOfWeek).OrderBy(c => c.StartTime).ToList();
+            if (!dayCosts.Any())
+                throw new InvalidOperationException($"Sân chưa có bảng giá cho Thứ {hour.DayOfWeek}.");
+
+            if (dayCosts.First().StartTime > hour.OpenTime)
+                throw new InvalidOperationException($"Bảng giá Thứ {hour.DayOfWeek} chưa bắt đầu từ {hour.OpenTime:HH:mm}.");
+
+            if (dayCosts.Last().EndTime < hour.CloseTime)
+                throw new InvalidOperationException($"Bảng giá Thứ {hour.DayOfWeek} chưa kéo dài đến {hour.CloseTime:HH:mm}.");
+
+            for (int i = 0; i < dayCosts.Count - 1; i++)
+            {
+                if (dayCosts[i].EndTime < dayCosts[i + 1].StartTime)
+                    throw new InvalidOperationException($"Bảng giá Thứ {hour.DayOfWeek} bị hở ở khoảng {dayCosts[i].EndTime:HH:mm} đến {dayCosts[i + 1].StartTime:HH:mm}. Bạn phải thiết lập giá kín giờ.");
+            }
         }
     }
 
@@ -230,6 +228,7 @@ public class CourtCostService : ICourtCostService
             FacilityId = cc.FacilityId,
             CourtId = cc.CourtId,
             CourtName = courtName,
+            DayOfWeek = cc.DayOfWeek,
             StartTime = cc.StartTime,
             EndTime = cc.EndTime,
             DurationMinutes = cc.DurationMinutes,

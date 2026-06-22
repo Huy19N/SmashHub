@@ -152,7 +152,10 @@ public class BookingService : IBookingService
         var startTime = TimeOnly.FromDateTime(bookingStart);
         var endTime = TimeOnly.FromDateTime(bookingEnd);
 
-        var courtCosts = await _unitOfWork.CourtCosts.GetCostsForTimeRangeAsync(courtId, startTime, endTime);
+        var sysDayOfWeek = (int)bookingStart.DayOfWeek;
+        var dbDayOfWeek = sysDayOfWeek == 0 ? 8 : sysDayOfWeek + 1;
+
+        var courtCosts = await _unitOfWork.CourtCosts.GetCostsForTimeRangeAsync(courtId, dbDayOfWeek, startTime, endTime);
 
         if (courtCosts.Count == 0)
             throw new InvalidOperationException("Không tìm thấy bảng giá cho khung giờ này. Vui lòng liên hệ chủ sân.");

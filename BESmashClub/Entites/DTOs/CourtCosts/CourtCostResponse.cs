@@ -6,6 +6,7 @@ public class CourtCostResponse
     public int FacilityId { get; set; }
     public int CourtId { get; set; }
     public string? CourtName { get; set; }
+    public int DayOfWeek { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int DurationMinutes { get; set; }
