@@ -252,13 +252,14 @@ public class ScheduleService : IScheduleService
 
         foreach (var p in participants)
         {
+            decimal extra = p.IsAttended ? extraFeePerPerson : 0;
             if (request.CustomAmounts != null && request.CustomAmounts.ContainsKey(p.UserId))
             {
-                p.CostToPay = request.CustomAmounts[p.UserId];
+                p.CostToPay = request.CustomAmounts[p.UserId] + extra;
             }
             else if (request.FixedAmountPerPerson.HasValue)
             {
-                p.CostToPay = request.FixedAmountPerPerson.Value;
+                p.CostToPay = request.FixedAmountPerPerson.Value + extra;
             }
             else
             {

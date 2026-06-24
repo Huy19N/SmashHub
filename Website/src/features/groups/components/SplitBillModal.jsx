@@ -4,13 +4,38 @@ import Button from '../../../components/ui/Button';
 import toast from 'react-hot-toast';
 import { calculateSplitBillAPI } from '../api/groups.api';
 
-export default function SplitBillModal({ isOpen, onClose, scheduleId, participants = [], onSuccess, isDarkMode = false }) {
+export default function SplitBillModal({ isOpen, onClose, scheduleId, participants = [], baseCourtCost = 0, onSuccess, isDarkMode = false }) {
   const [extraFee, setExtraFee] = useState('');
   const [extraFeeNote, setExtraFeeNote] = useState('');
   const [splitMode, setSplitMode] = useState('auto'); // auto, fixed, custom
   const [fixedAmount, setFixedAmount] = useState('');
   const [customAmounts, setCustomAmounts] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // --- Calculation for Warning ---
+  const fee = extraFee ? parseInt(extraFee, 10) : 0;
+  const attendedCount = participants.filter(p => p.isAttended).length;
+  const totalParticipants = participants.length;
+  const extraFeePerPerson = attendedCount > 0 ? fee / attendedCount : 0;
+  
+  let totalCollected = 0;
+  if (splitMode === 'fixed') {
+    const fixed = fixedAmount ? parseInt(fixedAmount, 10) : 0;
+    totalCollected = (fixed * totalParticipants) + (extraFeePerPerson * attendedCount); 
+  } else if (splitMode === 'custom') {
+    let customTotal = 0;
+    participants.forEach(p => {
+       const amount = customAmounts[p.userId] ? parseInt(customAmounts[p.userId], 10) : 0;
+       customTotal += amount;
+       if (p.isAttended) customTotal += extraFeePerPerson;
+    });
+    totalCollected = customTotal;
+  }
+  
+  const totalCost = baseCourtCost + fee;
+  const difference = totalCollected - totalCost;
+  const isWarningVisible = splitMode !== 'auto';
+  // -------------------------------
 
   if (!isOpen) return null;
 
@@ -163,6 +188,26 @@ export default function SplitBillModal({ isOpen, onClose, scheduleId, participan
                   {participants.length === 0 && (
                     <div className="text-sm text-gray-500 italic">Không có thành viên nào.</div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Warning block */}
+            {isWarningVisible && (
+              <div className={`p-4 rounded-xl border ${difference === 0 ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-white/5 dark:border-white/10 dark:text-gray-400' : difference > 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400' : 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'} font-label text-sm flex flex-col gap-1`}>
+                <div className="flex justify-between font-bold">
+                  <span>Tổng thu dự kiến:</span>
+                  <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCollected)}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Tổng chi (Tiền sân + Phụ phí):</span>
+                  <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}</span>
+                </div>
+                <div className="flex justify-between font-bold border-t border-current/20 pt-1 mt-1">
+                  <span>Trạng thái:</span>
+                  <span>
+                    {difference === 0 ? 'Đủ tiền' : difference > 0 ? `Dư ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(difference)}` : `Thiếu ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(difference))}`}
+                  </span>
                 </div>
               </div>
             )}

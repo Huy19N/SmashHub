@@ -8,7 +8,22 @@ import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
+    { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
   ]
 };
 
@@ -79,17 +94,25 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
         connection.on('ReceiveSignal', async (fromConnId, fromUserId, signalDataRaw) => {
           // Fetch username if we don't know who this is
           if (!remoteStreams[fromConnId]?.userName && fromUserId && fromUserId !== '00000000-0000-0000-0000-000000000000') {
-            let userName = "Đồng đội";
-            try {
-              const res = await getAllUserByIdAPI(fromUserId);
-              userName = res?.data?.fullName || res?.fullName || userName;
-            } catch (e) {
-              console.error('Lỗi khi lấy thông tin người dùng:', e);
-            }
+            // Đánh dấu là đang tải để tránh gọi API nhiều lần cho cùng một user
             setRemoteStreams(prev => ({
               ...prev,
-              [fromConnId]: { ...(prev[fromConnId] || {}), userName }
+              [fromConnId]: { ...(prev[fromConnId] || {}), userName: "Đang tải..." }
             }));
+            
+            getAllUserByIdAPI(fromUserId).then(res => {
+              const userName = res?.data?.fullName || res?.fullName || "Đồng đội";
+              setRemoteStreams(prev => ({
+                ...prev,
+                [fromConnId]: { ...(prev[fromConnId] || {}), userName }
+              }));
+            }).catch(e => {
+              console.error('Lỗi khi lấy thông tin người dùng:', e);
+              setRemoteStreams(prev => ({
+                ...prev,
+                [fromConnId]: { ...(prev[fromConnId] || {}), userName: "Đồng đội" }
+              }));
+            });
           }
 
           const signal = JSON.parse(signalDataRaw);
@@ -306,6 +329,9 @@ const VideoPlayer = ({ stream }) => {
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(e => {
+        console.error("Autoplay prevented by browser:", e);
+      });
     }
   }, [stream]);
 

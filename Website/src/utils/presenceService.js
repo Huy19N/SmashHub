@@ -60,6 +60,8 @@ class PresenceService {
     // Suppress warnings from other team hub events
     this.connection.on('CallStarted', () => {});
     this.connection.on('callstarted', () => {});
+    this.connection.on('CallEnded', () => {});
+    this.connection.on('callended', () => {});
     this.connection.on('UserJoinedCall', () => {});
     this.connection.on('UserLeftCall', () => {});
     this.connection.on('ReceiveSignal', () => {});
