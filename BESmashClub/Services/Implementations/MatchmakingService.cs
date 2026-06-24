@@ -226,6 +226,7 @@ public class MatchmakingService : IMatchmakingService
             .Include(m => m.MatchAcceptances).ThenInclude(ma => ma.ChallengerTeam)
             .Include(m => m.MatchAcceptances).ThenInclude(ma => ma.Status)
             .Where(m => m.HostTeamId == teamId || context.Set<MatchAcceptance>().Any(ma => ma.ChallengeId == m.ChallengeId && ma.ChallengerTeamId == teamId))
+            .AsSplitQuery()
             .ToListAsync();
             
         var responses = new List<MatchChallengeResponse>();

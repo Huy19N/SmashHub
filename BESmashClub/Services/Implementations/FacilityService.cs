@@ -39,7 +39,7 @@ public class FacilityService : IFacilityService
     public async Task<List<FacilityResponse>> GetAllFacilitiesAsync()
     {
         var facilities = await _unitOfWork.Facilities.GetAllWithDetailsAsync();
-        return facilities.Select(MapToResponse).ToList();
+        return facilities.Where(f => f.StatusId != 3).Select(MapToResponse).ToList();
     }
 
     public async Task<List<FacilityResponse>> GetFacilitiesByOwnerAsync(Guid userId)
@@ -322,6 +322,7 @@ public class FacilityService : IFacilityService
             .Include(f => f.Courts).ThenInclude(c => c.Sport)
             .Include(f => f.Courts).ThenInclude(c => c.CourtCosts)
             .Include(f => f.FacilityOperatingHours)
+            .AsSplitQuery()
             .AsQueryable();
 
         // 1. Filter by SportId
@@ -343,11 +344,11 @@ public class FacilityService : IFacilityService
         // 3. Filter by Location Area
         if (!string.IsNullOrWhiteSpace(request.City))
         {
-            query = query.Where(f => f.City.Contains(request.City));
+            query = query.Where(f => f.City == request.City);
         }
         if (!string.IsNullOrWhiteSpace(request.District))
         {
-            query = query.Where(f => f.District.Contains(request.District));
+            query = query.Where(f => f.District == request.District);
         }
 
         // 4. Filter by Date and Time slots

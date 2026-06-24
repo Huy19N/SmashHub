@@ -3,6 +3,7 @@ import { Phone, Video, Mic, MicOff, VideoOff, PhoneOff, Users } from 'lucide-rea
 import * as signalR from '@microsoft/signalr';
 import { getAccessToken } from '../../../config/axios';
 import toast from 'react-hot-toast';
+import { getAllUserByIdAPI } from '../../profiles/api/profiles.api';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -28,7 +29,13 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
     const startCall = async () => {
       try {
         // 1. Get local media
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (e) {
+          console.warn('Không tìm thấy camera, thử chỉ dùng micro:', e);
+          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          setIsVideoMuted(true);
+        }
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
@@ -41,6 +48,24 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
 
         // 3. Register Events
         connection.on('UserJoinedCall', async (connId, userId) => {
+          // Fetch user name
+          let userName = "Đồng đội";
+          try {
+            const res = await getAllUserByIdAPI(userId);
+            userName = res?.data?.fullName || res?.fullName || userName;
+          } catch (e) {
+            console.error('Lỗi khi lấy thông tin người dùng:', e);
+          }
+
+          setRemoteStreams(prev => {
+             // If stream is already added (by ontrack), update its name.
+             // If not, we store the name first, and ontrack will add the stream later.
+             return {
+               ...prev,
+               [connId]: { ...(prev[connId] || {}), userName }
+             };
+          });
+
           // A new user joined, we are already in the room. We should initiate the offer.
           const peer = createPeer(connId, stream, connection);
           peersRef.current[connId] = peer;
@@ -92,7 +117,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
       } catch (err) {
         console.error('Lỗi khởi tạo video call:', err);
         toast.error('Không thể truy cập camera/micro hoặc kết nối thất bại.');
-        onClose();
+        onClose(true);
       }
     };
 
@@ -130,11 +155,10 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
       }
     };
 
-    // Handle remote stream
     peer.ontrack = (event) => {
       setRemoteStreams(prev => ({
         ...prev,
-        [connId]: event.streams[0]
+        [connId]: { ...(prev[connId] || {}), stream: event.streams[0] }
       }));
     };
 
@@ -200,11 +224,11 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
         </div>
 
         {/* Remote Videos */}
-        {Object.entries(remoteStreams).map(([connId, stream]) => (
+        {Object.entries(remoteStreams).map(([connId, remoteData]) => (
           <div key={connId} className="relative w-full max-w-2xl aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-xl border border-white/10 flex items-center justify-center">
-            <VideoPlayer stream={stream} />
+            {remoteData.stream ? <VideoPlayer stream={remoteData.stream} /> : <div className="text-gray-400">Đang kết nối...</div>}
             <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1.5 rounded-lg text-white text-sm backdrop-blur-sm">
-              Đồng đội
+              {remoteData.userName || "Đồng đội"}
             </div>
           </div>
         ))}
@@ -221,7 +245,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
         </button>
 
         <button
-          onClick={onClose}
+          onClick={() => onClose(false)}
           className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg shadow-red-500/20"
         >
           <PhoneOff className="h-7 w-7 text-white" />

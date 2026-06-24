@@ -164,7 +164,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             senderId: callerId,
             senderName: callerName,
             content: "Đã bắt đầu phòng gọi video nhóm.",
-            messageType: 99,
+            messageType: 4,
             roomId: roomId,
             sentAt: new Date().toISOString(),
             isEnded: false
@@ -181,7 +181,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       if (activeCallRef.current && activeCallRef.current.connId === connId) {
         const endedRoomId = activeCallRef.current.roomId;
         setActiveCallState(null);
-        setMessages(prev => prev.map(m => m.messageId === `call_${endedRoomId}` ? { ...m, isEnded: true } : m));
+        setMessages(prev => prev.map(m => m.roomId === endedRoomId ? { ...m, isEnded: true } : m));
       }
     });
 
@@ -389,7 +389,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 toast.error("Phòng đang mở bạn không thể mở phòng mới!");
                 return;
               }
-              const rId = `team_${teamId}_${Date.now()}`;
+              const rId = crypto.randomUUID();
               const myConnId = connectionRef.current?.connectionId;
               setActiveCallState({ roomId: rId, callerId: currentUserId, connId: myConnId });
               setVideoCallRoom({ roomId: rId, isInitiator: true });
@@ -398,7 +398,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 senderId: currentUserId,
                 senderName: "Bạn",
                 content: "Đã bắt đầu phòng gọi video nhóm.",
-                messageType: 99,
+                messageType: 4,
                 roomId: rId,
                 sentAt: new Date().toISOString(),
                 isEnded: false
@@ -492,7 +492,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                           </div>
                         ) : null}
 
-                        {msg.messageType === 99 ? (
+                        {msg.messageType === 4 ? (
                           <div className="flex flex-col gap-2 min-w-[180px] sm:min-w-[200px]">
                             <div className="flex items-center gap-2 mb-1">
                               <div className="h-8 w-8 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center">
@@ -525,7 +525,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                       </div>
 
                       {/* Delete button (only for own messages) */}
-                      {isMine(msg) && msg.messageType !== 99 && (
+                      {isMine(msg) && msg.messageType !== 4 && (
                         <button
                           onClick={() => handleDeleteMessage(msg.messageId)}
                           className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/msg:opacity-100 transition-all duration-200 p-1 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:scale-110 cursor-pointer"
@@ -602,10 +602,14 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           teamId={teamId}
           roomId={videoCallRoom.roomId}
           isInitiator={videoCallRoom.isInitiator}
-          onClose={() => {
+          onClose={(error = false) => {
             if (videoCallRoom.isInitiator) {
               setActiveCallState(null);
-              setMessages(prev => prev.map(m => m.messageId === `call_${videoCallRoom.roomId}` ? { ...m, isEnded: true } : m));
+              if (error) {
+                setMessages(prev => prev.filter(m => m.roomId !== videoCallRoom.roomId));
+              } else {
+                setMessages(prev => prev.map(m => m.roomId === videoCallRoom.roomId ? { ...m, isEnded: true } : m));
+              }
             }
             setVideoCallRoom(null);
           }}

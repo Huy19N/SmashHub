@@ -25,5 +25,9 @@ namespace Entites.DTOs.Teams
         public string? MediaUrl { get; set; }
 
         public DateTime? SentAt { get; set; }
+
+        public string? RoomId { get; set; }
+
+        public bool IsEnded { get; set; }
     }
 }
