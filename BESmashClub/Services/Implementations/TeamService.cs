@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Repositories;
 using Services.Hubs;
 using Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Services.Implementations;
 
