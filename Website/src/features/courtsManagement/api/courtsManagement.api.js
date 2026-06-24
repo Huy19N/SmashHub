@@ -12,6 +12,12 @@ export const createFacilityAPI = async (facilityData) => {
   return response.data;
 };
 
+/** Cập nhật thông tin cơ sở (PUT /api/facilities/{facilityId}) */
+export const updateFacilityAPI = async (facilityId, facilityData) => {
+  const response = await api.put(`/facilities/${facilityId}`, facilityData);
+  return response.data;
+};
+
 /** Cập nhật giờ hoạt động của cơ sở (PUT /api/facilities/{facilityId}/operating-hours) */
 export const updateFacilityOperatingHoursAPI = async (facilityId, hoursData) => {
   const response = await api.put(`/facilities/${facilityId}/operating-hours`, hoursData);

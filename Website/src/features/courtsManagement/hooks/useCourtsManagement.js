@@ -14,7 +14,8 @@ import {
   deleteCourtCostAPI,
   updateFacilityOperatingHoursAPI,
   getFacilityOperatingHoursAPI,
-  updateCourtAllAPI
+  updateCourtAllAPI,
+  updateFacilityAPI
 } from '../api/courtsManagement.api';
 
 export const useCourtsManagement = () => {
@@ -121,6 +122,22 @@ export const useCourtsManagement = () => {
       console.error("Lỗi từ backend:", err.response?.data || err);
       const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
       setError(backendMessage || 'Lỗi khi tạo cơ sở mới.');
+      throw err;
+    }
+  };
+
+  // Update facility
+  const updateFacility = async (facilityId, facilityData) => {
+    setError(null);
+    try {
+      const res = await updateFacilityAPI(facilityId, facilityData);
+      const updated = res?.data ?? res;
+      setFacilities((prev) => prev.map((f) => (f.facilityId === facilityId ? { ...f, ...updated } : f)));
+      return updated;
+    } catch (err) {
+      console.error("Lỗi từ backend khi cập nhật cơ sở:", err.response?.data || err);
+      const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
+      setError(backendMessage || 'Lỗi khi cập nhật cơ sở.');
       throw err;
     }
   };
@@ -263,7 +280,8 @@ export const useCourtsManagement = () => {
     updateCourtCost,
     updateCourtAll,
     deleteCourtCost,
-    updateFacilityHours
+    updateFacilityHours,
+    updateFacility
   };
 };
 export default useCourtsManagement;
