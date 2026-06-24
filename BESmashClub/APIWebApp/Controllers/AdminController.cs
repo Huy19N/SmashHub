@@ -21,12 +21,14 @@ public class AdminController : ControllerBase
     private readonly SmashClubContext _context;
     private readonly IFacilityService _facilityService;
     private readonly ISystemSettingService _systemSettingService;
+    private readonly INotificationService _notificationService;
 
-    public AdminController(SmashClubContext context, IFacilityService facilityService, ISystemSettingService systemSettingService)
+    public AdminController(SmashClubContext context, IFacilityService facilityService, ISystemSettingService systemSettingService, INotificationService notificationService)
     {
         _context = context;
         _facilityService = facilityService;
         _systemSettingService = systemSettingService;
+        _notificationService = notificationService;
     }
 
     #region 1. Statistics & Dashboard
@@ -183,6 +185,7 @@ public class AdminController : ControllerBase
                 f.Address,
                 f.PhoneNumber,
                 f.CreatedAt,
+                f.StatusId,
                 OwnerName = f.Owner.FullName,
                 OwnerEmail = f.Owner.Email
             })
@@ -197,6 +200,19 @@ public class AdminController : ControllerBase
         try
         {
             await _facilityService.ApproveRejectFacilityAsync(facilityId, 2); // 2: Active/Approved
+            
+            var facility = await _context.Facilities.FindAsync(facilityId);
+            if (facility != null)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    facility.OwnerId,
+                    "Cơ sở của bạn đã được phê duyệt",
+                    $"Cơ sở thể thao '{facility.Name}' của bạn đã được duyệt và hoạt động trên hệ thống.",
+                    "FacilityApproved",
+                    null
+                );
+            }
+            
             return Ok(ApiResponse.SuccessResponse("Phê duyệt cơ sở thành công."));
         }
         catch (KeyNotFoundException ex)
@@ -211,11 +227,46 @@ public class AdminController : ControllerBase
         try
         {
             await _facilityService.ApproveRejectFacilityAsync(facilityId, 3); // 3: Rejected
+            
+            var facility = await _context.Facilities.FindAsync(facilityId);
+            if (facility != null)
+            {
+                facility.IsDelete = true;
+                await _context.SaveChangesAsync();
+                
+                await _notificationService.CreateNotificationAsync(
+                    facility.OwnerId,
+                    "Yêu cầu đăng ký cơ sở bị từ chối",
+                    $"Cơ sở '{facility.Name}' của bạn đã bị từ chối đăng ký.",
+                    "FacilityRejected",
+                    null
+                );
+            }
+            
             return Ok(ApiResponse.SuccessResponse("Từ chối cơ sở thành công."));
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpDelete("facilities/{facilityId:int}")]
+    public async Task<IActionResult> DeleteFacility(int facilityId)
+    {
+        try
+        {
+            var facility = await _context.Facilities.FindAsync(facilityId);
+            if (facility == null)
+                return NotFound(ApiResponse.ErrorResponse("Không tìm thấy cơ sở."));
+            
+            facility.IsDelete = true;
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse.SuccessResponse("Xóa cơ sở thành công."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
     }
 

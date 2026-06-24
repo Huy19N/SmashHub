@@ -11,6 +11,7 @@ import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { useTheme } from '../../../contexts/ThemeContext';
 import useCourtsManagement from '../hooks/useCourtsManagement';
 import Button from '../../../components/ui/Button';
+import toast from 'react-hot-toast';
 
 // Fix for default Leaflet icon not showing in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -229,6 +230,8 @@ export default function CourtsManagementPage() {
       if (hoursData.length > 0) {
         await updateFacilityHours(newFacility.facilityId, hoursData);
       }
+
+      toast.success('Đăng ký cơ sở thành công. Đơn đăng ký của bạn đang chờ Admin phê duyệt.');
 
       setFacName('');
       setFacCity('');
@@ -470,16 +473,18 @@ export default function CourtsManagementPage() {
               >
                 Danh sách sân
               </button>
-              <button
-                onClick={() => setActiveTab('add-court')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
-                  activeTab === 'add-court'
-                    ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                + Thêm sân mới
-              </button>
+              {activeFacility?.statusId !== 1 && (
+                <button
+                  onClick={() => setActiveTab('add-court')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
+                    activeTab === 'add-court'
+                      ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  + Thêm sân mới
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -908,7 +913,7 @@ export default function CourtsManagementPage() {
                   >
                     {facilities.map((fac) => (
                       <option key={fac.facilityId} value={fac.facilityId}>
-                        {fac.name}
+                        {fac.name} {fac.statusId === 1 ? '(Chờ duyệt)' : ''}
                       </option>
                     ))}
                   </select>
@@ -934,6 +939,20 @@ export default function CourtsManagementPage() {
               </div>
             )}
 
+            {/* Pending Approval Banner */}
+            {activeFacility?.statusId === 1 && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl text-sm text-amber-700 dark:text-amber-400 font-label flex items-start gap-3 max-w-xl mx-auto mb-6">
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-500" />
+                <div>
+                  <h5 className="font-bold text-sm">Cơ sở đang chờ phê duyệt</h5>
+                  <p className="text-xs mt-1 text-amber-600 dark:text-amber-400/80 leading-relaxed">
+                    Cơ sở "{activeFacility.name}" của bạn đang được quản trị viên xem xét. 
+                    Bạn sẽ có thể tạo sân con và bắt đầu vận hành sau khi cơ sở được phê duyệt thành công.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* List of Courts */}
             {isLoadingCourts ? (
               <div className="flex flex-col items-center justify-center py-20">
@@ -944,17 +963,25 @@ export default function CourtsManagementPage() {
               <div className="text-center py-16 bg-white dark:bg-card-dark/20 rounded-3xl border-2 border-dashed border-gray-200 dark:border-border-dark/40 p-8">
                 <Sparkles className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3 animate-pulse" />
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white font-display">Cơ sở chưa có sân con nào</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-label mt-1 max-w-sm mx-auto leading-relaxed">
-                  Bấm nút bên dưới để bắt đầu thêm các sân con (sân cầu lông số 1, sân bóng bàn A, v.v...) vào điểm chơi này.
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={() => setActiveTab('add-court')}
-                  className="mt-4 py-2.5 text-xs"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Thêm sân con ngay
-                </Button>
+                {activeFacility?.statusId === 1 ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-label mt-2 max-w-sm mx-auto leading-relaxed">
+                    Cơ sở đang chờ phê duyệt. Bạn sẽ có thể bắt đầu tạo sân con sau khi cơ sở được phê duyệt thành công.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-label mt-1 max-w-sm mx-auto leading-relaxed">
+                      Bấm nút bên dưới để bắt đầu thêm các sân con (sân cầu lông số 1, sân bóng bàn A, v.v...) vào điểm chơi này.
+                    </p>
+                    <Button
+                      variant="primary"
+                      onClick={() => setActiveTab('add-court')}
+                      className="mt-4 py-2.5 text-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Thêm sân con ngay
+                    </Button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">

@@ -111,7 +111,65 @@ export const useAdminFacilities = () => {
     }
   }, []);
 
-  return { facilities, isLoading, fetchFacilities };
+  const approveFacility = async (facilityId) => {
+    try {
+      const response = await adminApi.approveFacilityAPI(facilityId);
+      if (response.success) {
+        toast.success(response.message || 'Phê duyệt cơ sở thành công.');
+        setFacilities(prev => prev.map(f => 
+          f.facilityId === facilityId ? { ...f, statusId: 2, statusName: 'Đã duyệt' } : f
+        ));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi phê duyệt cơ sở.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi phê duyệt.');
+      return false;
+    }
+  };
+
+  const rejectFacility = async (facilityId) => {
+    try {
+      const response = await adminApi.rejectFacilityAPI(facilityId);
+      if (response.success) {
+        toast.success(response.message || 'Từ chối cơ sở thành công.');
+        setFacilities(prev => prev.map(f => 
+          f.facilityId === facilityId ? { ...f, statusId: 3, statusName: 'Đã từ chối' } : f
+        ));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi từ chối cơ sở.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi từ chối.');
+      return false;
+    }
+  };
+
+  const deleteFacility = async (facilityId) => {
+    try {
+      const response = await adminApi.deleteFacilityAPI(facilityId);
+      if (response.success) {
+        toast.success(response.message || 'Xóa cơ sở thành công.');
+        setFacilities(prev => prev.filter(f => f.facilityId !== facilityId));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi xóa cơ sở.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi xóa.');
+      return false;
+    }
+  };
+
+  return { facilities, isLoading, fetchFacilities, approveFacility, rejectFacility, deleteFacility };
 };
 
 export const useAdminPayouts = () => {

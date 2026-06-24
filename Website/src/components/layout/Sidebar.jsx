@@ -12,7 +12,8 @@ import {
   Settings,
   Moon,
   Sun,
-  LogOut
+  LogOut,
+  Percent
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
@@ -42,6 +43,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'users', label: 'Quản lý User', shortLabel: 'User', icon: Users, path: '/admin/users' },
     { id: 'facilities', label: 'Quản lý Chủ sân', shortLabel: 'Chủ sân', icon: CalendarDays, path: '/admin/facilities' },
     { id: 'payouts', label: 'Yêu cầu rút tiền', shortLabel: 'Rút tiền', icon: DollarSign, path: '/admin/payouts' },
+    { id: 'revenue', label: 'Quản lý doanh thu', shortLabel: 'Doanh thu', icon: Percent, path: '/admin/revenue' },
     { id: 'system-settings', label: 'Cài đặt hệ thống', shortLabel: 'Cài đặt', icon: Settings, path: '/admin/system-settings' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/admin/profile' },
   ] : isFacilityOwner ? [
