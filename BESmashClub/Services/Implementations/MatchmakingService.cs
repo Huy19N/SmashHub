@@ -30,12 +30,12 @@ public class MatchmakingService : IMatchmakingService
         if (booking == null)
             throw new InvalidOperationException("Lịch chơi chưa được liên kết với lượt đặt sân hợp lệ.");
 
-        // Check if there is already an active challenge for this schedule
+        // Check if there is already an active or matched challenge for this schedule
         var context = _unitOfWork.MatchChallenges.GetContext();
         var existing = await context.Set<MatchChallenge>()
-            .FirstOrDefaultAsync(c => c.ScheduleId == request.ScheduleId && c.StatusId == 1);
+            .FirstOrDefaultAsync(c => c.ScheduleId == request.ScheduleId && (c.StatusId == 1 || c.StatusId == 2));
         if (existing != null)
-            throw new InvalidOperationException("Lịch chơi này đã có tin ghép đấu đang tìm đối thủ.");
+            throw new InvalidOperationException("Lịch chơi này đã có tin ghép đấu (đang tìm đối thủ hoặc đã ghép xong).");
 
         var challenge = new MatchChallenge
         {
