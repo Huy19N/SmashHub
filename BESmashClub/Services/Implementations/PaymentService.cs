@@ -85,9 +85,15 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=subscription&orderId={payment.PaymentId}"
         };
 
-        var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
-
-        payment.Note = paymentLink.CheckoutUrl;
+        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        {
+            payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
+        }
+        else
+        {
+            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+            payment.Note = paymentLink.CheckoutUrl;
+        }
 
         await _unitOfWork.Payments.CreateAsync(payment);
 
@@ -148,9 +154,15 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
-
-        payment.Note = paymentLink.CheckoutUrl;
+        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        {
+            payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
+        }
+        else
+        {
+            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+            payment.Note = paymentLink.CheckoutUrl;
+        }
 
         await _unitOfWork.Payments.CreateAsync(payment);
 

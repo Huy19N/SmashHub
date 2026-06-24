@@ -42,6 +42,10 @@ public class PaymentsController : ControllerBase
         {
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse($"Lỗi khi tạo link thanh toán (kiểm tra lại cấu hình PayOS): {ex.Message}"));
+        }
     }
 
     /// <summary>
