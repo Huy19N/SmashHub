@@ -22,7 +22,7 @@ function getInitials(name) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-export default function MemberCard({ member, onRemove, onViewProfile }) {
+export default function MemberCard({ member, onRemove, onViewProfile, isLeader, currentUserId, onPromote }) {
   const [showMenu, setShowMenu] = useState(false);
   const [avatarFileId, setAvatarFileId] = useState(null);
   const [initialOnlineState, setInitialOnlineState] = useState(false);
@@ -93,6 +93,8 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
       : winRate >= 40 ? 'Khá'
         : 'Trung bình';
 
+  const showMenuActions = isLeader && String(userId) !== String(currentUserId);
+
   return (
     <div className="rounded-2xl border border-gray-200/80 dark:border-border-dark/60 bg-white dark:bg-card-dark/30 shadow-sm dark:shadow-none hover:border-emerald-500/40 dark:hover:border-primary/20 hover:shadow-md transition-all duration-300 p-5 group flex flex-col justify-between min-h-[220px]">
       {/* Top: Avatar + Name + Menu */}
@@ -124,24 +126,32 @@ export default function MemberCard({ member, onRemove, onViewProfile }) {
         </div>
 
         {/* Menu */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/5 transition-all cursor-pointer"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-[#1a202c] border border-gray-200 dark:border-border-dark rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowMenu(false); onRemove?.(member); }}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors font-label cursor-pointer text-left"
-              >
-                <Trash2 className="h-4 w-4" /> Xóa khỏi nhóm
-              </button>
-            </div>
-          )}
-        </div>
+        {showMenuActions && (
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#1a202c] border border-gray-200 dark:border-border-dark rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onPromote?.(member); }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-amber-600 hover:bg-amber-50 dark:text-amber-500 dark:hover:bg-amber-500/10 transition-colors font-label cursor-pointer text-left border-b border-gray-100 dark:border-border-dark/60"
+                >
+                  <Shield className="h-4 w-4" /> Phong Trưởng Nhóm
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); onRemove?.(member); }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors font-label cursor-pointer text-left"
+                >
+                  <Trash2 className="h-4 w-4" /> Xóa khỏi nhóm
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Middle: Info */}

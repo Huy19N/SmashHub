@@ -23,7 +23,7 @@ import {
   Dumbbell,
 } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { useTeamDetail, useTeamMembers, useRemoveMember, useCreateInvite, useTeamSchedules, useDeleteSchedule, useAddScheduleParticipant, useRemoveScheduleParticipant } from '../hooks/useGroups';
+import { useTeamDetail, useTeamMembers, useRemoveMember, useCreateInvite, useTeamSchedules, useDeleteSchedule, useAddScheduleParticipant, useRemoveScheduleParticipant, useUpdateTeamMember, useDeleteGroup } from '../hooks/useGroups';
 import { getScheduleParticipantsAPI } from '../api/groups.api.js';
 import { getActiveChallengesAPI, getTeamChallengesAPI } from '../api/matchmaking.api.js';
 import { useMatchmaking } from '../hooks/useMatchmaking';
@@ -144,6 +144,8 @@ export default function TeamManagementPage() {
   const { members, isLoading: membersLoading, refetch: refetchMembers } = useTeamMembers(teamId);
   const { schedules, isLoading: schedulesLoading, refetch: refetchSchedules } = useTeamSchedules(teamId);
   const { removeMember, isLoading: isRemoving } = useRemoveMember();
+  const { deleteGroup, isLoading: isDeletingGroup } = useDeleteGroup();
+  const { updateMember, isLoading: isUpdatingMember } = useUpdateTeamMember();
   const { deleteSchedule, isLoading: isDeletingSchedule } = useDeleteSchedule();
   const { addParticipant } = useAddScheduleParticipant();
   const { removeParticipant } = useRemoveScheduleParticipant();
@@ -317,6 +319,39 @@ export default function TeamManagementPage() {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    try {
+      await deleteGroup(teamId);
+      toast.success('Giải tán nhóm thành công!');
+      navigate('/groups');
+    } catch (err) {
+      // Error handled by hook
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    try {
+      await removeMember(teamId, currentUserId);
+      toast.success('Rời nhóm thành công!');
+      navigate('/groups');
+    } catch (err) {
+      // Error handled by hook
+    }
+  };
+
+  const handlePromote = async (member) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn chuyển quyền Trưởng Nhóm cho ${member.fullName}? Bạn sẽ trở thành thành viên thường.`)) return;
+    try {
+      await updateMember(teamId, member.userId, { teamRoleId: 1 });
+      toast.success(`Đã chuyển quyền trưởng nhóm cho ${member.fullName}!`);
+      // Demote current user
+      await updateMember(teamId, currentUserId, { teamRoleId: 2 });
+      refetchMembers();
+    } catch (err) {
+      // Error handled by hook
+    }
+  };
+
   const contentTabs = [
     { id: 'members', label: 'Tất cả thành viên' },
     { id: 'chat', label: 'Trò chuyện' },
@@ -370,14 +405,44 @@ export default function TeamManagementPage() {
                 </p>
               </div>
 
-              <Button
-                variant="primary"
-                onClick={handleAddMember}
-                className="shrink-0 py-2.5 px-5 text-sm"
-              >
-                <Plus className="h-4 w-4" />
-                Thêm thành viên
-              </Button>
+              <div className="flex items-center gap-3">
+                {isLeader ? (
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Bạn có chắc chắn muốn xóa nhóm này không? Toàn bộ dữ liệu sẽ bị mất.")) {
+                        handleDeleteGroup();
+                      }
+                    }}
+                    disabled={isDeletingGroup}
+                    className="shrink-0 py-2.5 px-5 text-sm font-bold rounded-lg transition-all duration-300 font-label bg-red-500 hover:bg-red-600 text-white shadow-md hover:-translate-y-0.5 disabled:opacity-50"
+                  >
+                    {isDeletingGroup ? 'Đang xóa...' : 'Xóa nhóm'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Bạn có chắc chắn muốn rời nhóm này không?")) {
+                        handleLeaveGroup();
+                      }
+                    }}
+                    disabled={isRemoving}
+                    className="shrink-0 py-2.5 px-5 text-sm font-bold rounded-lg transition-all duration-300 font-label bg-red-500 hover:bg-red-600 text-white shadow-md hover:-translate-y-0.5 disabled:opacity-50"
+                  >
+                    {isRemoving ? 'Đang rời...' : 'Rời nhóm'}
+                  </button>
+                )}
+
+                {isLeader && (
+                  <Button
+                    variant="primary"
+                    onClick={handleAddMember}
+                    className="shrink-0 py-2.5 px-5 text-sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Thêm thành viên
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Tabs */}
@@ -409,13 +474,16 @@ export default function TeamManagementPage() {
                           Hãy mời bạn bè tham gia nhóm của bạn.
                         </p>
                       </div>
-                      <Button
-                        variant="primary"
-                        onClick={handleAddMember}
-                        className="mt-4 py-2.5 px-5 text-sm"
-                      >
-                        <Plus className="h-4 w-4" /> Thêm thành viên
-                      </Button>
+                      </div>
+                      {isLeader && (
+                        <Button
+                          variant="primary"
+                          onClick={handleAddMember}
+                          className="mt-4 py-2.5 px-5 text-sm"
+                        >
+                          <Plus className="h-4 w-4" /> Thêm thành viên
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -423,23 +491,28 @@ export default function TeamManagementPage() {
                         <MemberCard
                           key={m.userId}
                           member={m}
+                          isLeader={isLeader} // pass isLeader to control button visibility inside MemberCard
+                          currentUserId={currentUserId}
                           onRemove={(member) => setRemovingMember(member)}
                           onViewProfile={(member) => handleViewProfile(member)}
+                          onPromote={(member) => handlePromote(member)}
                         />
                       ))}
 
                       {/* Add Member Card */}
-                      <button
-                        onClick={handleAddMember}
-                        className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-border-dark/60 bg-white/50 dark:bg-card-dark/10 hover:border-emerald-500/40 dark:hover:border-primary/30 hover:bg-emerald-50/30 dark:hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer group/add"
-                      >
-                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-emerald-100 dark:group-hover/add:bg-primary/10 transition-colors">
-                          <Plus className="h-5 w-5 text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors" />
-                        </div>
-                        <span className="mt-3 text-sm font-semibold text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors font-label">
-                          Thêm thành viên mới
-                        </span>
-                      </button>
+                      {isLeader && (
+                        <button
+                          onClick={handleAddMember}
+                          className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-border-dark/60 bg-white/50 dark:bg-card-dark/10 hover:border-emerald-500/40 dark:hover:border-primary/30 hover:bg-emerald-50/30 dark:hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer group/add"
+                        >
+                          <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-emerald-100 dark:group-hover/add:bg-primary/10 transition-colors">
+                            <Plus className="h-5 w-5 text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors" />
+                          </div>
+                          <span className="mt-3 text-sm font-semibold text-gray-400 group-hover/add:text-emerald-600 dark:group-hover/add:text-primary transition-colors font-label">
+                            Thêm thành viên mới
+                          </span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </>

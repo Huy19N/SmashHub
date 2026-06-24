@@ -56,14 +56,27 @@ public class BookingService : IBookingService
             CreatedAt = DateTime.Now
         };
 
-        await _unitOfWork.Booking.CreateAsync(booking);
+        using var transaction = await _unitOfWork.Booking.GetContext().Database.BeginTransactionAsync();
+        try
+        {
+            await _unitOfWork.Booking.CreateAsync(booking);
 
-        // Create payment link via PayOS
-        var paymentResult = await _paymentService.CreateBookingPaymentAsync(userId, booking.BookingId);
+            // Create payment link via PayOS
+            var paymentResult = await _paymentService.CreateBookingPaymentAsync(userId, booking.BookingId);
 
-        var response = await GetBookingDetailAsync(booking.BookingId);
-        response.PaymentUrl = paymentResult.CheckoutUrl;
-        return response;
+            await transaction.CommitAsync();
+
+            var response = await GetBookingDetailAsync(booking.BookingId);
+            response.PaymentUrl = paymentResult.CheckoutUrl;
+            return response;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            if (ex is InvalidOperationException || ex is KeyNotFoundException)
+                throw;
+            throw new InvalidOperationException("Không thể tạo liên kết thanh toán. Lỗi: " + ex.Message);
+        }
     }
 
     public async Task<PagedResult<BookingResponse>> GetBookingsByUserAsync(Guid userId, PaginationParams pagination)

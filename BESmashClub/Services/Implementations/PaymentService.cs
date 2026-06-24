@@ -117,8 +117,8 @@ public class PaymentService : IPaymentService
         if (booking.StatusId != 1) // Only Pending bookings
             throw new InvalidOperationException("Booking không ở trạng thái chờ thanh toán.");
 
-        if (booking.TotalCost == null || booking.TotalCost <= 0)
-            throw new InvalidOperationException("Chi phí booking không hợp lệ.");
+        if (booking.TotalCost == null || booking.TotalCost < 2000)
+            throw new InvalidOperationException("Chi phí booking phải từ 2,000 VNĐ trở lên để thanh toán qua cổng PayOS.");
 
         // 2. Check for existing pending payment
         var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(

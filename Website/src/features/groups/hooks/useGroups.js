@@ -22,6 +22,7 @@ import {
   removeScheduleParticipantAPI,
   updateScheduleAttendanceAPI,
   updateScheduleSplitBillAPI,
+  updateTeamMemberAPI,
 } from '../api/groups.api.js';
 
 /**
@@ -523,6 +524,30 @@ export const useRemoveMember = () => {
   };
 
   return { removeMember, isLoading, error };
+};
+
+// ─── useUpdateTeamMember ──────────────────────────────────────
+
+export const useUpdateTeamMember = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const updateMember = async (teamId, userId, data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await updateTeamMemberAPI(teamId, userId, data);
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể cập nhật thành viên.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateMember, isLoading, error };
 };
 
 // ─── useMessages ──────────────────────────────────────────

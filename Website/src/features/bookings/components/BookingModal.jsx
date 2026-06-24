@@ -359,13 +359,18 @@ export default function BookingModal({ isOpen, onClose, facility }) {
 
   const clearSelection = () => setSelectedSlots([]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // ─── Book (creates one booking per contiguous range) ───
   const handleBook = async () => {
+    if (isSubmitting) return;
     const groups = getSelectionGroups();
     if (groups.length === 0) {
       toast.error('Vui lòng chọn ít nhất một khung giờ');
       return;
     }
+    
+    setIsSubmitting(true);
     try {
       for (const g of groups) {
         const startTime = `${selectedDateStr}T${timeSlots[g.startIdx]}:00`;
@@ -376,6 +381,8 @@ export default function BookingModal({ isOpen, onClose, facility }) {
       onClose();
     } catch (err) {
       toast.error('Có lỗi xảy ra: ' + (err?.message || 'Unknown'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -590,10 +597,10 @@ export default function BookingModal({ isOpen, onClose, facility }) {
             </div>
             <Button
               onClick={handleBook}
-              disabled={totalSlotCount === 0 || bookingActionLoading}
+              disabled={totalSlotCount === 0 || bookingActionLoading || isSubmitting}
               className="px-8 py-3 rounded-xl text-sm font-bold bg-amber-400 hover:bg-amber-500 text-gray-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {bookingActionLoading ? 'Đang xử lý...' : 'TIẾP THEO'}
+              {bookingActionLoading || isSubmitting ? 'Đang xử lý...' : 'TIẾP THEO'}
             </Button>
           </div>
         </div>
