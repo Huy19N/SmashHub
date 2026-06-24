@@ -58,6 +58,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'matchmaking', label: 'Bắt kèo', shortLabel: 'Bắt kèo', icon: Flame, path: '/matchmaking' },
     { id: 'bookings', label: 'Đặt sân', shortLabel: 'Đặt sân', icon: CalendarCheck, path: '/bookings' },
     { id: 'sessions', label: 'Lịch chơi', shortLabel: 'Lịch chơi', icon: CalendarClock, path: '/schedules' },
+    { id: 'subscriptions', label: 'Mua Gói', shortLabel: 'Mua gói', icon: CreditCard, path: '/subscriptions' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ];
 
