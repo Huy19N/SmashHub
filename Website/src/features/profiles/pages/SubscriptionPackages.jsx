@@ -16,7 +16,7 @@ export default function SubscriptionPackages() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await api.get('/api/subscriptions/plans');
+        const response = await api.get('/subscriptions/plans');
         setPlans(response.data.data);
       } catch (err) {
         toast.error('Lỗi khi tải danh sách gói.');
@@ -36,7 +36,7 @@ export default function SubscriptionPackages() {
 
     setIsProcessing(true);
     try {
-      const response = await api.post('/api/payments/subscription', { planId, returnUrl: window.location.origin + '/profile?payment=success' });
+      const response = await api.post('/payments/subscription', { planId, returnUrl: window.location.origin + '/profile?payment=success' });
       if (response.data.data?.checkoutUrl) {
         window.location.href = response.data.data.checkoutUrl;
       } else {
