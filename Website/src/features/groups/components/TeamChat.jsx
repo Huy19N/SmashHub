@@ -185,6 +185,13 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       }
     });
 
+    connection.on('CallEnded', (roomId) => {
+      setMessages(prev => prev.map(m => m.roomId === roomId ? { ...m, isEnded: true } : m));
+      if (activeCallRef.current && activeCallRef.current.roomId === roomId) {
+        setActiveCallState(null);
+      }
+    });
+
     connection.onreconnecting(() => setConnectionStatus('connecting'));
     connection.onreconnected(() => {
       setConnectionStatus('connected');

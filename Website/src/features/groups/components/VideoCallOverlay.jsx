@@ -76,7 +76,22 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
           connection.invoke('SendSignal', connId, JSON.stringify({ type: 'offer', sdp: peer.localDescription }));
         });
 
-        connection.on('ReceiveSignal', async (fromConnId, signalDataRaw) => {
+        connection.on('ReceiveSignal', async (fromConnId, fromUserId, signalDataRaw) => {
+          // Fetch username if we don't know who this is
+          if (!remoteStreams[fromConnId]?.userName && fromUserId && fromUserId !== '00000000-0000-0000-0000-000000000000') {
+            let userName = "Đồng đội";
+            try {
+              const res = await getAllUserByIdAPI(fromUserId);
+              userName = res?.data?.fullName || res?.fullName || userName;
+            } catch (e) {
+              console.error('Lỗi khi lấy thông tin người dùng:', e);
+            }
+            setRemoteStreams(prev => ({
+              ...prev,
+              [fromConnId]: { ...(prev[fromConnId] || {}), userName }
+            }));
+          }
+
           const signal = JSON.parse(signalDataRaw);
           let peer = peersRef.current[fromConnId];
 

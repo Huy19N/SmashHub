@@ -45,7 +45,14 @@ namespace Services.Hubs
         /// </summary>
         public async Task SendSignal(string targetConnectionId, string signalData)
         {
-            await Clients.Client(targetConnectionId).SendAsync("ReceiveSignal", Context.ConnectionId, signalData);
+            if (Guid.TryParse(Context.UserIdentifier, out var userId))
+            {
+                await Clients.Client(targetConnectionId).SendAsync("ReceiveSignal", Context.ConnectionId, userId, signalData);
+            }
+            else
+            {
+                await Clients.Client(targetConnectionId).SendAsync("ReceiveSignal", Context.ConnectionId, Guid.Empty, signalData);
+            }
         }
 
         /// <summary>
@@ -158,6 +165,8 @@ namespace Services.Hubs
                     {
                         session.EndedAt = DateTime.Now;
                         context.Set<VideoCallSession>().Update(session);
+
+                        await Clients.Group(session.TeamId.ToString()).SendAsync("CallEnded", roomId);
                     }
 
                     await context.SaveChangesAsync();
