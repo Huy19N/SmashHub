@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Building, Settings, Plus, Edit3, Trash2, CheckCircle2, AlertTriangle, 
-  MapPin, Loader2, Save, X, Activity, ToggleLeft, ToggleRight, Sparkles 
+  MapPin, Loader2, Save, X, Activity, ToggleLeft, ToggleRight, Sparkles,
+  ChevronDown
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -12,6 +13,8 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import useCourtsManagement from '../hooks/useCourtsManagement';
 import Button from '../../../components/ui/Button';
 import toast from 'react-hot-toast';
+import EditFacilityModal from '../components/EditFacilityModal';
+import EditCourtModal from '../components/EditCourtModal';
 
 // Fix for default Leaflet icon not showing in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -70,7 +73,8 @@ export default function CourtsManagementPage() {
     createCourtCost,
     updateCourtCost,
     updateCourtAll,
-    updateFacilityHours
+    updateFacilityHours,
+    updateFacility
   } = useCourtsManagement();
 
   // Active tab: 'list' | 'add-court' | 'add-facility'
@@ -131,15 +135,25 @@ export default function CourtsManagementPage() {
   const [isSubmittingCourt, setIsSubmittingCourt] = useState(false);
   const [courtFormError, setCourtFormError] = useState('');
 
+  // Facility Selector state & Modal state
+  const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
+  const [isEditFacilityModalOpen, setIsEditFacilityModalOpen] = useState(false);
+  const [editingFacility, setEditingFacility] = useState(null);
+
   // Edit court modal state
   const [editingCourt, setEditingCourt] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editSportId, setEditSportId] = useState('');
-  const [editStatusId, setEditStatusId] = useState('');
-  const [editIsActive, setEditIsActive] = useState(true);
-  const [groupedEditCosts, setGroupedEditCosts] = useState([]);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [editError, setEditError] = useState('');
+
+  useEffect(() => {
+    if (!isFacilityDropdownOpen) return;
+    const handleOutsideClick = (e) => {
+      const selector = document.getElementById('facility-selector-container');
+      if (selector && !selector.contains(e.target)) {
+        setIsFacilityDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [isFacilityDropdownOpen]);
 
   const addCostRow = (groupIndex, isEdit = false) => {
     const setFn = isEdit ? setGroupedEditCosts : setGroupedCourtCosts;
@@ -302,116 +316,8 @@ export default function CourtsManagementPage() {
   };
 
   // Open edit modal
-  // Open edit modal
-  const openEditModal = async (court) => {
+  const openEditModal = (court) => {
     setEditingCourt(court);
-    setEditName(court.courtName);
-    setEditSportId(court.sportId);
-    setEditStatusId(court.statusId);
-    setEditIsActive(court.isActive);
-    setEditError('');
-    setGroupedEditCosts([]);
-
-    try {
-      const hours = await fetchFacilityHours(court.facilityId);
-      const costs = await fetchCourtCosts(court.courtId);
-      
-      const groups = {};
-      hours.forEach(h => {
-         const key = `${h.openTime}-${h.closeTime}`;
-         if (!groups[key]) groups[key] = { openTime: h.openTime, closeTime: h.closeTime, daysOfWeek: [], label: '' };
-         groups[key].daysOfWeek.push(h.dayOfWeek);
-      });
-
-      const parsedGroups = Object.values(groups).map((g, idx) => {
-         g.label = g.daysOfWeek.map(d => d === 8 ? 'CN' : `T${d}`).join(', ');
-         
-         const firstRepresentedDay = g.daysOfWeek.find(d => costs.some(c => c.dayOfWeek === d));
-         let groupCostsList = [];
-         if (firstRepresentedDay) {
-           groupCostsList = costs
-             .filter(c => c.dayOfWeek === firstRepresentedDay)
-             .map(c => ({
-               id: c.courtCostId || Date.now() + Math.random() + idx * 100,
-               startTime: c.startTime.substring(0, 5),
-               endTime: c.endTime.substring(0, 5),
-               durationMinutes: c.durationMinutes.toString(),
-               cost: c.cost.toString()
-             }));
-         }
-
-         if (groupCostsList.length === 0) {
-           groupCostsList = [{
-             id: Date.now() + Math.random() + idx * 100,
-             startTime: g.openTime.substring(0, 5),
-             endTime: g.closeTime.substring(0, 5),
-             durationMinutes: '60',
-             cost: ''
-           }];
-         }
-
-         return {
-            id: Date.now() + Math.random() + idx,
-            groupId: `${g.openTime}-${g.closeTime}-${g.daysOfWeek.join(',')}`,
-            daysOfWeek: g.daysOfWeek,
-            label: g.label,
-            openTime: g.openTime,
-            closeTime: g.closeTime,
-            costs: groupCostsList
-         };
-      });
-
-      setGroupedEditCosts(parsedGroups);
-    } catch (e) {
-      console.warn("Could not load court costs", e);
-      setGroupedEditCosts([]);
-    }
-  };
-
-  // Handle Save Court edits
-  const handleSaveCourtEdit = async (e) => {
-    e.preventDefault();
-    setEditError('');
-    if (!editName.trim() || !editSportId) {
-      setEditError('Vui lòng điền tên sân và chọn môn thể thao.');
-      return;
-    }
-    setIsSavingEdit(true);
-    try {
-      const bulkData = [];
-      const formatTime = (t) => t && t.length === 5 ? `${t}:00` : t;
-      
-      groupedEditCosts.forEach(group => {
-        group.costs.forEach(c => {
-          if (c.cost !== '' && c.cost !== null) {
-            bulkData.push({
-               daysOfWeek: group.daysOfWeek,
-               startTime: formatTime(c.startTime),
-               endTime: formatTime(c.endTime),
-               durationMinutes: parseInt(c.durationMinutes),
-               cost: parseFloat(c.cost)
-            });
-          }
-        });
-      });
-
-      await updateCourtAll(editingCourt.courtId, bulkData);
-
-      await updateCourt(editingCourt.courtId, {
-        courtName: editName,
-        sportId: parseInt(editSportId),
-        statusId: parseInt(editStatusId),
-        isActive: editIsActive
-      });
-
-      setEditingCourt(null);
-      refetchCourts();
-    } catch (err) {
-      const backendMessage = err.response?.data?.message || err.response?.data?.title || err.message;
-      setEditError(backendMessage || 'Lỗi khi lưu thay đổi sân.');
-    } finally {
-      setIsSavingEdit(false);
-    }
   };
 
   // Handle Delete/Deactivate Court
@@ -460,33 +366,6 @@ export default function CourtsManagementPage() {
               Thành lập cơ sở thể thao và quản lý danh sách sân con thuộc quyền sở hữu của bạn.
             </p>
           </div>
-
-          {facilities.length > 0 && (
-            <div className="flex items-center bg-gray-150 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-1 rounded-2xl gap-1">
-              <button
-                onClick={() => setActiveTab('list')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
-                  activeTab === 'list'
-                    ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Danh sách sân
-              </button>
-              {activeFacility?.statusId !== 1 && (
-                <button
-                  onClick={() => setActiveTab('add-court')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
-                    activeTab === 'add-court'
-                      ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  + Thêm sân mới
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {error && (
@@ -901,41 +780,117 @@ export default function CourtsManagementPage() {
           <div className="space-y-6">
             
             {/* Facility Selector Bar */}
-            <div className="bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Building className="w-5.5 h-5.5 text-emerald-500 shrink-0" />
-                <div className="min-w-0">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-label block">Chọn cơ sở quản lý</span>
-                  <select
-                    value={selectedFacilityId || ''}
-                    onChange={(e) => setSelectedFacilityId(parseInt(e.target.value))}
-                    className="mt-0.5 text-sm font-black text-gray-900 dark:text-white bg-transparent focus:outline-none font-display cursor-pointer"
-                  >
-                    {facilities.map((fac) => (
-                      <option key={fac.facilityId} value={fac.facilityId}>
-                        {fac.name} {fac.statusId === 1 ? '(Chờ duyệt)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+              {/* Custom Dropdown Selector (left side, flex-1) */}
+              <div id="facility-selector-container" className="relative flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFacilityDropdownOpen(!isFacilityDropdownOpen)}
+                  className="w-full text-left flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-2xl border border-gray-150/80 dark:border-white/10 hover:border-emerald-500/50 dark:hover:border-emerald-500/30 transition-all duration-200 cursor-pointer focus:outline-none bg-gray-50/50 dark:bg-white/5"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Building className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-label block">Chọn cơ sở quản lý</span>
+                      <span className="text-sm font-black text-gray-900 dark:text-white font-display truncate block mt-0.5">
+                        {activeFacility?.name} {activeFacility?.statusId === 1 ? '(Chờ duyệt)' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-4.5 h-4.5 text-gray-400 transition-transform duration-200 shrink-0 ${isFacilityDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isFacilityDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#0f172a] border border-gray-150/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-[100] animate-fadeIn">
+                    <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                      {facilities.map((fac) => (
+                        <button
+                          key={fac.facilityId}
+                          type="button"
+                          onClick={() => {
+                            setSelectedFacilityId(fac.facilityId);
+                            setIsFacilityDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm font-extrabold flex items-center justify-between transition-colors cursor-pointer
+                            ${fac.facilityId === selectedFacilityId
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                            }`}
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Building className={`w-4 h-4 shrink-0 ${fac.facilityId === selectedFacilityId ? 'text-emerald-500' : 'text-gray-400'}`} />
+                            <span className="truncate">
+                              {fac.name} {fac.statusId === 1 ? '(Chờ duyệt)' : ''}
+                            </span>
+                          </span>
+                          {fac.facilityId === selectedFacilityId && (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Action Buttons (right side) */}
+              <div className="flex items-center gap-2 shrink-0">
                 <Button
                   variant="outline"
-                  onClick={() => setActiveTab('add-facility')}
-                  className="py-2.5 px-3.5 text-xs w-full sm:w-auto text-center"
+                  onClick={() => {
+                    setEditingFacility(activeFacility);
+                    setIsEditFacilityModalOpen(true);
+                  }}
+                  className="py-2.5 px-3.5 text-xs"
                 >
-                  + Đăng ký cơ sở mới
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Chỉnh sửa cơ sở
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setActiveTab('add-facility')}
+                  className="py-2.5 px-3.5 text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Đăng ký cơ sở mới
                 </Button>
               </div>
             </div>
 
-            {/* Facility Location Details */}
+            {/* Facility Location Details & Tab Switcher */}
             {activeFacility && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-label pl-1">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <span>Địa chỉ: {activeFacility.address}, {activeFacility.district}, {activeFacility.city}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-1 text-xs text-gray-500 dark:text-gray-400 font-label">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span className="truncate">Địa chỉ: {activeFacility.address}, {activeFacility.district}, {activeFacility.city}</span>
+                </div>
+                {facilities.length > 0 && (
+                  <div className="flex items-center bg-gray-150 dark:bg-white/5 border border-gray-200 dark:border-white/10 p-1 rounded-2xl gap-1 shrink-0 self-start sm:self-auto">
+                    <button
+                      onClick={() => setActiveTab('list')}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
+                        activeTab === 'list'
+                          ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Danh sách sân
+                    </button>
+                    {activeFacility?.statusId !== 1 && (
+                      <button
+                        onClick={() => setActiveTab('add-court')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold font-label transition-all duration-200 active:scale-95 hover:scale-[1.03] cursor-pointer ${
+                          activeTab === 'add-court'
+                            ? 'bg-emerald-600 dark:bg-primary text-white dark:text-[#052e14] shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                      >
+                        + Thêm sân mới
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1274,6 +1229,23 @@ export default function CourtsManagementPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL: CHỈNH SỬA CƠ SỞ */}
+      <EditFacilityModal
+        isOpen={isEditFacilityModalOpen}
+        onClose={() => {
+          setIsEditFacilityModalOpen(false);
+          setEditingFacility(null);
+        }}
+        facility={editingFacility}
+        onSave={async (facilityId, data) => {
+          await updateFacility(facilityId, data);
+          toast.success('Cập nhật cơ sở thành công!');
+          setIsEditFacilityModalOpen(false);
+          setEditingFacility(null);
+          refetchFacilities();
+        }}
+      />
 
     </div>
   );
