@@ -80,6 +80,19 @@ namespace Services.Hubs
                         JoinedAt = DateTime.Now
                     };
                     context.Set<VideoCallParticipant>().Add(participant);
+                    
+                    var callMessage = new TeamMessage
+                    {
+                        MessageId = Guid.NewGuid(),
+                        TeamId = teamId,
+                        SenderId = userId,
+                        MessageType = 99,
+                        Content = $"ROOM_ID:{roomId}",
+                        SentAt = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    context.Set<TeamMessage>().Add(callMessage);
+
                     await context.SaveChangesAsync();
                 }
             }

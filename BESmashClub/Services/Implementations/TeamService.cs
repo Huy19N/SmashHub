@@ -353,19 +353,51 @@ public class TeamService : ITeamService
         var (items, totalCount) = await _unitOfWork.TeamMessages
             .GetMessagesByTeamIdAsync(teamId, search, pagination.PageNumber, pagination.PageSize);
 
+        var context = _unitOfWork.TeamMessages.GetContext();
+        var roomIds = items.Where(m => m.MessageType == 99 && m.Content != null && m.Content.StartsWith("ROOM_ID:"))
+                           .Select(m => m.Content.Replace("ROOM_ID:", ""))
+                           .ToList();
+        
+        var endedSessions = new HashSet<string>();
+        if (roomIds.Any())
+        {
+            var sessions = await context.Set<VideoCallSession>()
+                .Where(s => roomIds.Contains(s.SessionId.ToString()))
+                .ToListAsync();
+            foreach (var s in sessions)
+            {
+                if (s.EndedAt != null) endedSessions.Add(s.SessionId.ToString());
+            }
+        }
+
         return new PagedResult<TeamMessageResponse>
         {
-            Items = items.Select(m => new TeamMessageResponse
-            {
-                MessageId = m.MessageId,
-                TeamId = m.TeamId,
-                SenderId = m.SenderId,
-                SenderName = m.Sender?.FullName,
-                Content = m.Content,
-                MessageType = m.MessageType,
-                MediaFileId = m.MediaFileId,
-                MediaUrl = m.MediaFileId.HasValue ? $"/api/files/{m.MediaFileId.Value}" : null,
-                SentAt = m.SentAt
+            Items = items.Select(m => {
+                string? roomId = null;
+                bool isEnded = false;
+                string content = m.Content;
+
+                if (m.MessageType == 99 && content != null && content.StartsWith("ROOM_ID:"))
+                {
+                    roomId = content.Replace("ROOM_ID:", "");
+                    content = "Đã bắt đầu phòng gọi video nhóm.";
+                    isEnded = endedSessions.Contains(roomId);
+                }
+
+                return new TeamMessageResponse
+                {
+                    MessageId = m.MessageId,
+                    TeamId = m.TeamId,
+                    SenderId = m.SenderId,
+                    SenderName = m.Sender?.FullName,
+                    Content = content,
+                    MessageType = m.MessageType,
+                    MediaFileId = m.MediaFileId,
+                    MediaUrl = m.MediaFileId.HasValue ? $"/api/files/{m.MediaFileId.Value}" : null,
+                    SentAt = m.SentAt,
+                    RoomId = roomId,
+                    IsEnded = isEnded
+                };
             }).ToList(),
             TotalCount = totalCount,
             PageNumber = pagination.PageNumber,

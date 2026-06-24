@@ -181,7 +181,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       if (activeCallRef.current && activeCallRef.current.connId === connId) {
         const endedRoomId = activeCallRef.current.roomId;
         setActiveCallState(null);
-        setMessages(prev => prev.map(m => m.messageId === `call_${endedRoomId}` ? { ...m, isEnded: true } : m));
+        setMessages(prev => prev.map(m => m.roomId === endedRoomId ? { ...m, isEnded: true } : m));
       }
     });
 
@@ -605,7 +605,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           onClose={() => {
             if (videoCallRoom.isInitiator) {
               setActiveCallState(null);
-              setMessages(prev => prev.map(m => m.messageId === `call_${videoCallRoom.roomId}` ? { ...m, isEnded: true } : m));
+              setMessages(prev => prev.map(m => m.roomId === videoCallRoom.roomId ? { ...m, isEnded: true } : m));
             }
             setVideoCallRoom(null);
           }}
