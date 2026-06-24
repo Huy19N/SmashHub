@@ -474,7 +474,6 @@ export default function TeamManagementPage() {
                           Hãy mời bạn bè tham gia nhóm của bạn.
                         </p>
                       </div>
-                      </div>
                       {isLeader && (
                         <Button
                           variant="primary"
