@@ -96,10 +96,11 @@ public class FilesController : ControllerBase
 
         try
         {
-            var bytes = await _fileService.GetFileBytesAsync(fileId);
-            if (bytes == null) return NotFound();
-            
-            return File(bytes, localFile.MimeType, localFile.OriginalFileName);
+            var presignedUrl = await _fileService.GetFileUrlAsync(fileId);
+            if (string.IsNullOrEmpty(presignedUrl))
+                return NotFound();
+                
+            return Redirect(presignedUrl);
         }
         catch (Exception ex)
         {

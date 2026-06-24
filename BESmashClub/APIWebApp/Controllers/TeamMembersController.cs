@@ -26,6 +26,7 @@ public class TeamMembersController : ControllerBase
     /// Lấy danh sách thành viên trong team.
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetMembers(Guid teamId)
     {
         var result = await _teamService.GetMembersAsync(teamId);
