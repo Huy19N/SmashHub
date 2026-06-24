@@ -91,3 +91,27 @@ export const deleteCourtCostAPI = async (courtCostId) => {
   const response = await api.delete(`/court-costs/${courtCostId}`);
   return response.data;
 };
+
+/** Lấy danh sách tài khoản ngân hàng của cơ sở (GET /api/facilities/{facilityId}/bank-accounts) */
+export const getBankAccountsAPI = async (facilityId) => {
+  const response = await api.get(`/facilities/${facilityId}/bank-accounts`);
+  return response.data;
+};
+
+/** Thêm tài khoản ngân hàng cho cơ sở (POST /api/facilities/{facilityId}/bank-accounts) */
+export const createBankAccountAPI = async (facilityId, bankAccountData) => {
+  const response = await api.post(`/facilities/${facilityId}/bank-accounts`, bankAccountData);
+  return response.data;
+};
+
+/** Cập nhật tài khoản ngân hàng (PUT /api/facilities/{facilityId}/bank-accounts/{bankAccountId}) */
+export const updateBankAccountAPI = async (facilityId, bankAccountId, bankAccountData) => {
+  const response = await api.put(`/facilities/${facilityId}/bank-accounts/${bankAccountId}`, bankAccountData);
+  return response.data;
+};
+
+/** Xóa tài khoản ngân hàng (DELETE /api/facilities/{facilityId}/bank-accounts/{bankAccountId}) */
+export const deleteBankAccountAPI = async (facilityId, bankAccountId) => {
+  const response = await api.delete(`/facilities/${facilityId}/bank-accounts/${bankAccountId}`);
+  return response.data;
+};

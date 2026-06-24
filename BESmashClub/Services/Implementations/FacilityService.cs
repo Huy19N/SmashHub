@@ -301,11 +301,13 @@ public class FacilityService : IFacilityService
     {
         return new FacilityBankAccountResponse
         {
+            BankAccountId = a.BankAccountId,
             FacilityId = a.FacilityId,
             FacilityName = facilityName,
             BankName = a.BankName,
             AccountNumber = a.AccountNumber,
             AccountHolder = a.AccountHolder,
+            IsPrimary = a.IsPrimary,
             IsActive = a.IsActive,
             CreatedAt = a.CreatedAt,
             UpdatedAt = a.UpdatedAt

@@ -13,8 +13,9 @@ import {
   Moon,
   Sun,
   LogOut,
+  Percent,
+  Wallet,
   CreditCard,
-  Percent
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
@@ -51,6 +52,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
   ] : isFacilityOwner ? [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'courts-management', label: 'Quản lý sân', shortLabel: 'Sân bãi', icon: Settings, path: '/courts-management' },
+    { id: 'payment-management', label: 'Quản lý thanh toán', shortLabel: 'Thanh toán', icon: Wallet, path: '/payment-management' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ] : [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
