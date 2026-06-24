@@ -35,6 +35,7 @@ const AdminSettings = lazy(() => import('../features/admin/pages/AdminSettings')
 const PaymentSettings = lazy(() => import('../features/admin/pages/PaymentSettings'));
 const PayoutManagement = lazy(() => import('../features/admin/pages/PayoutManagement'));
 const AdminProfile = lazy(() => import('../features/admin/pages/AdminProfile'));
+const RevenueManagement = lazy(() => import('../features/admin/pages/RevenueManagement'));
 
 /**
  * Global Routing Registry
@@ -116,6 +117,7 @@ export const router = createBrowserRouter([
       { path: 'users', element: <UserManagement /> },
       { path: 'facilities', element: <AdminFacilities /> },
       { path: 'payouts', element: <PayoutManagement /> },
+      { path: 'revenue', element: <RevenueManagement /> },
       { path: 'system-settings', element: <AdminSettings /> },
       { path: 'payment-settings', element: <PaymentSettings /> },
       { path: 'profile', element: <AdminProfile /> },

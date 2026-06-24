@@ -30,6 +30,18 @@ export const getAdminFacilitiesAPI = async () => {
   return response.data;
 };
 
+// Approve a facility registration
+export const approveFacilityAPI = async (facilityId) => {
+  const response = await axios.put(`/admin/facilities/${facilityId}/approve`);
+  return response.data;
+};
+
+// Reject a facility registration
+export const rejectFacilityAPI = async (facilityId) => {
+  const response = await axios.put(`/admin/facilities/${facilityId}/reject`);
+  return response.data;
+};
+
 // Fetch all payout requests
 export const getPayoutRequestsAPI = async () => {
   const response = await axios.get('/admin/payout-requests');
@@ -50,12 +62,18 @@ export const rejectPayoutAPI = async (payoutId, payoutData) => {
 
 // Fetch all system settings
 export const getSystemSettingsAPI = async () => {
-  const response = await axios.get('/admin/system-settings');
+  const response = await axios.get('/admin/settings');
   return response.data;
 };
 
 // Update a system setting
 export const updateSystemSettingAPI = async (key, value) => {
-  const response = await axios.put(`/admin/system-settings/${key}`, { settingValue: value });
+  const response = await axios.put(`/admin/settings/${key}`, { settingValue: value });
+  return response.data;
+};
+
+// Delete (soft delete) a facility
+export const deleteFacilityAPI = async (facilityId) => {
+  const response = await axios.delete(`/admin/facilities/${facilityId}`);
   return response.data;
 };
