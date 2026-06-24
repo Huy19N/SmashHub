@@ -13,7 +13,7 @@ namespace Entites.DTOs.Teams
         public Guid TeamId { get; set; }
         [Required]
         public string Content { get; set; } = null!;
-        public int MessageType { get; set; } = 0; // 0: Text, 1: Image, 2: Video
+        public int MessageType { get; set; } = 0; // 0: message, 1: image, 2: video, 3: document, 4: video call
         public Guid? MediaFileId { get; set; }
     }
 }

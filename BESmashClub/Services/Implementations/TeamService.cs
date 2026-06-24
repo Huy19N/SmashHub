@@ -354,7 +354,7 @@ public class TeamService : ITeamService
             .GetMessagesByTeamIdAsync(teamId, search, pagination.PageNumber, pagination.PageSize);
 
         var context = _unitOfWork.TeamMessages.GetContext();
-        var roomIds = items.Where(m => m.MessageType == 99 && m.Content != null && m.Content.StartsWith("ROOM_ID:"))
+        var roomIds = items.Where(m => m.MessageType == 4 && m.Content != null && m.Content.StartsWith("ROOM_ID:"))
                            .Select(m => m.Content.Replace("ROOM_ID:", ""))
                            .ToList();
         
@@ -377,7 +377,7 @@ public class TeamService : ITeamService
                 bool isEnded = false;
                 string content = m.Content;
 
-                if (m.MessageType == 99 && content != null && content.StartsWith("ROOM_ID:"))
+                if (m.MessageType == 4 && content != null && content.StartsWith("ROOM_ID:"))
                 {
                     roomId = content.Replace("ROOM_ID:", "");
                     content = "Đã bắt đầu phòng gọi video nhóm.";

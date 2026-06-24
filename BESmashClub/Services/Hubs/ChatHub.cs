@@ -86,7 +86,7 @@ namespace Services.Hubs
                         MessageId = Guid.NewGuid(),
                         TeamId = teamId,
                         SenderId = userId,
-                        MessageType = 99,
+                        MessageType = 4,
                         Content = $"ROOM_ID:{roomId}",
                         SentAt = DateTime.Now,
                         IsDeleted = false
