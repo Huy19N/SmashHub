@@ -14,20 +14,19 @@ export default function SplitBillModal({ isOpen, onClose, scheduleId, participan
 
   // --- Calculation for Warning ---
   const fee = extraFee ? parseInt(extraFee, 10) : 0;
-  const attendedCount = participants.filter(p => p.isAttended).length;
   const totalParticipants = participants.length;
-  const extraFeePerPerson = attendedCount > 0 ? fee / attendedCount : 0;
+  const extraFeePerPerson = totalParticipants > 0 ? fee / totalParticipants : 0;
   
   let totalCollected = 0;
   if (splitMode === 'fixed') {
     const fixed = fixedAmount ? parseInt(fixedAmount, 10) : 0;
-    totalCollected = (fixed * totalParticipants) + (extraFeePerPerson * attendedCount); 
+    totalCollected = (fixed * totalParticipants) + (extraFeePerPerson * totalParticipants); 
   } else if (splitMode === 'custom') {
     let customTotal = 0;
     participants.forEach(p => {
        const amount = customAmounts[p.userId] ? parseInt(customAmounts[p.userId], 10) : 0;
        customTotal += amount;
-       if (p.isAttended) customTotal += extraFeePerPerson;
+       customTotal += extraFeePerPerson;
     });
     totalCollected = customTotal;
   }
@@ -108,7 +107,7 @@ export default function SplitBillModal({ isOpen, onClose, scheduleId, participan
 
             {splitMode === 'auto' && (
               <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-300 font-label">
-                Hệ thống tự động tính phí sân. Bạn nhập phụ phí bên dưới để chia đều cho người đã điểm danh (No-show chỉ trả tiền sân).
+                Hệ thống tự động chia đều tiền sân và phụ phí cho toàn bộ người tham gia (kể cả chưa điểm danh).
               </div>
             )}
             {splitMode === 'fixed' && (

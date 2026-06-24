@@ -143,12 +143,20 @@ export const useTeams = () => {
             const members = membersRes?.data ?? membersRes;
             const memberList = Array.isArray(members) ? members : [];
 
+            let isLeader = false;
             // Check if current user is in this team's member list (robust property mapping)
             const isMember = memberList.some((m) => {
               const memberUserId = m?.userId ?? m?.id ?? m?.user?.id ?? m?.user?.userId;
-              return memberUserId && userId && String(memberUserId) === String(userId);
+              if (memberUserId && userId && String(memberUserId) === String(userId)) {
+                if (m.roleName === 'Leader' || m.teamRoleId === 1) {
+                  isLeader = true;
+                }
+                return true;
+              }
+              return false;
             });
-            return { team, isMember };
+
+            return { team: { ...team, isLeader }, isMember };
           } catch {
             // If we can't fetch members, don't include team
             return { team, isMember: false };

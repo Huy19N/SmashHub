@@ -16,13 +16,14 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { useTeams, useDeleteGroup } from '../hooks/useGroups';
+import { useTeams, useDeleteGroup, useRemoveMember } from '../hooks/useGroups';
 import CreateGroupModal from './CreateGroupModal';
 import EditGroupModal from './EditGroupModal';
 import TeamCard from '../components/TeamCard';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import Button from '../../../components/ui/Button';
+import toast from 'react-hot-toast';
 
 /**
  * GroupsDashboard
@@ -43,6 +44,7 @@ export default function GroupsDashboard() {
   const [deletingTeam, setDeletingTeam] = useState(null);
 
   const { deleteGroup, isLoading: isDeleting } = useDeleteGroup();
+  const { removeMember, isLoading: isRemoving } = useRemoveMember();
 
   const handleManageTeam = (teamId) => {
     navigate(`/groups/${teamId}/manage`);
@@ -52,10 +54,24 @@ export default function GroupsDashboard() {
     if (!deletingTeam) return;
     try {
       await deleteGroup(deletingTeam.teamId);
+      toast.success('Xóa nhóm thành công');
       setDeletingTeam(null);
       refetchTeams();
     } catch (err) {
       console.error('Delete failed:', err);
+    }
+  };
+
+  const handleLeaveTeam = async (team) => {
+    if (window.confirm(`Bạn có chắc chắn muốn rời nhóm "${team.teamName}" không?`)) {
+      try {
+        const currentUserId = localStorage.getItem('userId');
+        await removeMember(team.teamId || team.id, currentUserId);
+        toast.success('Đã rời nhóm thành công');
+        refetchTeams();
+      } catch (err) {
+        console.error('Leave failed:', err);
+      }
     }
   };
 
@@ -165,6 +181,7 @@ export default function GroupsDashboard() {
                       onManage={handleManageTeam}
                       onEdit={(t) => setEditingTeam(t)}
                       onDelete={(t) => setDeletingTeam(t)}
+                      onLeave={handleLeaveTeam}
                     />
                   ))}
                 </div>

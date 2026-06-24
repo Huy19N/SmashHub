@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Users, FileText, ChevronRight, MoreVertical, Calendar, Edit2, Trash2 } from 'lucide-react';
 
-export default function TeamCard({ team, onManage, onEdit, onDelete }) {
+export default function TeamCard({ team, onManage, onEdit, onDelete, onLeave }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -47,26 +47,41 @@ export default function TeamCard({ team, onManage, onEdit, onDelete }) {
           
           {showMenu && (
             <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[#1a202c] border border-gray-200 dark:border-border-dark rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation();
-                  setShowMenu(false); 
-                  onEdit && onEdit(team); 
-                }}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors font-label cursor-pointer text-left"
-              >
-                <Edit2 className="h-4 w-4" /> Chỉnh sửa
-              </button>
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation();
-                  setShowMenu(false); 
-                  onDelete && onDelete(team); 
-                }}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors font-label cursor-pointer text-left border-t border-gray-100 dark:border-border-dark"
-              >
-                <Trash2 className="h-4 w-4" /> Xóa nhóm
-              </button>
+              {team.isLeader ? (
+                <>
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMenu(false); 
+                      onEdit && onEdit(team); 
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors font-label cursor-pointer text-left"
+                  >
+                    <Edit2 className="h-4 w-4" /> Chỉnh sửa
+                  </button>
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMenu(false); 
+                      onDelete && onDelete(team); 
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors font-label cursor-pointer text-left border-t border-gray-100 dark:border-border-dark"
+                  >
+                    <Trash2 className="h-4 w-4" /> Xóa nhóm
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation();
+                    setShowMenu(false); 
+                    onLeave && onLeave(team); 
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors font-label cursor-pointer text-left"
+                >
+                  <Trash2 className="h-4 w-4" /> Rời nhóm
+                </button>
+              )}
             </div>
           )}
         </div>

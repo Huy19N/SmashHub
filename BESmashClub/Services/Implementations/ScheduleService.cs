@@ -246,13 +246,13 @@ public class ScheduleService : IScheduleService
         var attendedCount = attendedParticipants.Count;
 
         var courtFeePerPerson = totalParticipants > 0 ? schedule.BaseCourtCost / totalParticipants : 0;
-        var extraFeePerPerson = attendedCount > 0 ? request.ExtraFee / attendedCount : 0;
+        var extraFeePerPerson = totalParticipants > 0 ? request.ExtraFee / totalParticipants : 0;
 
         var context = _unitOfWork.Schedules.GetContext();
 
         foreach (var p in participants)
         {
-            decimal extra = p.IsAttended ? extraFeePerPerson : 0;
+            decimal extra = extraFeePerPerson;
             if (request.CustomAmounts != null && request.CustomAmounts.ContainsKey(p.UserId))
             {
                 p.CostToPay = request.CustomAmounts[p.UserId] + extra;
@@ -263,7 +263,7 @@ public class ScheduleService : IScheduleService
             }
             else
             {
-                p.CostToPay = p.IsAttended ? (courtFeePerPerson + extraFeePerPerson) : courtFeePerPerson;
+                p.CostToPay = courtFeePerPerson + extraFeePerPerson;
             }
         }
         
