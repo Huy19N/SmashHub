@@ -105,8 +105,8 @@ public class TeamsController : ControllerBase
             await file.CopyToAsync(ms);
             var fileData = ms.ToArray();
 
-            // Save file in LocalFiles table with purpose 'TeamAvatar' and type 'Image'
-            var fileId = await fileService.UploadFileAsync(userId, fileName, fileData, "Image", "TeamAvatar", mimeType);
+            // Save file in LocalFiles table with purpose 'Avatar' and type 'Image'
+            var fileId = await fileService.UploadFileAsync(userId, fileName, fileData, "Image", "Avatar", mimeType);
 
             // Update team profile
             var team = await _teamService.UpdateAvatarAsync(userId, teamId, fileId);
