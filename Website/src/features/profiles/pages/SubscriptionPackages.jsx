@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Check, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { getAccessToken, axiosInstance } from '../../../config/axios';
+import api, { getAccessToken } from '../../../config/axios';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,7 @@ export default function SubscriptionPackages() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await axiosInstance.get('/api/subscriptions/plans');
+        const response = await api.get('/api/subscriptions/plans');
         setPlans(response.data.data);
       } catch (err) {
         toast.error('Lỗi khi tải danh sách gói.');
@@ -36,7 +36,7 @@ export default function SubscriptionPackages() {
 
     setIsProcessing(true);
     try {
-      const response = await axiosInstance.post('/api/payments/subscription', { planId, returnUrl: window.location.origin + '/profile?payment=success' });
+      const response = await api.post('/api/payments/subscription', { planId, returnUrl: window.location.origin + '/profile?payment=success' });
       if (response.data.data?.checkoutUrl) {
         window.location.href = response.data.data.checkoutUrl;
       } else {

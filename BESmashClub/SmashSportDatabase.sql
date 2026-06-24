@@ -428,7 +428,7 @@ CREATE TABLE TeamMessages (
     MessageId UNIQUEIDENTIFIER DEFAULT NEWID(),
     TeamId UNIQUEIDENTIFIER NOT NULL,
     SenderId UNIQUEIDENTIFIER NOT NULL,
-    MessageType INT NOT NULL DEFAULT 0, --0:text, 1:image, 2:video, 3: document
+    MessageType INT NOT NULL DEFAULT 0, --0: message, 1: image, 2: video, 3: document, 4: video call
     Content NVARCHAR(MAX),
     MediaFileId UNIQUEIDENTIFIER,
     SentAt DATETIME DEFAULT GETDATE(),
@@ -437,9 +437,9 @@ CREATE TABLE TeamMessages (
     CONSTRAINT FK_TeamMessages_Teams FOREIGN KEY (TeamId) REFERENCES Teams(TeamId) ON DELETE CASCADE,
     CONSTRAINT FK_TeamMessages_Users FOREIGN KEY (SenderId) REFERENCES Users(UserId) ON DELETE NO ACTION,
     CONSTRAINT FK_TeamMessages_Media FOREIGN KEY (MediaFileId) REFERENCES StoredFiles(FileId),
-    CONSTRAINT CK_TeamMessages_Type CHECK (MessageType >=0 AND MessageType <=2),
+    CONSTRAINT CK_TeamMessages_Type CHECK (MessageType >=0 AND MessageType <=4),
     CONSTRAINT CK_TeamMessages_Content CHECK ( 
-        (MessageType = 0 AND Content IS NOT NULL) OR
+        ((MessageType = 0 OR MessageType = 4) AND Content IS NOT NULL) OR
         (MessageType >=1 AND MessageType <=3 AND MediaFileId IS NOT NULL)
     )
 );
