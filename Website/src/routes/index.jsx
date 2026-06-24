@@ -23,6 +23,7 @@ const SchedulesPage = lazy(() => import('../features/schedules/pages/SchedulesPa
 const ProfilePage = lazy(() => import('../features/profiles/pages/ProfilePage'));
 const DashboardPage = lazy(() => import('../features/dashboard/pages/DashboardPage'));
 const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pages/CourtsManagementPage'));
+const PaymentManagementPage = lazy(() => import('../features/courtsManagement/pages/PaymentManagementPage'));
 const MatchmakingPage = lazy(() => import('../features/groups/pages/MatchmakingPage'));
 
 // Admin Features
@@ -102,6 +103,10 @@ export const router = createBrowserRouter([
   {
     path: PATHS.COURTS_MANAGEMENT,
     element: <ProtectedRoute><CourtsManagementPage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.PAYMENT_MANAGEMENT,
+    element: <ProtectedRoute><PaymentManagementPage /></ProtectedRoute>
   },
   {
     path: '/admin',
