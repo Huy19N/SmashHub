@@ -71,6 +71,7 @@ public class TeamService : ITeamService
                 Description = t.Description,
                 CreatedAt = t.CreatedAt,
                 IsActive = t.IsActive,
+                AvatarFileId = t.AvatarFileId,
                 MemberCount = t.TeamMembers?.Count ?? 0
             }).ToList(),
             TotalCount = totalCount,
@@ -102,6 +103,20 @@ public class TeamService : ITeamService
         if (request.Description != null)
             team.Description = request.Description;
 
+        await _unitOfWork.Teams.UpdateAsync(team);
+
+        return await GetTeamDetailAsync(teamId);
+    }
+
+    public async Task<TeamDetailResponse> UpdateAvatarAsync(Guid userId, Guid teamId, Guid fileId)
+    {
+        await EnsureLeaderAsync(teamId, userId);
+
+        var team = await _unitOfWork.Teams.GetByIdAsync(teamId);
+        if (team == null)
+            throw new KeyNotFoundException("Không tìm thấy team.");
+
+        team.AvatarFileId = fileId;
         await _unitOfWork.Teams.UpdateAsync(team);
 
         return await GetTeamDetailAsync(teamId);
@@ -445,6 +460,7 @@ public class TeamService : ITeamService
             Description = team.Description,
             CreatedAt = team.CreatedAt,
             IsActive = team.IsActive,
+            AvatarFileId = team.AvatarFileId,
             Members = team.TeamMembers?.Select(MapToMemberResponse).ToList() ?? new()
         };
     }

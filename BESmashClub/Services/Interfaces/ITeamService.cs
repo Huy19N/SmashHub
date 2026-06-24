@@ -10,6 +10,7 @@ public interface ITeamService
     Task<PagedResult<TeamResponse>> GetTeamsAsync(string? search, PaginationParams pagination);
     Task<TeamDetailResponse> GetTeamDetailAsync(Guid teamId);
     Task<TeamDetailResponse> UpdateTeamAsync(Guid userId, Guid teamId, UpdateTeamRequest request);
+    Task<TeamDetailResponse> UpdateAvatarAsync(Guid userId, Guid teamId, Guid fileId);
     Task DeleteTeamAsync(Guid userId, Guid teamId);
 
     // Members

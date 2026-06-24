@@ -83,6 +83,51 @@ public class TeamsController : ControllerBase
     }
 
     /// <summary>
+    /// Cập nhật ảnh đại diện nhóm (Chỉ Leader).
+    /// </summary>
+    [Authorize]
+    [HttpPost("{teamId:guid}/avatar")]
+    public async Task<IActionResult> UpdateAvatar(Guid teamId, IFormFile file, [FromServices] IFileService fileService)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResponse.ErrorResponse("Tệp tải lên không hợp lệ hoặc rỗng."));
+
+        if (!file.ContentType.StartsWith("image/"))
+            return BadRequest(ApiResponse.ErrorResponse("Vui lòng tải lên tệp hình ảnh hợp lệ."));
+
+        try
+        {
+            var userId = GetCurrentUserId();
+            var fileName = file.FileName;
+            var mimeType = file.ContentType;
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var fileData = ms.ToArray();
+
+            // Save file in LocalFiles table with purpose 'TeamAvatar' and type 'Image'
+            var fileId = await fileService.UploadFileAsync(userId, fileName, fileData, "Image", "TeamAvatar", mimeType);
+
+            // Update team profile
+            var team = await _teamService.UpdateAvatarAsync(userId, teamId, fileId);
+
+            return Ok(ApiResponse<TeamDetailResponse>.SuccessResponse(team, "Cập nhật ảnh đại diện nhóm thành công."));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
     /// Giải tán team (Chỉ Leader).
     /// </summary>
     [Authorize]

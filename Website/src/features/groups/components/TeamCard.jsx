@@ -89,9 +89,22 @@ export default function TeamCard({ team, onManage, onEdit, onDelete, onLeave }) 
 
       {/* Middle section: Title and Description */}
       <div className="space-y-2 mt-2">
-        <h3 className="text-base font-bold text-gray-900 dark:text-white truncate font-display group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors duration-200">
-          {team.teamName}
-        </h3>
+        <div className="flex items-center gap-3">
+          {team.avatarFileId ? (
+            <img 
+              src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} 
+              alt={team.teamName} 
+              className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-border-dark shrink-0" 
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-primary/20 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-primary/30">
+              <Users className="h-5 w-5 text-emerald-600 dark:text-primary" />
+            </div>
+          )}
+          <h3 className="text-base font-bold text-gray-900 dark:text-white truncate font-display group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors duration-200">
+            {team.teamName}
+          </h3>
+        </div>
 
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">

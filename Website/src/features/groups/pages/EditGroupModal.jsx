@@ -1,14 +1,30 @@
 import { useState } from 'react';
 import { X, Users, Check, AlertCircle } from 'lucide-react';
 import Button from '../../../components/ui/Button';
-import { useUpdateGroup } from '../hooks/useGroups';
+import { useUpdateGroup, useUploadTeamAvatar } from '../hooks/useGroups';
 
 export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = false }) {
   const [teamName, setTeamName] = useState(team?.teamName || '');
   const [description, setDescription] = useState(team?.description || '');
   const [validationError, setValidationError] = useState('');
 
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+
   const { updateGroup, isLoading: updateLoading, error: updateError } = useUpdateGroup();
+  const { uploadAvatar, isLoading: uploadLoading, error: uploadError } = useUploadTeamAvatar();
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setValidationError('Vui lòng chọn file hình ảnh hợp lệ.');
+        return;
+      }
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +40,12 @@ export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = 
     }
 
     try {
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('file', avatarFile);
+        await uploadAvatar(team.teamId, formData);
+      }
+
       await updateGroup(team.teamId, {
         teamName: teamName.trim(),
         description: description.trim(),
@@ -54,12 +76,45 @@ export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = 
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {(validationError || updateError) && (
+            {(validationError || updateError || uploadError) && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm font-label animate-fade-in">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                {validationError || updateError}
+                {validationError || updateError || uploadError}
               </div>
             )}
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 font-label">
+                Ảnh đại diện nhóm
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-border-dark flex items-center justify-center overflow-hidden">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
+                  ) : team.avatarFileId ? (
+                    <img src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <Users className="h-8 w-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="block w-full text-sm text-gray-500 dark:text-gray-400
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-emerald-50 file:text-emerald-700
+                      hover:file:bg-emerald-100
+                      dark:file:bg-primary/10 dark:file:text-primary
+                      dark:hover:file:bg-primary/20
+                      cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 font-label">

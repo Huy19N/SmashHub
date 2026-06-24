@@ -9,6 +9,7 @@ import {
   getTeamSchedulesAPI,
   updateTeamAPI,
   deleteTeamAPI,
+  uploadTeamAvatarAPI,
   getTeamMembersAPI,
   removeTeamMemberAPI,
   getMessagesAPI,
@@ -101,6 +102,31 @@ export const useDeleteGroup = () => {
   };
 
   return { deleteGroup, isLoading, error };
+};
+
+// ─── useUploadTeamAvatar ───────────────────────────────────────────
+
+export const useUploadTeamAvatar = () => {
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const uploadAvatar = async (teamId, formData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Need to import uploadTeamAvatarAPI at the top
+      const response = await uploadTeamAvatarAPI(teamId, formData);
+      return response;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Không thể tải lên ảnh nhóm.';
+      setError(errorMsg);
+      throw errorMsg;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { uploadAvatar, isLoading, error };
 };
 
 // ─── useTeams ─────────────────────────────────────────────────

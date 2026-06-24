@@ -396,13 +396,26 @@ export default function TeamManagementPage() {
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200/60 dark:border-border-dark/40 pb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">
-                  Quản lý Thành viên
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-label">
-                  Quản lý danh sách và trình độ của các thành viên trong {team?.teamName || 'câu lạc bộ'}.
-                </p>
+              <div className="flex items-center gap-4">
+                {team?.avatarFileId ? (
+                  <img 
+                    src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} 
+                    alt={team.teamName} 
+                    className="h-14 w-14 rounded-full object-cover border-2 border-emerald-500 dark:border-primary shrink-0" 
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-full bg-emerald-100 dark:bg-primary/20 flex items-center justify-center shrink-0 border-2 border-emerald-500 dark:border-primary/50">
+                    <Users className="h-7 w-7 text-emerald-600 dark:text-primary" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-display">
+                    {team?.teamName || 'Đang tải...'}
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-label">
+                    Quản lý danh sách và trình độ của các thành viên trong nhóm.
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">

@@ -34,6 +34,14 @@ export const deleteTeamAPI = async (teamId) => {
   return response.data;
 };
 
+/** Upload team avatar — Leader only (POST /api/teams/{teamId}/avatar) */
+export const uploadTeamAvatarAPI = async (teamId, formData) => {
+  const response = await api.post(`/teams/${teamId}/avatar`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
 // ─── Invites ──────────────────────────────────────────────────
 
 /** Create invite link for a team (POST /api/teams/{teamId}/invites) */

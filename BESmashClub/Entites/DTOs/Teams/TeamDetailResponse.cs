@@ -7,5 +7,6 @@ public class TeamDetailResponse
     public string Description { get; set; }
     public DateTime? CreatedAt { get; set; }
     public bool IsActive { get; set; }
+    public Guid? AvatarFileId { get; set; }
     public List<TeamMemberResponse> Members { get; set; } = new();
 }
