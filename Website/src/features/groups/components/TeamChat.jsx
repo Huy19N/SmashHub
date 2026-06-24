@@ -602,10 +602,14 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
           teamId={teamId}
           roomId={videoCallRoom.roomId}
           isInitiator={videoCallRoom.isInitiator}
-          onClose={() => {
+          onClose={(error = false) => {
             if (videoCallRoom.isInitiator) {
               setActiveCallState(null);
-              setMessages(prev => prev.map(m => m.roomId === videoCallRoom.roomId ? { ...m, isEnded: true } : m));
+              if (error) {
+                setMessages(prev => prev.filter(m => m.roomId !== videoCallRoom.roomId));
+              } else {
+                setMessages(prev => prev.map(m => m.roomId === videoCallRoom.roomId ? { ...m, isEnded: true } : m));
+              }
             }
             setVideoCallRoom(null);
           }}

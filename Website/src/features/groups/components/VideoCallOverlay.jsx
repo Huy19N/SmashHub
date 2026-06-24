@@ -29,7 +29,13 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
     const startCall = async () => {
       try {
         // 1. Get local media
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (e) {
+          console.warn('Không tìm thấy camera, thử chỉ dùng micro:', e);
+          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          setIsVideoMuted(true);
+        }
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
@@ -111,7 +117,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
       } catch (err) {
         console.error('Lỗi khởi tạo video call:', err);
         toast.error('Không thể truy cập camera/micro hoặc kết nối thất bại.');
-        onClose();
+        onClose(true);
       }
     };
 
