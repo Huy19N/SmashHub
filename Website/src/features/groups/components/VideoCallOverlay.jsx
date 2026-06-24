@@ -245,7 +245,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
         </button>
 
         <button
-          onClick={onClose}
+          onClick={() => onClose(false)}
           className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg shadow-red-500/20"
         >
           <PhoneOff className="h-7 w-7 text-white" />

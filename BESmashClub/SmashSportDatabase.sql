@@ -438,7 +438,7 @@ CREATE TABLE TeamMessages (
     CONSTRAINT FK_TeamMessages_Users FOREIGN KEY (SenderId) REFERENCES Users(UserId) ON DELETE NO ACTION,
     CONSTRAINT FK_TeamMessages_Media FOREIGN KEY (MediaFileId) REFERENCES StoredFiles(FileId),
     CONSTRAINT CK_TeamMessages_Type CHECK (MessageType >=0 AND MessageType <=4),
-    CONSTRAINT CK_TeamMessages_Content CHECK ( 
+    CONSTRAINT CK_TeamMessages_Content CHECK (
         ((MessageType = 0 OR MessageType = 4) AND Content IS NOT NULL) OR
         (MessageType >=1 AND MessageType <=3 AND MediaFileId IS NOT NULL)
     )
