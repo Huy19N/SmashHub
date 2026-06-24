@@ -248,16 +248,32 @@ public class ScheduleService : IScheduleService
         var courtFeePerPerson = totalParticipants > 0 ? schedule.BaseCourtCost / totalParticipants : 0;
         var extraFeePerPerson = attendedCount > 0 ? request.ExtraFee / attendedCount : 0;
 
+        var context = _unitOfWork.Schedules.GetContext();
+
         foreach (var p in participants)
         {
-            p.CostToPay = p.IsAttended ? (courtFeePerPerson + extraFeePerPerson) : courtFeePerPerson;
-            await _unitOfWork.ScheduleParticipants.UpdateAsync(p);
+            if (request.CustomAmounts != null && request.CustomAmounts.ContainsKey(p.UserId))
+            {
+                p.CostToPay = request.CustomAmounts[p.UserId];
+            }
+            else if (request.FixedAmountPerPerson.HasValue)
+            {
+                p.CostToPay = request.FixedAmountPerPerson.Value;
+            }
+            else
+            {
+                p.CostToPay = p.IsAttended ? (courtFeePerPerson + extraFeePerPerson) : courtFeePerPerson;
+            }
         }
+        
+        context.Set<ScheduleParticipant>().UpdateRange(participants);
 
         schedule.ExtraFee = request.ExtraFee;
         schedule.ExtraFeeNote = request.ExtraFeeNote;
         schedule.TotalCalculatedCost = schedule.BaseCourtCost + request.ExtraFee;
-        await _unitOfWork.Schedules.UpdateAsync(schedule);
+        
+        context.Set<Schedule>().Update(schedule);
+        await context.SaveChangesAsync();
     }
 
     #endregion

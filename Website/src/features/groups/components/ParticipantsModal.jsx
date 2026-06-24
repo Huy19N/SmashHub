@@ -350,6 +350,7 @@ export default function ParticipantsModal({ isOpen, onClose, schedule, onSuccess
         isOpen={showSplitBill}
         onClose={() => setShowSplitBill(false)}
         scheduleId={scheduleId}
+        participants={participants}
         onSuccess={() => {
           if (refetchParticipants) refetchParticipants();
         }}

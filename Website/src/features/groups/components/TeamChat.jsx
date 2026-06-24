@@ -389,7 +389,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 toast.error("Phòng đang mở bạn không thể mở phòng mới!");
                 return;
               }
-              const rId = `team_${teamId}_${Date.now()}`;
+              const rId = crypto.randomUUID();
               const myConnId = connectionRef.current?.connectionId;
               setActiveCallState({ roomId: rId, callerId: currentUserId, connId: myConnId });
               setVideoCallRoom({ roomId: rId, isInitiator: true });

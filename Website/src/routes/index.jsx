@@ -21,6 +21,7 @@ const JoinGroupPage = lazy(() => import('../features/groups/pages/JoinGroupPage'
 const BookingsPage = lazy(() => import('../features/bookings/pages/BookingsPage'));
 const SchedulesPage = lazy(() => import('../features/schedules/pages/SchedulesPage'));
 const ProfilePage = lazy(() => import('../features/profiles/pages/ProfilePage'));
+const SubscriptionPackages = lazy(() => import('../features/profiles/pages/SubscriptionPackages'));
 const DashboardPage = lazy(() => import('../features/dashboard/pages/DashboardPage'));
 const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pages/CourtsManagementPage'));
 const MatchmakingPage = lazy(() => import('../features/groups/pages/MatchmakingPage'));
@@ -31,6 +32,7 @@ const AdminDashboard = lazy(() => import('../features/admin/pages/AdminDashboard
 const UserManagement = lazy(() => import('../features/admin/pages/UserManagement'));
 const AdminFacilities = lazy(() => import('../features/admin/pages/FacilityManagement'));
 const AdminSettings = lazy(() => import('../features/admin/pages/AdminSettings'));
+const PaymentSettings = lazy(() => import('../features/admin/pages/PaymentSettings'));
 const PayoutManagement = lazy(() => import('../features/admin/pages/PayoutManagement'));
 const AdminProfile = lazy(() => import('../features/admin/pages/AdminProfile'));
 
@@ -95,6 +97,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
   },
   {
+    path: '/subscriptions',
+    element: <ProtectedRoute><SubscriptionPackages /></ProtectedRoute>
+  },
+  {
     path: PATHS.DASHBOARD,
     element: <ProtectedRoute><DashboardPage /></ProtectedRoute>
   },
@@ -111,6 +117,7 @@ export const router = createBrowserRouter([
       { path: 'facilities', element: <AdminFacilities /> },
       { path: 'payouts', element: <PayoutManagement /> },
       { path: 'system-settings', element: <AdminSettings /> },
+      { path: 'payment-settings', element: <PaymentSettings /> },
       { path: 'profile', element: <AdminProfile /> },
       { index: true, element: <Navigate to="dashboard" replace /> }
     ]

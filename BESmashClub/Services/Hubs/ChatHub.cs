@@ -60,6 +60,28 @@ namespace Services.Hubs
                 
                 // Broadcast cho cả team biết có cuộc gọi bắt đầu
                 await Clients.Group(teamId.ToString()).SendAsync("CallStarted", roomId, userId, Context.ConnectionId);
+
+                if (Guid.TryParse(roomId, out var sessionId))
+                {
+                    var context = _unitOfWork.TeamMembers.GetContext();
+                    var session = new VideoCallSession
+                    {
+                        SessionId = sessionId,
+                        TeamId = teamId,
+                        InitiatedByUserId = userId,
+                        StartedAt = DateTime.Now
+                    };
+                    context.Set<VideoCallSession>().Add(session);
+                    
+                    var participant = new VideoCallParticipant
+                    {
+                        SessionId = sessionId,
+                        UserId = userId,
+                        JoinedAt = DateTime.Now
+                    };
+                    context.Set<VideoCallParticipant>().Add(participant);
+                    await context.SaveChangesAsync();
+                }
             }
         }
 
@@ -73,6 +95,24 @@ namespace Services.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"webrtc_room_{roomId}");
                 // Thông báo cho các thành viên khác trong phòng cuộc gọi
                 await Clients.GroupExcept($"webrtc_room_{roomId}", Context.ConnectionId).SendAsync("UserJoinedCall", Context.ConnectionId, userId);
+
+                if (Guid.TryParse(roomId, out var sessionId))
+                {
+                    var context = _unitOfWork.TeamMembers.GetContext();
+                    var participant = await context.Set<VideoCallParticipant>()
+                        .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId && p.LeftAt == null);
+
+                    if (participant == null)
+                    {
+                        context.Set<VideoCallParticipant>().Add(new VideoCallParticipant
+                        {
+                            SessionId = sessionId,
+                            UserId = userId,
+                            JoinedAt = DateTime.Now
+                        });
+                        await context.SaveChangesAsync();
+                    }
+                }
             }
         }
 
@@ -86,6 +126,29 @@ namespace Services.Hubs
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"webrtc_room_{roomId}");
                 // Thông báo cho các thành viên khác
                 await Clients.GroupExcept($"webrtc_room_{roomId}", Context.ConnectionId).SendAsync("UserLeftCall", Context.ConnectionId, userId);
+
+                if (Guid.TryParse(roomId, out var sessionId))
+                {
+                    var context = _unitOfWork.TeamMembers.GetContext();
+                    var participant = await context.Set<VideoCallParticipant>()
+                        .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId && p.LeftAt == null);
+                    
+                    if (participant != null)
+                    {
+                        participant.LeftAt = DateTime.Now;
+                        context.Set<VideoCallParticipant>().Update(participant);
+                    }
+
+                    // Nếu là người tạo phòng rời đi, đóng luôn session
+                    var session = await context.Set<VideoCallSession>().FirstOrDefaultAsync(s => s.SessionId == sessionId);
+                    if (session != null && session.InitiatedByUserId == userId && session.EndedAt == null)
+                    {
+                        session.EndedAt = DateTime.Now;
+                        context.Set<VideoCallSession>().Update(session);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
             }
         }
 

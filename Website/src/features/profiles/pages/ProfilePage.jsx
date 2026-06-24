@@ -665,6 +665,12 @@ export default function ProfilePage() {
                       <Crown className="w-5 h-5 text-amber-500 animate-pulse" />
                       Gói hội viên (Subscription)
                     </h3>
+                    <Button
+                      onClick={() => navigate('/subscriptions')}
+                      className="py-1.5 px-3 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      Nâng cấp
+                    </Button>
                   </div>
                   
                   {(() => {
