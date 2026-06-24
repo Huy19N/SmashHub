@@ -13,7 +13,7 @@ import {
   Moon,
   Sun,
   LogOut,
-  CreditCard
+  CreditCard,
   Percent
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
