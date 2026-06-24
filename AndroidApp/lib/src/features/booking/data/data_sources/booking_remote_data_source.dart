@@ -121,4 +121,56 @@ class BookingRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi tải thông tin chi tiết sân');
     }
   }
+
+  /// Lấy tất cả cơ sở (Facilities).
+  Future<ApiResponse<List<FacilityResponse>>> getAllFacilities() async {
+    try {
+      final response = await _apiClient.get('/api/facilities');
+      return ApiResponse<List<FacilityResponse>>.fromJson(
+        response.data,
+        (json) {
+          final list = json as List<dynamic>? ?? [];
+          return list.map((item) => FacilityResponse.fromJson(item as Map<String, dynamic>)).toList();
+        },
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải danh sách cơ sở sân chơi');
+    }
+  }
+
+  /// Lấy chi tiết cơ sở (Facility).
+  Future<ApiResponse<FacilityResponse>> getFacilityDetail(int facilityId) async {
+    try {
+      final response = await _apiClient.get('/api/facilities/$facilityId');
+      return ApiResponse<FacilityResponse>.fromJson(
+        response.data,
+        (json) => FacilityResponse.fromJson(json as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải chi tiết cơ sở sân chơi');
+    }
+  }
+
+  /// Lấy trạng thái hoạt động/đặt của các sân theo cơ sở và ngày.
+  Future<ApiResponse<List<CourtAvailabilityResponse>>> getCourtAvailabilities(
+    int facilityId,
+    DateTime date,
+  ) async {
+    try {
+      final dateString = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final response = await _apiClient.get(
+        '/api/facilities/$facilityId/courts/status',
+        queryParameters: {'date': dateString},
+      );
+      return ApiResponse<List<CourtAvailabilityResponse>>.fromJson(
+        response.data,
+        (json) {
+          final list = json as List<dynamic>? ?? [];
+          return list.map((item) => CourtAvailabilityResponse.fromJson(item as Map<String, dynamic>)).toList();
+        },
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải lịch hoạt động sân con');
+    }
+  }
 }

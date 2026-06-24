@@ -171,3 +171,198 @@ class CourtResponse {
     };
   }
 }
+
+class SportPriceSummary {
+  final int sportId;
+  final String sportName;
+  final double minPrice;
+  final double maxPrice;
+
+  SportPriceSummary({
+    required this.sportId,
+    required this.sportName,
+    required this.minPrice,
+    required this.maxPrice,
+  });
+
+  factory SportPriceSummary.fromJson(Map<String, dynamic> json) {
+    return SportPriceSummary(
+      sportId: json['sportId'] as int? ?? 0,
+      sportName: json['sportName'] as String? ?? '',
+      minPrice: (json['minPrice'] as num?)?.toDouble() ?? 0.0,
+      maxPrice: (json['maxPrice'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sportId': sportId,
+      'sportName': sportName,
+      'minPrice': minPrice,
+      'maxPrice': maxPrice,
+    };
+  }
+}
+
+class FacilityResponse {
+  final int facilityId;
+  final String? ownerId;
+  final String? ownerName;
+  final String? name;
+  final String? city;
+  final String? district;
+  final String? address;
+  final int courtCount;
+  final double? latitude;
+  final double? longitude;
+  final double? distanceKm;
+  final String? businessCode;
+  final int statusId;
+  final String? statusName;
+  final DateTime? createdAt;
+  final List<SportPriceSummary> sportPrices;
+
+  FacilityResponse({
+    required this.facilityId,
+    this.ownerId,
+    this.ownerName,
+    this.name,
+    this.city,
+    this.district,
+    this.address,
+    required this.courtCount,
+    this.latitude,
+    this.longitude,
+    this.distanceKm,
+    this.businessCode,
+    required this.statusId,
+    this.statusName,
+    this.createdAt,
+    required this.sportPrices,
+  });
+
+  factory FacilityResponse.fromJson(Map<String, dynamic> json) {
+    return FacilityResponse(
+      facilityId: json['facilityId'] as int? ?? 0,
+      ownerId: json['ownerId'] as String?,
+      ownerName: json['ownerName'] as String?,
+      name: json['name'] as String?,
+      city: json['city'] as String?,
+      district: json['district'] as String?,
+      address: json['address'] as String?,
+      courtCount: json['courtCount'] as int? ?? 0,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
+      businessCode: json['businessCode'] as String?,
+      statusId: json['statusId'] as int? ?? 0,
+      statusName: json['statusName'] as String?,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : null,
+      sportPrices: (json['sportPrices'] as List<dynamic>?)
+              ?.map((item) => SportPriceSummary.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'facilityId': facilityId,
+      'ownerId': ownerId,
+      'ownerName': ownerName,
+      'name': name,
+      'city': city,
+      'district': district,
+      'address': address,
+      'courtCount': courtCount,
+      'latitude': latitude,
+      'longitude': longitude,
+      'distanceKm': distanceKm,
+      'businessCode': businessCode,
+      'statusId': statusId,
+      'statusName': statusName,
+      'createdAt': createdAt?.toIso8601String(),
+      'sportPrices': sportPrices.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class TimeSlotStatus {
+  final String startTime;
+  final String endTime;
+  final double cost;
+  final String status;
+  final String? bookingId;
+  final String? bookedByUserName;
+
+  TimeSlotStatus({
+    required this.startTime,
+    required this.endTime,
+    required this.cost,
+    required this.status,
+    this.bookingId,
+    this.bookedByUserName,
+  });
+
+  factory TimeSlotStatus.fromJson(Map<String, dynamic> json) {
+    return TimeSlotStatus(
+      startTime: json['startTime'] as String? ?? '',
+      endTime: json['endTime'] as String? ?? '',
+      cost: (json['cost'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] as String? ?? 'Available',
+      bookingId: json['bookingId'] as String?,
+      bookedByUserName: json['bookedByUserName'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'startTime': startTime,
+      'endTime': endTime,
+      'cost': cost,
+      'status': status,
+      'bookingId': bookingId,
+      'bookedByUserName': bookedByUserName,
+    };
+  }
+}
+
+class CourtAvailabilityResponse {
+  final int courtId;
+  final String courtName;
+  final String sportName;
+  final bool isActive;
+  final List<TimeSlotStatus> timeSlots;
+
+  CourtAvailabilityResponse({
+    required this.courtId,
+    required this.courtName,
+    required this.sportName,
+    required this.isActive,
+    required this.timeSlots,
+  });
+
+  factory CourtAvailabilityResponse.fromJson(Map<String, dynamic> json) {
+    return CourtAvailabilityResponse(
+      courtId: json['courtId'] as int? ?? 0,
+      courtName: json['courtName'] as String? ?? '',
+      sportName: json['sportName'] as String? ?? '',
+      isActive: json['isActive'] as bool? ?? false,
+      timeSlots: (json['timeSlots'] as List<dynamic>?)
+              ?.map((item) => TimeSlotStatus.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'courtId': courtId,
+      'courtName': courtName,
+      'sportName': sportName,
+      'isActive': isActive,
+      'timeSlots': timeSlots.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+

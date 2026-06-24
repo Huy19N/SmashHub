@@ -58,6 +58,24 @@ class VerifyEmailRequest {
   }
 }
 
+/// DTO gửi đi để xác thực Email khi đang ở trong Profile (kích hoạt bằng tay).
+class EmailConfirmationRequest {
+  final String email;
+  final String code;
+
+  EmailConfirmationRequest({
+    required this.email,
+    required this.code,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'code': code,
+    };
+  }
+}
+
 /// DTO phản hồi chứa Access Token và Refresh Token từ Backend.
 class TokenResponse {
   final String accessToken;

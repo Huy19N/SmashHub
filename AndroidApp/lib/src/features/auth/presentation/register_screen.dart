@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/main_wrapper.dart';
 import 'login_screen.dart';
+import 'verify_email_screen.dart';
 import 'controllers/auth_controller.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../data/data_sources/auth_remote_data_source.dart';
@@ -97,17 +98,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // 3. Xử lý phản hồi kết quả từ máy chủ
     if (mounted) {
       if (response.success) {
-        // Thành công: Chuyển hướng người dùng sang ProfileScreen (được sử dụng làm dashboard tạm thời)
+        // Thành công: Chuyển hướng người dùng sang VerifyEmailScreen để nhập mã OTP
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đăng ký tài khoản thành công!'),
+            content: Text('Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP.'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
         );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const MainWrapper(),
+            builder: (context) => VerifyEmailScreen(email: _emailController.text.trim()),
           ),
         );
       } else {

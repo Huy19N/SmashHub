@@ -13,6 +13,8 @@ import '../controllers/home_controller.dart';
 import '../../../../features/auth/data/data_sources/profile_remote_data_source.dart';
 import '../../../../features/auth/data/repositories/profile_repository_impl.dart';
 import '../../../../features/auth/presentation/controllers/profile_controller.dart';
+import '../../../matchmaking/presentation/screens/matchmaking_dashboard_screen.dart';
+import 'post_comments_screen.dart';
 
 /// Màn hình Trang chủ chính (HomeScreen) với phong cách thiết kế thể thao hiện đại, cao cấp.
 /// Tích hợp SliverAppBar, Banners quảng cáo, Lưới hành động nhanh và Bản tin cộng đồng.
@@ -594,7 +596,14 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Tìm đối thủ giao lưu',
           color: Colors.orangeAccent,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const MatchmakingDashboardScreen(),
+              ),
+            );
+          },
         ),
         _buildActionCard(
           icon: Icons.event_available_rounded,
@@ -676,6 +685,79 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _togglePostLike(CommunityPost post) async {
+    final index = _posts.indexWhere((p) => p.id == post.id);
+    if (index == -1) return;
+
+    final p = _posts[index];
+    final originalState = p.isLiked;
+    final originalCount = p.likeCount;
+
+    final updatedPost = CommunityPost(
+      id: p.id,
+      userAvatarUrl: p.userAvatarUrl,
+      userName: p.userName,
+      timeAgo: p.timeAgo,
+      content: p.content,
+      featuredImageUrl: p.featuredImageUrl,
+      likeCount: originalState ? originalCount - 1 : originalCount + 1,
+      commentCount: p.commentCount,
+      shareCount: p.shareCount,
+      isLiked: !originalState,
+      tag: p.tag,
+    );
+
+    setState(() {
+      _posts[index] = updatedPost;
+    });
+
+    try {
+      final apiClient = ApiClient();
+      if (originalState) {
+        await apiClient.delete('/api/social/posts/${post.id}/like');
+      } else {
+        await apiClient.post('/api/social/posts/${post.id}/like');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _posts[index] = p;
+        });
+      }
+    }
+  }
+
+  Future<void> _openComments(CommunityPost post) async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostCommentsScreen(post: post),
+      ),
+    );
+
+    if (result != null && mounted) {
+      final index = _posts.indexWhere((p) => p.id == post.id);
+      if (index != -1) {
+        final p = _posts[index];
+        setState(() {
+          _posts[index] = CommunityPost(
+            id: p.id,
+            userAvatarUrl: p.userAvatarUrl,
+            userName: p.userName,
+            timeAgo: p.timeAgo,
+            content: p.content,
+            featuredImageUrl: p.featuredImageUrl,
+            likeCount: result['likeCount'] as int? ?? p.likeCount,
+            commentCount: result['commentCount'] as int? ?? p.commentCount,
+            shareCount: p.shareCount,
+            isLiked: result['isLiked'] as bool? ?? p.isLiked,
+            tag: p.tag,
+          );
+        });
+      }
+    }
   }
 
   /// Từng Item bài viết trong bản tin cộng đồng (Community Feed Item)
@@ -785,13 +867,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     : Icons.favorite_border_rounded,
                 label: post.likeCount.toString(),
                 color: post.isLiked ? Colors.redAccent : Colors.grey,
-                onTap: () {},
+                onTap: () => _togglePostLike(post),
               ),
               _buildInteractionButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 label: post.commentCount.toString(),
                 color: Colors.grey,
-                onTap: () {},
+                onTap: () => _openComments(post),
               ),
               _buildInteractionButton(
                 icon: Icons.share_outlined,

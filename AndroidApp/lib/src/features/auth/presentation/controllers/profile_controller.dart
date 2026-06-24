@@ -19,6 +19,23 @@ class ProfileController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  /// Đánh dấu tài khoản đã kích hoạt ngay trên bộ nhớ local để UI cập nhật tức thì.
+  void markAsActive() {
+    if (_userProfile != null) {
+      _userProfile = UserProfileResponse(
+        userId: _userProfile!.userId,
+        fullName: _userProfile!.fullName,
+        email: _userProfile!.email,
+        phoneNumber: _userProfile!.phoneNumber,
+        roleName: _userProfile!.roleName,
+        createdAt: _userProfile!.createdAt,
+        isActive: true,
+        avatarFileId: _userProfile!.avatarFileId,
+      );
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchProfileData() async {
     _isLoading = true;
     _errorMessage = null;
@@ -179,6 +196,64 @@ class ProfileController extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Lỗi tải ảnh đại diện lên máy chủ';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> sendConfirmationEmail(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _profileRepository.sendConfirmationEmail(email);
+      if (response.success) {
+        return true;
+      } else {
+        _errorMessage = response.message;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Lỗi gửi yêu cầu xác thực email';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> verifyCode(String email, String code) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final request = EmailConfirmationRequest(email: email, code: code);
+      final response = await _profileRepository.verifyCode(request);
+      if (response.success && response.data == true) {
+        // Nếu xác thực thành công, giả định isActive thành true để UI có thể mở lại
+        if (_userProfile != null) {
+          _userProfile = UserProfileResponse(
+            userId: _userProfile!.userId,
+            fullName: _userProfile!.fullName,
+            email: _userProfile!.email,
+            phoneNumber: _userProfile!.phoneNumber,
+            roleName: _userProfile!.roleName,
+            createdAt: _userProfile!.createdAt,
+            isActive: true, // Cập nhật isActive thành true!
+            avatarFileId: _userProfile!.avatarFileId,
+          );
+        }
+        return true;
+      } else {
+        _errorMessage = response.message;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Lỗi xác thực mã OTP';
       return false;
     } finally {
       _isLoading = false;

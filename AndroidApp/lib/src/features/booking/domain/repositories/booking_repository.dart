@@ -29,4 +29,16 @@ abstract class BookingRepository {
 
   /// Xem chi tiết thông tin một sân cụ thể.
   Future<ApiResponse<CourtResponse>> getCourtDetail(int courtId);
+
+  /// Lấy tất cả các cơ sở thể thao.
+  Future<ApiResponse<List<FacilityResponse>>> getAllFacilities();
+
+  /// Xem chi tiết thông tin một cơ sở thể thao cụ thể.
+  Future<ApiResponse<FacilityResponse>> getFacilityDetail(int facilityId);
+
+  /// Lấy trạng thái hoạt động/đặt sân con theo cơ sở và ngày cụ thể.
+  Future<ApiResponse<List<CourtAvailabilityResponse>>> getCourtAvailabilities(
+    int facilityId,
+    DateTime date,
+  );
 }
