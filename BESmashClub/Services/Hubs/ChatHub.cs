@@ -120,7 +120,7 @@ namespace Services.Hubs
                 {
                     var context = _unitOfWork.TeamMembers.GetContext();
                     var participant = await context.Set<VideoCallParticipant>()
-                        .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId && p.LeftAt == null);
+                        .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId);
 
                     if (participant == null)
                     {
@@ -130,8 +130,14 @@ namespace Services.Hubs
                             UserId = userId,
                             JoinedAt = DateTime.Now
                         });
-                        await context.SaveChangesAsync();
                     }
+                    else if (participant.LeftAt != null)
+                    {
+                        participant.LeftAt = null;
+                        participant.JoinedAt = DateTime.Now;
+                        context.Set<VideoCallParticipant>().Update(participant);
+                    }
+                    await context.SaveChangesAsync();
                 }
             }
         }
