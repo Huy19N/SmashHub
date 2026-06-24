@@ -5,6 +5,8 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import api, { getAccessToken } from '../../../config/axios';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../../components/layout/Sidebar';
+import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 
 export default function SubscriptionPackages() {
   const { theme } = useTheme();
@@ -50,18 +52,22 @@ export default function SubscriptionPackages() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} py-12 px-4 sm:px-6 lg:px-8 font-sans`}>
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl font-display">
-            Nâng cấp Trải nghiệm của Bạn
-          </h2>
-          <p className="mt-4 text-lg text-gray-500 dark:text-gray-400 font-label">
-            Chọn gói dịch vụ phù hợp nhất để mở khóa các tính năng quản lý câu lạc bộ, bắt kèo và kết nối mạnh mẽ.
-          </p>
-        </div>
+    <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans relative overflow-hidden`}>
+      <SportyWatermarks />
+      <Sidebar activeMenu="profile" />
+      
+      <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col animate-page">
+        <div className="max-w-7xl mx-auto w-full">
+          <div className="text-center max-w-3xl mx-auto mb-16 mt-4">
+            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl font-display">
+              Nâng cấp Trải nghiệm của Bạn
+            </h2>
+            <p className="mt-4 text-lg text-gray-500 dark:text-gray-400 font-label">
+              Chọn gói dịch vụ phù hợp nhất để mở khóa các tính năng quản lý câu lạc bộ, bắt kèo và kết nối mạnh mẽ.
+            </p>
+          </div>
 
-        {isLoading ? (
+          {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
           </div>
@@ -114,7 +120,8 @@ export default function SubscriptionPackages() {
             })}
           </div>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
