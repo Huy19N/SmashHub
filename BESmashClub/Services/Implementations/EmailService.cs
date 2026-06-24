@@ -56,13 +56,21 @@ public class EmailService : IEmailService
 
     public async Task<bool> VerifyEmailAsync(string code, string email)
     {
+
+        var user = await _unitOfWork.Users.GetByEmailAsync(email);
         var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
         if (confirm == null)
             throw new KeyNotFoundException("Mã xác nhận không hợp lệ.");
-
         if (confirm.ExpiredAt < DateTime.Now)
             throw new InvalidOperationException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
         await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
+        if (confirm != null)
+        {
+            user.IsActive = true;
+            await _unitOfWork.Users.UpdateAsync(user);
+        }
         return true;
     }
 
