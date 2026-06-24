@@ -31,7 +31,7 @@ public class SubscriptionsController : ControllerBase
                 p.DurationMonths,
                 p.Price,
                 TierName = p.Tier.TierName,
-                Features = p.Tier.Features
+                Features = string.Join("\n", p.Tier.Features.Select(f => f.FeatureName))
             })
             .ToListAsync();
 

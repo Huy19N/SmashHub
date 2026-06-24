@@ -691,10 +691,29 @@ INSERT INTO MatchAcceptanceStatuses (StatusId, StatusName) VALUES (1, N'Pending'
 INSERT INTO Sports (SportName, Description) VALUES (N'Cầu Lông', N'Sân thảm tiêu chuẩn'), (N'Bóng Bàn', N'Bàn ITTF'), (N'Pickleball', N'Sân ngoài trời');
 INSERT INTO SportLevels (SportId, LevelName, RankValue) VALUES (1, N'Cơ bản', 1), (1, N'Nâng cao', 2), (1, N'Tuyển thủ', 3);
  
-INSERT INTO SubscriptionTiers (TierName, Description) VALUES ('Free', N'Cơ bản'), ('Basic', N'Nâng cao'), ('Pro', N'Toàn bộ');
+INSERT INTO SubscriptionTiers (TierName, Description) VALUES ('Free', N'Gói cơ bản miễn phí'), ('Standard', N'Gói nâng cao'), ('Premium', N'Gói toàn diện');
 DECLARE @FreeId INT = (SELECT TierId FROM SubscriptionTiers WHERE TierName = 'Free');
-DECLARE @ProId INT = (SELECT TierId FROM SubscriptionTiers WHERE TierName = 'Pro');
-INSERT INTO SubscriptionPlans (TierId, DurationMonths, Price) VALUES (@FreeId, 0, 0), (@ProId, 1, 99000);
+DECLARE @StdId INT = (SELECT TierId FROM SubscriptionTiers WHERE TierName = 'Standard');
+DECLARE @PremId INT = (SELECT TierId FROM SubscriptionTiers WHERE TierName = 'Premium');
+INSERT INTO SubscriptionPlans (TierId, DurationMonths, Price) VALUES (@FreeId, 0, 0), (@StdId, 1, 49000), (@PremId, 1, 99000);
+
+-- Insert Features
+INSERT INTO Features (FeatureCode, FeatureName) VALUES 
+('MEMBER_15', N'Tối đa 15 thành viên/nhóm'),
+('TEAM_5', N'Tham gia tối đa 5 nhóm'),
+('CHAT_BASIC', N'Nhắn tin nhóm cơ bản'),
+('MEMBER_30', N'Tối đa 30 thành viên/nhóm'),
+('TEAM_10', N'Tham gia tối đa 10 nhóm'),
+('MEDIA_5', N'Gửi tối đa 5 ảnh/ngày'),
+('MEMBER_100', N'Tối đa 100 thành viên/nhóm'),
+('TEAM_UNL', N'Không giới hạn nhóm tham gia'),
+('MEDIA_UNL', N'Gửi ảnh, video, tài liệu không giới hạn'),
+('CALL_FULL', N'Gọi thoại và gọi video nhóm');
+
+-- Map Features to Tiers
+INSERT INTO TierFeatures (TierId, FeatureId) SELECT @FreeId, FeatureId FROM Features WHERE FeatureCode IN ('MEMBER_15', 'TEAM_5', 'CHAT_BASIC');
+INSERT INTO TierFeatures (TierId, FeatureId) SELECT @StdId, FeatureId FROM Features WHERE FeatureCode IN ('MEMBER_30', 'TEAM_10', 'MEDIA_5');
+INSERT INTO TierFeatures (TierId, FeatureId) SELECT @PremId, FeatureId FROM Features WHERE FeatureCode IN ('MEMBER_100', 'TEAM_UNL', 'MEDIA_UNL', 'CALL_FULL');
  
 INSERT INTO SystemSettings (SettingKey, SettingValue, Description) VALUES (N'PlatformFeePercentage', N'5', N'Phần trăm phí hoa hồng thu từ chủ sân cho mỗi booking');
  

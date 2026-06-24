@@ -21,6 +21,7 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
   const localVideoRef = useRef(null);
   const connectionRef = useRef(null);
   const peersRef = useRef({}); // { connectionId: RTCPeerConnection }
+  const candidateQueue = useRef({}); // { connectionId: RTCIceCandidate[] }
 
   // Init SignalR & WebRTC
   useEffect(() => {
@@ -85,13 +86,34 @@ export default function VideoCallOverlay({ teamId, roomId, isInitiator, onClose,
               peersRef.current[fromConnId] = peer;
             }
             await peer.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            // Drain queue
+            if (candidateQueue.current[fromConnId]) {
+              for (const cand of candidateQueue.current[fromConnId]) {
+                try { await peer.addIceCandidate(new RTCIceCandidate(cand)); } catch(e) { console.error(e); }
+              }
+              candidateQueue.current[fromConnId] = [];
+            }
             const answer = await peer.createAnswer();
             await peer.setLocalDescription(answer);
             connection.invoke('SendSignal', fromConnId, JSON.stringify({ type: 'answer', sdp: peer.localDescription }));
           } else if (signal.type === 'answer') {
-            if (peer) await peer.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            if (peer) {
+              await peer.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+              // Drain queue
+              if (candidateQueue.current[fromConnId]) {
+                for (const cand of candidateQueue.current[fromConnId]) {
+                  try { await peer.addIceCandidate(new RTCIceCandidate(cand)); } catch(e) { console.error(e); }
+                }
+                candidateQueue.current[fromConnId] = [];
+              }
+            }
           } else if (signal.candidate) {
-            if (peer) await peer.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            if (!peer || !peer.remoteDescription) {
+              if (!candidateQueue.current[fromConnId]) candidateQueue.current[fromConnId] = [];
+              candidateQueue.current[fromConnId].push(signal.candidate);
+            } else {
+              try { await peer.addIceCandidate(new RTCIceCandidate(signal.candidate)); } catch(e) { console.error(e); }
+            }
           }
         });
 
