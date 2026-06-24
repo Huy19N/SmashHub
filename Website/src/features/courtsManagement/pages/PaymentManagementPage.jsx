@@ -111,6 +111,8 @@ export default function PaymentManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState(null);
 
   // Form values
   const [bankName, setBankName] = useState('');
@@ -259,17 +261,26 @@ export default function PaymentManagementPage() {
     }
   };
 
-  const handleDeleteAccount = async (account) => {
-    if (window.confirm(`Bạn có chắc chắn muốn XÓA tài khoản ${account.bankName} - ${account.accountNumber} không?`)) {
-      try {
-        const res = await deleteBankAccountAPI(selectedFacilityId, account.bankAccountId);
-        toast.success(res.message || 'Đã xóa tài khoản ngân hàng.');
-        fetchBankAccounts(selectedFacilityId);
-      } catch (err) {
-        console.error(err);
-        const msg = err.response?.data?.message || 'Lỗi khi xóa tài khoản.';
-        toast.error(msg);
-      }
+  const handleOpenDeleteModal = (account) => {
+    setAccountToDelete(account);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!accountToDelete) return;
+    setIsSubmitting(true);
+    try {
+      const res = await deleteBankAccountAPI(selectedFacilityId, accountToDelete.bankAccountId);
+      toast.success(res.message || 'Đã xóa tài khoản ngân hàng.');
+      setIsDeleteModalOpen(false);
+      setAccountToDelete(null);
+      fetchBankAccounts(selectedFacilityId);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || 'Lỗi khi xóa tài khoản.';
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -466,8 +477,8 @@ export default function PaymentManagementPage() {
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDeleteAccount(account)}
-                                className="p-2 rounded-lg bg-white/10 hover:bg-red-500/20 text-white hover:text-red-300 transition-colors cursor-pointer active:scale-90"
+                                onClick={() => handleOpenDeleteModal(account)}
+                                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-red-300 transition-colors cursor-pointer active:scale-90"
                                 title="Xóa"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -725,6 +736,72 @@ export default function PaymentManagementPage() {
               </Button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Delete Bank Account Confirmation Modal */}
+      {isDeleteModalOpen && accountToDelete && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="absolute inset-0" onClick={() => setIsDeleteModalOpen(false)}></div>
+          <div
+            className="relative w-full max-w-md bg-white dark:bg-[#0f172a] rounded-3xl border border-gray-150 dark:border-white/10 overflow-hidden shadow-2xl p-6 z-10 space-y-4 animate-scaleUp"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-3">
+              <h3 className="text-base font-extrabold font-display dark:text-white flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-red-500" />
+                Xác Nhận Xóa Tài Khoản
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+              <p className="leading-relaxed">
+                Bạn có chắc chắn muốn <span className="font-black text-red-500">XÓA</span> tài khoản ngân hàng này không? Hành động này không thể hoàn tác.
+              </p>
+              <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Ngân hàng</span>
+                  <span className="font-extrabold text-gray-800 dark:text-white">{accountToDelete.bankName}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Số tài khoản</span>
+                  <span className="font-mono font-extrabold text-gray-800 dark:text-white">{accountToDelete.accountNumber}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Chủ tài khoản</span>
+                  <span className="font-extrabold text-gray-800 dark:text-white uppercase tracking-wider">{accountToDelete.accountHolder}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 border-t border-gray-100 dark:border-white/5 pt-4 mt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 !py-2.5 rounded-xl text-xs font-bold"
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                isLoading={isSubmitting}
+                onClick={handleConfirmDelete}
+                className="flex-1 !py-2.5 rounded-xl text-xs font-bold"
+              >
+                {!isSubmitting && <Trash2 className="w-3.5 h-3.5 mr-1" />}
+                Xác nhận xóa
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
