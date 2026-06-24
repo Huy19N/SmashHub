@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Building2, CreditCard, Plus, Edit3, Trash2, Loader2,
-  AlertCircle, CheckCircle2, Wallet, User, Landmark, ShieldCheck, X
+  AlertCircle, CheckCircle2, Wallet, User, Landmark, ShieldCheck, X, MapPin,
+  ChevronDown
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
@@ -116,6 +117,7 @@ export default function PaymentManagementPage() {
   const [accountNumber, setAccountNumber] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
   const [showBankDropdown, setShowBankDropdown] = useState(false);
+  const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
 
   // Load owner facilities
   const fetchFacilities = useCallback(async () => {
@@ -161,6 +163,18 @@ export default function PaymentManagementPage() {
       setBankAccounts([]);
     }
   }, [selectedFacilityId, fetchBankAccounts]);
+
+  useEffect(() => {
+    if (!isFacilityDropdownOpen) return;
+    const handleOutsideClick = (e) => {
+      const selector = document.getElementById('facility-selector-container');
+      if (selector && !selector.contains(e.target)) {
+        setIsFacilityDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [isFacilityDropdownOpen]);
 
   const handleOpenAddModal = () => {
     setBankName('');
@@ -268,55 +282,94 @@ export default function PaymentManagementPage() {
 
       {/* Main Panel Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <header className="h-16 shrink-0 bg-white dark:bg-[#0b0f19] border-b border-gray-150 dark:border-white/5 flex items-center justify-between px-6 md:px-8">
-          <div>
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest font-label">SmashHub Bank</span>
-            <h2 className="text-sm font-extrabold text-emerald-700 dark:text-primary font-display mt-0.5">Quản lý nhận tiền</h2>
-          </div>
-        </header>
-
         {/* Scrollable container */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50 dark:bg-[#0e1322] relative">
           <SportyWatermarks />
 
           <div className="max-w-6xl mx-auto space-y-6 relative z-10">
-            {/* Title and Facility Dropdown */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-extrabold font-display leading-tight dark:text-white flex items-center gap-2">
-                  <Wallet className="w-6 h-6 text-emerald-600 dark:text-primary" />
-                  Quản Lý Tài Khoản Nhận Tiền
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Đăng ký thông tin tài khoản ngân hàng để làm nơi nhận các khoản tiền thanh toán và rút số dư ví của cơ sở.
-                </p>
-              </div>
-
-              {/* Facility Dropdown */}
-              {!isLoadingFacilities && facilities.length > 0 && (
-                <div className="flex items-center gap-2.5 bg-white dark:bg-[#0b0f19]/60 px-4 py-2 rounded-2xl border border-gray-150/80 dark:border-white/5 shadow-sm shrink-0">
-                  <Building2 className="w-4 h-4 text-emerald-500" />
-                  <select
-                    value={selectedFacilityId || ''}
-                    onChange={(e) => setSelectedFacilityId(Number(e.target.value))}
-                    className="bg-transparent border-0 focus:outline-none text-xs font-bold dark:text-white cursor-pointer pr-8 focus:ring-0"
-                  >
-                    {facilities.map((fac) => (
-                      <option key={fac.facilityId} value={fac.facilityId} className="dark:bg-[#0b0f19]">
-                        {fac.name} {fac.statusId === 1 ? '(Chờ duyệt)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+            {/* Title Block */}
+            <div className="space-y-1">
+              <h1 className="text-2xl md:text-3xl font-extrabold font-display leading-tight dark:text-white">
+                Quản lý nhận tiền
+              </h1>
+              <p className="text-xs text-gray-550 dark:text-gray-400">
+                Đăng ký thông tin tài khoản ngân hàng để làm nơi nhận các khoản tiền thanh toán và rút số dư ví của cơ sở.
+              </p>
             </div>
+
+            {/* Facility Selector Card (Matches image 1) */}
+            {!isLoadingFacilities && facilities.length > 0 && (
+              <div 
+                id="facility-selector-container"
+                className="relative"
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsFacilityDropdownOpen(!isFacilityDropdownOpen)}
+                  className="w-full text-left bg-white dark:bg-[#0b0f19]/60 p-4 md:p-6 rounded-3xl border border-gray-150/80 dark:border-white/5 shadow-sm flex justify-between items-center gap-4 hover:border-emerald-500/50 dark:hover:border-emerald-500/30 transition-all duration-200 cursor-pointer focus:outline-none animate-fadeIn"
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-extrabold text-gray-400 dark:text-gray-550 uppercase tracking-widest font-label block mb-1">
+                      CHỌN CƠ SỞ QUẢN LÝ
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                      <span className="text-base font-extrabold text-gray-900 dark:text-white truncate">
+                        {selectedFacility?.name} {selectedFacility?.statusId === 1 ? ' (Chờ duyệt)' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 shrink-0 ${isFacilityDropdownOpen ? 'transform rotate-180 text-emerald-500' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isFacilityDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#0f172a] border border-gray-150/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden z-[100] animate-fadeIn">
+                    <div className="max-h-60 overflow-y-auto scrollbar-thin">
+                      {facilities.map((fac) => (
+                        <button
+                          key={fac.facilityId}
+                          type="button"
+                          onClick={() => {
+                            setSelectedFacilityId(fac.facilityId);
+                            setIsFacilityDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-5 py-3.5 text-sm font-extrabold flex items-center justify-between transition-colors cursor-pointer
+                            ${fac.facilityId === selectedFacilityId
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+                            }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Building2 className={`w-4 h-4 ${fac.facilityId === selectedFacilityId ? 'text-emerald-500' : 'text-gray-400'}`} />
+                            <span>
+                              {fac.name} {fac.statusId === 1 ? ' (Chờ duyệt)' : ''}
+                            </span>
+                          </span>
+                          {fac.facilityId === selectedFacilityId && (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Facility Address (Matches image 1) */}
+            {!isLoadingFacilities && selectedFacility && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 pl-1">
+                <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Địa chỉ: {selectedFacility.address}, {selectedFacility.district}, {selectedFacility.city}</span>
+              </div>
+            )}
 
             {/* Main Content Area */}
             {isLoadingFacilities ? (
               <div className="flex flex-col items-center justify-center py-20 space-y-4">
                 <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-                <p className="text-xs text-gray-450">Đang tải danh sách cơ sở...</p>
+                <p className="text-xs text-gray-455">Đang tải danh sách cơ sở...</p>
               </div>
             ) : facilities.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-500 bg-white dark:bg-[#0b0f19]/40 rounded-3xl border border-dashed border-gray-200 dark:border-white/10 p-8 text-center max-w-xl mx-auto shadow-sm">
@@ -328,15 +381,6 @@ export default function PaymentManagementPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Information Header Block */}
-                {selectedFacility && (
-                  <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-primary/5 border border-emerald-100/50 dark:border-primary/10 flex items-center gap-3 text-xs text-emerald-800 dark:text-primary-light">
-                    <ShieldCheck className="w-5 h-5 shrink-0" />
-                    <span>
-                      Đang quản lý tài khoản thanh toán cho cơ sở: <strong className="font-extrabold">{selectedFacility.name}</strong> ({selectedFacility.address}, {selectedFacility.district}, {selectedFacility.city})
-                    </span>
-                  </div>
-                )}
 
                 {/* Add Button & Grid */}
                 <div className="flex justify-between items-center">
