@@ -116,4 +116,20 @@ class MatchmakingRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi phản hồi yêu cầu ghép đấu');
     }
   }
+
+  /// Lấy danh sách các tin ghép đấu của một đội cụ thể (cả chủ nhà và khách).
+  Future<ApiResponse<List<MatchChallengeResponse>>> getTeamChallenges(String teamId) async {
+    try {
+      final response = await _apiClient.get('/api/matchmaking/teams/$teamId');
+      return ApiResponse<List<MatchChallengeResponse>>.fromJson(
+        response.data,
+        (json) {
+          final list = json as List<dynamic>? ?? [];
+          return list.map((item) => MatchChallengeResponse.fromJson(item as Map<String, dynamic>)).toList();
+        },
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tải danh sách ghép đấu của đội');
+    }
+  }
 }

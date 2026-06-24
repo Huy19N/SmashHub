@@ -13,6 +13,9 @@ import '../../../shared/network/api_client.dart';
 import '../data/data_sources/profile_remote_data_source.dart';
 import '../data/repositories/profile_repository_impl.dart';
 import '../presentation/controllers/profile_controller.dart';
+import 'login_screen.dart';
+import 'verify_email_screen.dart';
+import 'subscription_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isEmbedded;
@@ -440,8 +443,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: _controller.isLoading && _controller.userProfile == null
           ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: SingleChildScrollView(
+          : (_controller.userProfile?.isActive == false)
+              ? _buildActivationRequiredState()
+              : SafeArea(
+                  child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20.0,
                   vertical: 16.0,
@@ -619,6 +624,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Subscription / Upgrade Account Banner Card
+                        AppCard(
+                          backgroundColor: isDark ? null : Colors.white,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Colors.amber, size: 36),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Gói Tài Khoản',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    ),
+                                    Text(
+                                      'Nâng cấp gói Standard/Premium để nhận nhiều ưu đãi hơn',
+                                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                                  ).then((_) => _controller.fetchProfileData());
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         // Personal Info Section Card
                         AppCard(
                           backgroundColor: isDark ? null : Colors.white,
@@ -1096,10 +1136,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        onPressed: () {
+                          // Xóa toàn bộ token session
+                          ApiClient.clearSession();
+                          // Quay lại màn hình Login và xóa toàn bộ route trước đó
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            (route) => false,
+                          );
+                        },
+                        text: 'Đăng xuất khỏi hệ thống',
+                        icon: const Icon(Icons.logout_rounded, size: 20, color: Colors.white),
+                        // Nút Đăng xuất thì dùng primary màu đỏ (tùy chỉnh màu thông qua AppTheme hoặc Container nếu cần, nhưng dùng button chuẩn trước)
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildActivationRequiredState() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 80,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Tài khoản chưa được kích hoạt',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Vui lòng xác thực email để sử dụng đầy đủ các tính năng của SmashHub.',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: () async {
+                  final email = _controller.userProfile?.email;
+                  if (email == null) return;
+                  
+                  // Gửi yêu cầu mã OTP mới nếu cần
+                  await _controller.sendConfirmationEmail(email);
+
+                  // Chuyển sang màn hình VerifyEmailScreen
+                  if (!mounted) return;
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => VerifyEmailScreen(
+                        email: email,
+                        fromProfile: true,
+                      ),
+                    ),
+                  );
+                  
+                  if (result == true) {
+                    // Cập nhật UI ngay lập tức (không chờ server)
+                    _controller.markAsActive();
+                    // Đồng bộ lại dữ liệu mới nhất từ server
+                    _controller.fetchProfileData();
+                  }
+                },
+                text: 'Kích hoạt ngay',
+                icon: const Icon(Icons.mark_email_read_rounded, color: Colors.white, size: 20),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: () {
+                  ApiClient.clearSession();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+                text: 'Đăng xuất',
+                type: AppButtonType.secondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

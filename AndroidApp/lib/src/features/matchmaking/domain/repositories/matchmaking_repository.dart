@@ -27,4 +27,7 @@ abstract class MatchmakingRepository {
 
   /// Đồng ý hoặc Từ chối lời giao lưu thách đấu từ đội khách.
   Future<ApiResponse<void>> respondToAcceptance(String acceptanceId, bool accept);
+
+  /// Lấy danh sách các tin ghép đấu của một đội cụ thể.
+  Future<ApiResponse<List<MatchChallengeResponse>>> getTeamChallenges(String teamId);
 }

@@ -53,4 +53,22 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<ApiResponse<CourtResponse>> getCourtDetail(int courtId) {
     return _remoteDataSource.getCourtDetail(courtId);
   }
+
+  @override
+  Future<ApiResponse<List<FacilityResponse>>> getAllFacilities() {
+    return _remoteDataSource.getAllFacilities();
+  }
+
+  @override
+  Future<ApiResponse<FacilityResponse>> getFacilityDetail(int facilityId) {
+    return _remoteDataSource.getFacilityDetail(facilityId);
+  }
+
+  @override
+  Future<ApiResponse<List<CourtAvailabilityResponse>>> getCourtAvailabilities(
+    int facilityId,
+    DateTime date,
+  ) {
+    return _remoteDataSource.getCourtAvailabilities(facilityId, date);
+  }
 }

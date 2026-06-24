@@ -57,4 +57,32 @@ class AuthController {
       GlobalLoading.dismiss();
     }
   }
+
+  /// Xác thực OTP khi vừa đăng ký xong.
+  Future<ApiResponse<TokenResponse>> verifyRegistration(
+    BuildContext context, {
+    required String email,
+    required String code,
+  }) async {
+    GlobalLoading.show(context, message: 'Đang xác thực...');
+    try {
+      final request = VerifyEmailRequest(email: email, code: code);
+      return await authRepository.verifyRegistration(request);
+    } finally {
+      GlobalLoading.dismiss();
+    }
+  }
+
+  /// Gửi lại mã OTP qua email (trong màn hình đăng ký).
+  Future<ApiResponse<void>> resendVerificationCode(
+    BuildContext context, {
+    required String email,
+  }) async {
+    GlobalLoading.show(context, message: 'Đang gửi lại mã...');
+    try {
+      return await authRepository.resendVerificationCode(email);
+    } finally {
+      GlobalLoading.dismiss();
+    }
+  }
 }

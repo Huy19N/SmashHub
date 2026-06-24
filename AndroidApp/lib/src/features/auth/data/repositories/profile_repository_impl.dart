@@ -47,4 +47,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<ApiResponse<String>> uploadAvatar(String filePath) {
     return _remoteDataSource.uploadAvatar(filePath);
   }
+
+  @override
+  Future<ApiResponse<void>> sendConfirmationEmail(String email) {
+    return _remoteDataSource.sendConfirmationEmail(email);
+  }
+
+  @override
+  Future<ApiResponse<bool>> verifyCode(EmailConfirmationRequest request) {
+    return _remoteDataSource.verifyCode(request);
+  }
 }

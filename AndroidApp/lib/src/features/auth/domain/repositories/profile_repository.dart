@@ -11,4 +11,10 @@ abstract class ProfileRepository {
   Future<ApiResponse<UserSportProfileResponse>> updateSportProfile(int sportId, UpdateSportProfileRequest request);
   Future<ApiResponse<void>> deleteSportProfile(int sportId);
   Future<ApiResponse<String>> uploadAvatar(String filePath);
+
+  /// Gửi lại email xác thực kích hoạt tài khoản
+  Future<ApiResponse<void>> sendConfirmationEmail(String email);
+
+  /// Xác thực mã OTP để kích hoạt tài khoản
+  Future<ApiResponse<bool>> verifyCode(EmailConfirmationRequest request);
 }

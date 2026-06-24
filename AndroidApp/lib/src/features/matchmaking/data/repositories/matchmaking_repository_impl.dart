@@ -49,4 +49,9 @@ class MatchmakingRepositoryImpl implements MatchmakingRepository {
   Future<ApiResponse<void>> respondToAcceptance(String acceptanceId, bool accept) {
     return _remoteDataSource.respondToAcceptance(acceptanceId, accept);
   }
+
+  @override
+  Future<ApiResponse<List<MatchChallengeResponse>>> getTeamChallenges(String teamId) {
+    return _remoteDataSource.getTeamChallenges(teamId);
+  }
 }
