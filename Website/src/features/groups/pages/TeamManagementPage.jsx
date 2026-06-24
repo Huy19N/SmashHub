@@ -399,7 +399,7 @@ export default function TeamManagementPage() {
               <div className="flex items-center gap-4">
                 {team?.avatarFileId ? (
                   <img 
-                    src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} 
+                    src={`https://tad-min.io.vn/api/files/${team.avatarFileId}/stream`} 
                     alt={team.teamName} 
                     className="h-14 w-14 rounded-full object-cover border-2 border-emerald-500 dark:border-primary shrink-0" 
                   />

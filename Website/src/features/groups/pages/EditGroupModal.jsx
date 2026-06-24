@@ -92,7 +92,7 @@ export default function EditGroupModal({ team, onClose, onUpdated, isDarkMode = 
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
                   ) : team.avatarFileId ? (
-                    <img src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} alt="Avatar" className="h-full w-full object-cover" />
+                    <img src={`https://tad-min.io.vn/api/files/${team.avatarFileId}/stream`} alt="Avatar" className="h-full w-full object-cover" />
                   ) : (
                     <Users className="h-8 w-8 text-gray-400" />
                   )}

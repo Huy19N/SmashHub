@@ -92,7 +92,7 @@ export default function TeamCard({ team, onManage, onEdit, onDelete, onLeave }) 
         <div className="flex items-center gap-3">
           {team.avatarFileId ? (
             <img 
-              src={`https://tad-min.io.vn/api/files/${team.avatarFileId}`} 
+              src={`https://tad-min.io.vn/api/files/${team.avatarFileId}/stream`} 
               alt={team.teamName} 
               className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-border-dark shrink-0" 
             />
