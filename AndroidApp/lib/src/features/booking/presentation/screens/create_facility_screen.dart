@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/theme/app_dialogs.dart';
 import '../../../../shared/network/api_client.dart';
 import '../../../../shared/widgets/app_card.dart';
+import 'package:latlong2/latlong.dart';
+import 'facility_location_picker_screen.dart';
 
 class CreateFacilityScreen extends StatefulWidget {
   const CreateFacilityScreen({super.key});
@@ -22,9 +25,31 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
   final TextEditingController _cityController = TextEditingController(text: 'Đà Nẵng');
   final TextEditingController _districtController = TextEditingController(text: 'Hải Châu');
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _latitudeController = TextEditingController(text: '16.047079');
-  final TextEditingController _longitudeController = TextEditingController(text: '108.206230');
   final TextEditingController _businessCodeController = TextEditingController();
+  
+  LatLng? _selectedLocation;
+
+  // Operating Hours State
+  final List<Map<String, dynamic>> _operatingHours = [
+    {'dayOfWeek': 2, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 3, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 4, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 5, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 6, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 7, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+    {'dayOfWeek': 8, 'isOpen': true, 'openTime': const TimeOfDay(hour: 5, minute: 0), 'closeTime': const TimeOfDay(hour: 23, minute: 0)},
+  ];
+
+  String _getDayName(int dayOfWeek) {
+    if (dayOfWeek == 8) return 'Chủ Nhật';
+    return 'Thứ $dayOfWeek';
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
 
   File? _selectedImage;
   bool _isLoading = false;
@@ -78,6 +103,13 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn vị trí cơ sở trên bản đồ'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -107,8 +139,8 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
         'city': _cityController.text.trim(),
         'district': _districtController.text.trim(),
         'address': _addressController.text.trim(),
-        'latitude': double.tryParse(_latitudeController.text) ?? 16.047079,
-        'longitude': double.tryParse(_longitudeController.text) ?? 108.206230,
+        'latitude': _selectedLocation?.latitude ?? 16.047079,
+        'longitude': _selectedLocation?.longitude ?? 108.206230,
         'businessCode': _businessCodeController.text.trim(),
       };
 
@@ -119,32 +151,39 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
 
       final responseData = response.data;
       if (responseData['success'] == true) {
+        // Cập nhật giờ hoạt động
+        try {
+          final data = responseData['data'];
+          final facilityId = data != null ? (data['facilityId'] ?? data['id']) : null;
+          
+          if (facilityId != null) {
+            final hoursPayload = _operatingHours.where((h) => h['isOpen'] == true).map((h) {
+              return {
+                'dayOfWeek': h['dayOfWeek'],
+                'openTime': _formatTimeOfDay(h['openTime']),
+                'closeTime': _formatTimeOfDay(h['closeTime']),
+              };
+            }).toList();
+
+            if (hoursPayload.isNotEmpty) {
+              await _apiClient.put(
+                '/api/facilities/$facilityId/operating-hours',
+                data: hoursPayload,
+              );
+            }
+          }
+        } catch (e) {
+          debugPrint('Update operating hours error: $e');
+        }
+
         if (mounted) {
-          showDialog(
+          AppDialogs.showSuccess(
             context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Row(
-                children: [
-                  Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
-                  SizedBox(width: 8),
-                  Text('Đăng ký thành công!'),
-                ],
-              ),
-              content: Text(
-                'Cơ sở thể thao "${_nameController.text}" đã được đăng ký và lưu trữ hình ảnh trên MinIO (FileId: ${_uploadedFileId ?? "Không có"}) thành công.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Đóng dialog
-                    Navigator.pop(context, true); // Trở về và trả về true để reload
-                  },
-                  child: const Text('Đồng ý', style: TextStyle(color: AppTheme.primaryColor)),
-                )
-              ],
-            ),
+            title: 'Đăng ký thành công!',
+            message: 'Đơn đã gửi về quản lý để duyệt đơn, bạn hãy vui lòng chờ đợi.',
+            onConfirm: () {
+              Navigator.pop(context, true); // Trở về và trả về true để reload
+            },
           );
         }
       } else {
@@ -297,34 +336,75 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _latitudeController,
-                            label: 'Vĩ Độ (Latitude) *',
-                            icon: Icons.explore_rounded,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (value) {
-                              if (value == null || double.tryParse(value) == null) return 'Vĩ độ không hợp lệ';
-                              return null;
-                            },
+                    const SizedBox(height: 16),
+
+                    // Vị trí bản đồ thay cho TextFields
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTheme.darkSurfaceColor : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.map_rounded, color: AppTheme.primaryColor),
+                              SizedBox(width: 8),
+                              Text('Vị Trí Cơ Sở Trên Bản Đồ *', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _longitudeController,
-                            label: 'Kinh Độ (Longitude) *',
-                            icon: Icons.explore_outlined,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (value) {
-                              if (value == null || double.tryParse(value) == null) return 'Kinh độ không hợp lệ';
-                              return null;
-                            },
+                          const SizedBox(height: 12),
+                          if (_selectedLocation != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Đã chọn: ${_selectedLocation!.latitude.toStringAsFixed(5)}, ${_selectedLocation!.longitude.toStringAsFixed(5)}',
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const FacilityLocationPickerScreen(),
+                                  ),
+                                );
+                                if (result != null && result is LatLng) {
+                                  setState(() {
+                                    _selectedLocation = result;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.location_on),
+                              label: Text(_selectedLocation == null ? 'Bấm để chọn vị trí trên bản đồ' : 'Chọn lại vị trí'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.primaryColor,
+                                side: const BorderSide(color: AppTheme.primaryColor),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -333,6 +413,9 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                       label: 'Mã Số Doanh Nghiệp / GPKD',
                       icon: Icons.card_membership_rounded,
                     ),
+                    const SizedBox(height: 16),
+
+                    _buildOperatingHoursSection(),
                     const SizedBox(height: 32),
 
                     // Button
@@ -359,6 +442,154 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildTimeSelector({
+    required TimeOfDay time,
+    required bool isEnabled,
+    required Function(TimeOfDay) onChanged,
+  }) {
+    return InkWell(
+      onTap: isEnabled
+          ? () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: time,
+              );
+              if (picked != null) {
+                onChanged(picked);
+              }
+            }
+          : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isEnabled ? Colors.white : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Text(
+              _formatTimeOfDay(time),
+              style: TextStyle(
+                fontSize: 13,
+                color: isEnabled ? Colors.black87 : Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.access_time,
+              size: 14,
+              color: isEnabled ? Colors.black54 : Colors.grey,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOperatingHoursSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.access_time_rounded, size: 20, color: AppTheme.primaryColor),
+                SizedBox(width: 8),
+                Text(
+                  'GIỜ HOẠT ĐỘNG',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ..._operatingHours.asMap().entries.map((entry) {
+            final index = entry.key;
+            final hourData = entry.value;
+            final bool isLast = index == _operatingHours.length - 1;
+            
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: hourData['isOpen'],
+                        activeColor: AppTheme.primaryColor,
+                        onChanged: (val) {
+                          setState(() {
+                            hourData['isOpen'] = val ?? false;
+                          });
+                        },
+                      ),
+                      SizedBox(
+                        width: 75,
+                        child: Text(
+                          _getDayName(hourData['dayOfWeek']),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _buildTimeSelector(
+                              time: hourData['openTime'],
+                              isEnabled: hourData['isOpen'],
+                              onChanged: (newTime) {
+                                setState(() {
+                                  hourData['openTime'] = newTime;
+                                });
+                              },
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text('-', style: TextStyle(color: Colors.grey)),
+                            ),
+                            _buildTimeSelector(
+                              time: hourData['closeTime'],
+                              isEnabled: hourData['isOpen'],
+                              onChanged: (newTime) {
+                                setState(() {
+                                  hourData['closeTime'] = newTime;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast) Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 
