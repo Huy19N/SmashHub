@@ -6,6 +6,7 @@ import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/network/api_client.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/api_config.dart';
+import '../../../../shared/widgets/app_media_image.dart';
 import '../../data/data_sources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../data/models/home_models.dart';
@@ -50,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
       profileRepository: profileRepository,
     );
     _profileController.addListener(_onProfileControllerUpdate);
+    ProfileController.profileUpdateNotifier.addListener(_onGlobalProfileUpdate);
 
     _loadData();
   }
@@ -60,8 +62,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _onGlobalProfileUpdate() {
+    if (mounted) {
+      _profileController.fetchProfileData();
+    }
+  }
+
   @override
   void dispose() {
+    ProfileController.profileUpdateNotifier.removeListener(_onGlobalProfileUpdate);
     _profileController.removeListener(_onProfileControllerUpdate);
     _profileController.dispose();
     super.dispose();
@@ -149,34 +158,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                   width: 2,
                                 ),
                                 color: AppTheme.primaryColor.withOpacity(0.2),
-                                image:
-                                    _profileController
-                                                .userProfile
-                                                ?.avatarFileId !=
-                                            null &&
-                                        _profileController
-                                            .userProfile!
-                                            .avatarFileId!
-                                            .isNotEmpty
-                                    ? DecorationImage(
-                                        image: CachedNetworkImageProvider(
-                                          ApiConfig.getFileUrl(_profileController.userProfile!.avatarFileId!),
-                                        ),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
                               ),
                               alignment: Alignment.center,
-                              child:
-                                  _profileController
-                                              .userProfile
-                                              ?.avatarFileId ==
-                                          null ||
-                                      _profileController
-                                          .userProfile!
-                                          .avatarFileId!
-                                          .isEmpty
-                                  ? Text(
+                              child: _profileController
+                                              .userProfile?.avatarFileId !=
+                                          null &&
+                                      _profileController.userProfile!
+                                          .avatarFileId!.isNotEmpty
+                                  ? ClipOval(
+                                      child: AppMediaImage(
+                                        fileId: _profileController
+                                            .userProfile!.avatarFileId!,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : Text(
                                       _profileController
                                                   .userProfile
                                                   ?.fullName
@@ -193,8 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         fontWeight: FontWeight.w900,
                                         color: AppTheme.primaryColor,
                                       ),
-                                    )
-                                  : null,
+                                    ),
                             ),
                             const SizedBox(width: 12),
                             // Lời chào và Subtitle

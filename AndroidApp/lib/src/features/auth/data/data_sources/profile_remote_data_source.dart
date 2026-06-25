@@ -144,8 +144,11 @@ class ProfileRemoteDataSource {
       );
 
       return ApiResponse<String>.fromJson(response.data, (json) {
-        final map = json as Map<String, dynamic>;
-        return map['avatarFileId'] as String? ?? '';
+        if (json is String) return json;
+        if (json is Map<String, dynamic>) {
+          return json['avatarFileId'] as String? ?? json['fileId'] as String? ?? '';
+        }
+        return '';
       });
     } on DioException catch (e) {
       return ApiResponse.error(e.message ?? 'Lỗi tải lên ảnh đại diện');
