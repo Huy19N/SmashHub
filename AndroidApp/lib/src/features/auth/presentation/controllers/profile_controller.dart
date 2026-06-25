@@ -6,6 +6,9 @@ import '../../data/models/auth_models.dart';
 class ProfileController extends ChangeNotifier {
   final ProfileRepository _profileRepository;
 
+  /// Global notifier to trigger UI updates across different tabs when profile changes
+  static final ValueNotifier<int> profileUpdateNotifier = ValueNotifier(0);
+
   ProfileController({required ProfileRepository profileRepository}) : _profileRepository = profileRepository;
 
   UserProfileResponse? _userProfile;
@@ -189,6 +192,8 @@ class ProfileController extends ChangeNotifier {
             avatarFileId: response.data,
           );
         }
+        await fetchProfileData(); // Ensure we have the latest data
+        ProfileController.profileUpdateNotifier.value++; // Notify other screens
         return true;
       } else {
         _errorMessage = response.message;
