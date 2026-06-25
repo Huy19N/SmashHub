@@ -1,7 +1,10 @@
 class ApiConfig {
   // ĐỔI URL NÀY KHI DEPLOY APK THỰC TẾ
-  // Ví dụ: 'https://api.smashclub.com' hoặc IP server thực tế
-  static const String baseUrl = 'https://10.0.2.2:7020';
+  // Sử dụng biến môi trường API_BASE_URL. Nếu không truyền sẽ mặc định dùng localhost của máy ảo Android.
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL', 
+    defaultValue: 'https://10.0.2.2:7020',
+  );
   
   /// Tạo URL file từ fileId để tải ảnh/video từ backend
   static String getFileUrl(String fileId) {
