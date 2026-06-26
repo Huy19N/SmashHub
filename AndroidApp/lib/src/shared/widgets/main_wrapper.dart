@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/auth/presentation/profile_screen.dart';
-import '../../features/booking/presentation/screens/facility_map_screen.dart';
+import '../../features/booking/presentation/screens/facility_list_screen.dart';
 import '../../features/community/presentation/screens/messages_screen.dart';
 import '../../features/community/presentation/screens/create_team_screen.dart';
 import '../../features/booking/presentation/screens/owner_dashboard_screen.dart';
@@ -46,7 +46,7 @@ class _MainWrapperState extends State<MainWrapper> {
   void initState() {
     super.initState();
     _homeScreen = const HomeScreen();
-    _bookingScreen = const FacilityMapScreen();
+    _bookingScreen = const FacilityListScreen();
     _profileScreen = const ProfileScreen(isEmbedded: true);
 
     _ownerDashboardScreen = const OwnerDashboardScreen();
@@ -60,12 +60,19 @@ class _MainWrapperState extends State<MainWrapper> {
       profileRepository: profileRepository,
     );
     _profileController.addListener(_onProfileControllerUpdate);
+    ProfileController.profileUpdateNotifier.addListener(_onGlobalProfileUpdate);
     _profileController.fetchProfileData();
   }
 
   void _onProfileControllerUpdate() {
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _onGlobalProfileUpdate() {
+    if (mounted) {
+      _profileController.fetchProfileData();
     }
   }
 
@@ -82,6 +89,9 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   void dispose() {
+    ProfileController.profileUpdateNotifier.removeListener(
+      _onGlobalProfileUpdate,
+    );
     _profileController.removeListener(_onProfileControllerUpdate);
     _profileController.dispose();
     super.dispose();
@@ -309,10 +319,7 @@ class _MainWrapperState extends State<MainWrapper> {
               ),
               const Text(
                 'Tạo Mới',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
               if (!isOwner) ...[
@@ -323,19 +330,21 @@ class _MainWrapperState extends State<MainWrapper> {
                   subtitle: 'Xây dựng câu lạc bộ và mời thành viên',
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.of(context).push<bool>(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateTeamScreen(),
-                      ),
-                    ).then((created) {
-                      // Nếu tạo nhóm thành công → chuyển sang tab Nhóm và ép reload danh sách
-                      if (created == true) {
-                        setState(() {
-                          _currentIndex = 2; // Tab "Nhóm"
-                          _messagesKey++; // Ép MessagesScreen rebuild để fetch lại danh sách
+                    Navigator.of(context)
+                        .push<bool>(
+                          MaterialPageRoute(
+                            builder: (_) => const CreateTeamScreen(),
+                          ),
+                        )
+                        .then((created) {
+                          // Nếu tạo nhóm thành công → chuyển sang tab Nhóm và ép reload danh sách
+                          if (created == true) {
+                            setState(() {
+                              _currentIndex = 2; // Tab "Nhóm"
+                              _messagesKey++; // Ép MessagesScreen rebuild để fetch lại danh sách
+                            });
+                          }
                         });
-                      }
-                    });
                   },
                 ),
                 const SizedBox(height: 16),
@@ -363,7 +372,9 @@ class _MainWrapperState extends State<MainWrapper> {
                   onTap: () {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tính năng bài viết đang phát triển!')),
+                      const SnackBar(
+                        content: Text('Tính năng bài viết đang phát triển!'),
+                      ),
                     );
                   },
                 ),
@@ -391,7 +402,9 @@ class _MainWrapperState extends State<MainWrapper> {
                   onTap: () {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đang phát triển Đặt Sân Thủ Công!')),
+                      const SnackBar(
+                        content: Text('Đang phát triển Đặt Sân Thủ Công!'),
+                      ),
                     );
                   },
                 ),
@@ -471,5 +484,3 @@ class _MainWrapperState extends State<MainWrapper> {
     );
   }
 }
-
-

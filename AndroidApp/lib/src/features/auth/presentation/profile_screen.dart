@@ -10,6 +10,8 @@ import '../../../shared/widgets/app_dropdown.dart';
 import '../../../shared/network/api_config.dart';
 
 import '../../../shared/network/api_client.dart';
+import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/app_media_image.dart';
 import '../data/data_sources/profile_remote_data_source.dart';
 import '../data/repositories/profile_repository_impl.dart';
 import '../presentation/controllers/profile_controller.dart';
@@ -466,37 +468,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Container(
                                 width: 80,
                                 height: 80,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: AppTheme.primaryColor,
-                                  image:
-                                      _controller.userProfile?.avatarFileId !=
-                                              null &&
-                                          _controller
-                                              .userProfile!
-                                              .avatarFileId!
-                                              .isNotEmpty
-                                      ? DecorationImage(
-                                          image: CachedNetworkImageProvider(
-                                            ApiConfig.getFileUrl(
-                                              _controller
-                                                  .userProfile!
-                                                  .avatarFileId!,
-                                            ),
-                                          ),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
                                 ),
                                 alignment: Alignment.center,
                                 child:
-                                    _controller.userProfile?.avatarFileId ==
-                                            null ||
-                                        _controller
-                                            .userProfile!
-                                            .avatarFileId!
-                                            .isEmpty
-                                    ? Text(
+                                    _controller.userProfile?.avatarFileId !=
+                                                null &&
+                                            _controller
+                                                .userProfile!
+                                                .avatarFileId!
+                                                .isNotEmpty
+                                        ? ClipOval(
+                                            child: AppMediaImage(
+                                              fileId: _controller
+                                                  .userProfile!.avatarFileId!,
+                                              width: 80,
+                                              height: 80,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Text(
                                         _controller
                                                     .userProfile
                                                     ?.fullName
@@ -511,8 +504,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           fontWeight: FontWeight.w900,
                                           color: Colors.white,
                                         ),
-                                      )
-                                    : null,
+                                      ),
                               ),
                               Positioned(
                                 bottom: 0,
