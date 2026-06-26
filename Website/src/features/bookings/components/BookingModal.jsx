@@ -138,6 +138,7 @@ export default function BookingModal({ isOpen, onClose, facility }) {
 
   const [operatingHours, setOperatingHours] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { courts, fetchCourts, courtStatuses, fetchCourtStatus, loading: loadingCourts } = useCourt();
   const { createBooking, loading: bookingActionLoading } = useBookings();
@@ -358,8 +359,6 @@ export default function BookingModal({ isOpen, onClose, facility }) {
   selectedSlots.forEach(s => { totalCost += getSlotCost(s.courtId, s.slotIdx); });
 
   const clearSelection = () => setSelectedSlots([]);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ─── Book (creates one booking per contiguous range) ───
   const handleBook = async () => {

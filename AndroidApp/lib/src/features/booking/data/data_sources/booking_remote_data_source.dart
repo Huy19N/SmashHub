@@ -26,6 +26,22 @@ class BookingRemoteDataSource {
     }
   }
 
+  /// Tạo nhiều đặt sân gộp cùng lúc.
+  Future<ApiResponse<BatchBookingResponse>> createBatchBooking(List<CreateBookingRequest> requests) async {
+    try {
+      final response = await _apiClient.post(
+        '/api/bookings/batch',
+        data: requests.map((e) => e.toJson()).toList(),
+      );
+      return ApiResponse<BatchBookingResponse>.fromJson(
+        response.data,
+        (json) => BatchBookingResponse.fromJson(json as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi đặt nhiều sân gộp');
+    }
+  }
+
   /// Lấy danh sách lịch sử đặt sân của tôi (có phân trang).
   Future<ApiResponse<PagedResult<BookingResponse>>> getMyBookings({
     required int pageNumber,

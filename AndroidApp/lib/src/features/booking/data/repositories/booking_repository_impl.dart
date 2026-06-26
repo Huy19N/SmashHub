@@ -16,6 +16,11 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<ApiResponse<BatchBookingResponse>> createBatchBooking(List<CreateBookingRequest> requests) {
+    return _remoteDataSource.createBatchBooking(requests);
+  }
+
+  @override
   Future<ApiResponse<PagedResult<BookingResponse>>> getMyBookings({
     required int pageNumber,
     required int pageSize,

@@ -7,7 +7,7 @@ public interface ITeamService
 {
     // Team CRUD
     Task<TeamDetailResponse> CreateTeamAsync(Guid userId, CreateTeamRequest request);
-    Task<PagedResult<TeamResponse>> GetTeamsAsync(string? search, PaginationParams pagination);
+    Task<PagedResult<TeamResponse>> GetTeamsAsync(Guid currentUserId, string? search, PaginationParams pagination);
     Task<TeamDetailResponse> GetTeamDetailAsync(Guid teamId);
     Task<TeamDetailResponse> UpdateTeamAsync(Guid userId, Guid teamId, UpdateTeamRequest request);
     Task<TeamDetailResponse> UpdateAvatarAsync(Guid userId, Guid teamId, Guid fileId);

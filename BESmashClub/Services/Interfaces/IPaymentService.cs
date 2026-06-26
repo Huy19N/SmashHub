@@ -10,6 +10,7 @@ public interface IPaymentService
 
     // Feature 2: Booking Payment (called internally after booking creation)
     Task<PaymentResponse> CreateBookingPaymentAsync(Guid userId, Guid bookingId);
+    Task<PaymentResponse> CreateBatchBookingPaymentAsync(Guid userId, System.Collections.Generic.List<Guid> bookingIds, decimal totalAmount, string description);
     Task<PaymentResponse> CreateSplitBookingPaymentAsync(Guid userId, Guid acceptanceId);
 
     // Webhook handlers

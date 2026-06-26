@@ -366,3 +366,30 @@ class CourtAvailabilityResponse {
   }
 }
 
+class BatchBookingResponse {
+  final List<BookingResponse> bookings;
+  final String? paymentUrl;
+
+  BatchBookingResponse({
+    required this.bookings,
+    this.paymentUrl,
+  });
+
+  factory BatchBookingResponse.fromJson(Map<String, dynamic> json) {
+    return BatchBookingResponse(
+      bookings: (json['bookings'] as List<dynamic>?)
+              ?.map((item) => BookingResponse.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      paymentUrl: json['paymentUrl'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bookings': bookings.map((x) => x.toJson()).toList(),
+      'paymentUrl': paymentUrl,
+    };
+  }
+}
+

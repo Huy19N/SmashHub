@@ -79,6 +79,89 @@ public class BookingService : IBookingService
         }
     }
 
+    public async Task<BatchBookingResponse> CreateBatchBookingAsync(Guid userId, List<CreateBookingRequest> requests)
+    {
+        if (requests == null || requests.Count == 0)
+            throw new ArgumentException("Danh sách yêu cầu đặt sân không được trống.");
+
+        var response = new BatchBookingResponse();
+        var bookingsToCreate = new List<Booking>();
+        decimal totalCost = 0;
+        var courtNames = new List<string>();
+
+        // Validate all and calculate costs
+        foreach (var request in requests)
+        {
+            var court = await _unitOfWork.Booking.GetCourtAsync(request.CourtId);
+            if (court == null || !court.IsActive)
+                throw new KeyNotFoundException($"Sân ID {request.CourtId} không tồn tại hoặc đã ngừng hoạt động.");
+
+            if (request.StartTime >= request.EndTime)
+                throw new InvalidOperationException($"Thời gian bắt đầu phải trước thời gian kết thúc ở sân {court.CourtName}.");
+
+            if (request.StartTime < DateTime.Now)
+                throw new InvalidOperationException($"Không thể đặt sân trong quá khứ ở sân {court.CourtName}.");
+
+            if (!await _unitOfWork.Booking.IsTimeSlotAvailableAsync(request.CourtId, request.StartTime, request.EndTime))
+                throw new InvalidOperationException($"Sân {court.CourtName} trong khung giờ {request.StartTime:HH:mm} - {request.EndTime:HH:mm} đã có người đặt.");
+
+            var cost = await CalculateTotalCostAsync(request.CourtId, request.StartTime, request.EndTime);
+            totalCost += cost;
+
+            var platformFeeSetting = await _unitOfWork.SystemSettings.GetByIdAsync("PLATFORM_FEE_PERCENTAGE");
+            decimal feePercentage = platformFeeSetting != null ? decimal.Parse(platformFeeSetting.SettingValue) : 5.0m;
+            decimal platformFee = Math.Round((cost * feePercentage) / 100m, 2);
+
+            var booking = new Booking
+            {
+                BookingId = Guid.NewGuid(),
+                CourtId = request.CourtId,
+                BookedByUserId = userId,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                TotalCost = cost,
+                PlatformFee = platformFee,
+                StatusId = 1, // Pending
+                CreatedAt = DateTime.Now
+            };
+
+            bookingsToCreate.Add(booking);
+            courtNames.Add(court.CourtName ?? "Sân");
+        }
+
+        using var transaction = await _unitOfWork.Booking.GetContext().Database.BeginTransactionAsync();
+        try
+        {
+            foreach (var b in bookingsToCreate)
+            {
+                await _unitOfWork.Booking.CreateAsync(b);
+            }
+
+            var bookingIds = bookingsToCreate.Select(b => b.BookingId).ToList();
+            var description = $"Dat nhieu san: {string.Join(", ", courtNames.Distinct())}";
+
+            // Create a single consolidated payment
+            var paymentResult = await _paymentService.CreateBatchBookingPaymentAsync(userId, bookingIds, totalCost, description);
+
+            await transaction.CommitAsync();
+
+            foreach (var b in bookingsToCreate)
+            {
+                var detail = await GetBookingDetailAsync(b.BookingId);
+                response.Bookings.Add(detail);
+            }
+            response.PaymentUrl = paymentResult.CheckoutUrl;
+            return response;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            if (ex is InvalidOperationException || ex is KeyNotFoundException)
+                throw;
+            throw new InvalidOperationException("Không thể tạo giao dịch đặt sân gộp. Lỗi: " + ex.Message);
+        }
+    }
+
     public async Task<PagedResult<BookingResponse>> GetBookingsByUserAsync(Guid userId, PaginationParams pagination)
     {
         var (items, totalCount) = await _unitOfWork.Booking

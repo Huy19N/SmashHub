@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Security.Claims;
 using Entites.DTOs.Bookings;
 using Entites.DTOs.Common;
@@ -33,6 +34,28 @@ public class BookingsController : ControllerBase
             var userId = GetCurrentUserId();
             var result = await _bookingService.CreateBookingAsync(userId, request);
             return Ok(ApiResponse<BookingResponse>.SuccessResponse(result, "Đặt sân thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Tạo nhiều booking mới cùng lúc (đặt nhiều sân gộp).
+    /// </summary>
+    [HttpPost("batch")]
+    public async Task<IActionResult> CreateBatchBooking([FromBody] List<CreateBookingRequest> requests)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _bookingService.CreateBatchBookingAsync(userId, requests);
+            return Ok(ApiResponse<BatchBookingResponse>.SuccessResponse(result, "Đặt các sân thành công."));
         }
         catch (KeyNotFoundException ex)
         {

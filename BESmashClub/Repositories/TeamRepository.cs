@@ -10,11 +10,16 @@ public class TeamRepository : GenericRepository<Team>
     public TeamRepository(SmashClubContext context) : base(context) { }
 
     public async Task<(List<Team> Items, int TotalCount)> SearchAsync(
-        string? search, int pageNumber, int pageSize)
+        string? search, Guid? userId, int pageNumber, int pageSize)
     {
         var query = _context.Teams
             .Include(t => t.TeamMembers)
             .Where(t => t.IsActive);
+
+        if (userId.HasValue)
+        {
+            query = query.Where(t => t.TeamMembers.Any(tm => tm.UserId == userId.Value));
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
         {

@@ -520,7 +520,7 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.PlatformFee).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ReferenceId)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(500);
             entity.Property(e => e.RefundAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StatusId).HasDefaultValue(1);
 

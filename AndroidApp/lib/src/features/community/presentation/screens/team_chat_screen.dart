@@ -12,6 +12,7 @@ import '../../../auth/data/data_sources/profile_remote_data_source.dart';
 import '../../../auth/data/repositories/profile_repository_impl.dart';
 import 'dart:async';
 import 'video_call_screen.dart';
+import '../../../../shared/widgets/app_media_image.dart';
 
 class TeamChatScreen extends StatefulWidget {
   final String teamId;
@@ -435,14 +436,6 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ) : null,
-                image: _userAvatars[msg.senderId] != null && _userAvatars[msg.senderId]!.isNotEmpty
-                    ? DecorationImage(
-                        image: CachedNetworkImageProvider(
-                          ApiConfig.getFileUrl(_userAvatars[msg.senderId]!),
-                        ),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -453,8 +446,16 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                 ],
               ),
               alignment: Alignment.center,
-              child: _userAvatars[msg.senderId] == null || _userAvatars[msg.senderId]!.isEmpty
-                  ? Text(
+              child: _userAvatars[msg.senderId] != null && _userAvatars[msg.senderId]!.isNotEmpty
+                  ? ClipOval(
+                      child: AppMediaImage(
+                        fileId: _userAvatars[msg.senderId]!,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Text(
                       _getInitials(msg.senderName ?? 'User'),
                       style: const TextStyle(
                         color: Colors.white,
@@ -462,8 +463,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
                       ),
-                    )
-                  : null,
+                    ),
             ),
             const SizedBox(width: 8),
           ],
