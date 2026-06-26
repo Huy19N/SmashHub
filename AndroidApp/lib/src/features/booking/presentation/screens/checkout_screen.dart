@@ -6,11 +6,13 @@ import 'booking_screen.dart';
 class CheckoutScreen extends StatefulWidget {
   final String paymentUrl;
   final String bookingId;
+  final bool isMultipleBookings;
 
   const CheckoutScreen({
     super.key,
     required this.paymentUrl,
     required this.bookingId,
+    this.isMultipleBookings = false,
   });
 
   @override
@@ -104,12 +106,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Đóng dialog
-              // Chuyển hướng sang trang danh sách đặt sân
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const BookingScreen()),
-              );
+              if (widget.isMultipleBookings) {
+                Navigator.of(context).pop(true); // Trả về kết quả true
+              } else {
+                // Chuyển hướng sang trang danh sách đặt sân
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const BookingScreen()),
+                );
+              }
             },
-            child: const Text('Xem lịch đặt sân', style: TextStyle(color: AppTheme.primaryColor)),
+            child: Text(
+              widget.isMultipleBookings ? 'Đồng ý' : 'Xem lịch đặt sân',
+              style: const TextStyle(color: AppTheme.primaryColor),
+            ),
           ),
         ],
       ),
@@ -136,9 +145,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Đóng dialog
-              Navigator.of(context).pop(); // Trở về màn hình chọn giờ
+              Navigator.of(context).pop(false); // Trở về màn hình chọn giờ và trả về false
             },
-            child: const Text('Đồng ý', style: TextStyle(color: Colors.white)),
+            child: const Text('Đồng ý', style: TextStyle(color: AppTheme.primaryColor)),
           ),
         ],
       ),
@@ -170,7 +179,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context); // Đóng dialog
-                      Navigator.pop(context); // Thoát CheckoutScreen
+                      Navigator.of(context).pop(false); // Thoát CheckoutScreen và trả về false
                     },
                     child: const Text('Thoát', style: TextStyle(color: Colors.red)),
                   ),

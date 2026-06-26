@@ -318,7 +318,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                                   ),
                                 ),
 
-                                // Status badge & Action Button
+                                // Status badge
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -339,37 +339,6 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: isAvailable
-                                            ? AppTheme.primaryColor
-                                            : Colors.grey[700],
-                                        foregroundColor: isAvailable ? Colors.black : Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      onPressed: isAvailable
-                                          ? () {
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (_) => SlotSelectionScreen(
-                                                    courtId: court.courtId,
-                                                    courtName: court.courtName ?? 'Sân',
-                                                    facilityId: widget.facilityId,
-                                                    facilityName: _facility!.name ?? 'Cơ sở',
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          : null,
-                                      child: const Text(
-                                        'CHỌN GIỜ',
-                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ],
@@ -384,6 +353,38 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: _courts.isEmpty
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SlotSelectionScreen(
+                          facilityId: widget.facilityId,
+                          facilityName: _facility!.name ?? 'Cơ sở',
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'ĐẶT SÂN NGAY',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 

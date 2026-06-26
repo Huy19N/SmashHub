@@ -36,10 +36,11 @@ public class TeamsController : ControllerBase
     /// <summary>
     /// Lấy danh sách teams (có search, pagination).
     /// </summary>
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetTeams([FromQuery] string? search, [FromQuery] PaginationParams pagination)
     {
-        var result = await _teamService.GetTeamsAsync(search, pagination);
+        var result = await _teamService.GetTeamsAsync(GetCurrentUserId(), search, pagination);
         return Ok(ApiResponse<PagedResult<TeamResponse>>.SuccessResponse(result));
     }
 

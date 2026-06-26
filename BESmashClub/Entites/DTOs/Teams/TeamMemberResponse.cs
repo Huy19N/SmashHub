@@ -8,4 +8,5 @@ public class TeamMemberResponse
     public int Wins { get; set; }
     public int Losses { get; set; }
     public DateTime? JoinedAt { get; set; }
+    public Guid? AvatarFileId { get; set; }
 }

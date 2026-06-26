@@ -70,7 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    ProfileController.profileUpdateNotifier.removeListener(_onGlobalProfileUpdate);
+    ProfileController.profileUpdateNotifier.removeListener(
+      _onGlobalProfileUpdate,
+    );
     _profileController.removeListener(_onProfileControllerUpdate);
     _profileController.dispose();
     super.dispose();
@@ -160,15 +162,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: AppTheme.primaryColor.withOpacity(0.2),
                               ),
                               alignment: Alignment.center,
-                              child: _profileController
-                                              .userProfile?.avatarFileId !=
+                              child:
+                                  _profileController
+                                              .userProfile
+                                              ?.avatarFileId !=
                                           null &&
-                                      _profileController.userProfile!
-                                          .avatarFileId!.isNotEmpty
+                                      _profileController
+                                          .userProfile!
+                                          .avatarFileId!
+                                          .isNotEmpty
                                   ? ClipOval(
                                       child: AppMediaImage(
                                         fileId: _profileController
-                                            .userProfile!.avatarFileId!,
+                                            .userProfile!
+                                            .avatarFileId!,
                                         width: 48,
                                         height: 48,
                                         fit: BoxFit.cover,
@@ -229,11 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Row(
                           children: [
-                            _buildCircleIconButton(
-                              icon: Icons.search_rounded,
-                              onPressed: () {},
-                              isDark: isDark,
-                            ),
+                            // _buildCircleIconButton(
+                            //   icon: Icons.search_rounded,
+                            //   onPressed: () {},
+                            //   isDark: isDark,
+                            // ),
                             const SizedBox(width: 12),
                             _buildCircleIconButton(
                               icon: Icons.notifications_none_rounded,
@@ -257,9 +264,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Thanh Tìm Kiếm Bo Tròn Đẹp Mắt
-                      const SizedBox(height: 10),
-                      _buildSearchBar(isDark),
-                      const SizedBox(height: 24),
+                      // const SizedBox(height: 10),
+                      // _buildSearchBar(isDark),
+                      // const SizedBox(height: 24),
 
                       // Banners Quảng Cáo Khuyến Mãi
                       _buildPromoBannersSection(isDark),
@@ -367,51 +374,51 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Thanh Tìm Kiếm Bo Tròn Cao Cấp
-  Widget _buildSearchBar(bool isDark) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurfaceColor : Colors.grey[100],
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.08),
-          width: 1.0,
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search_rounded,
-            color: isDark ? Colors.white54 : Colors.black45,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm sân chơi, câu lạc bộ...',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white30 : Colors.black38,
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 11),
-              ),
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          Icon(
-            Icons.tune_rounded,
-            color: isDark ? Colors.white54 : Colors.black45,
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildSearchBar(bool isDark) {
+  //   return Container(
+  //     height: 48,
+  //     decoration: BoxDecoration(
+  //       color: isDark ? AppTheme.darkSurfaceColor : Colors.grey[100],
+  //       borderRadius: BorderRadius.circular(24),
+  //       border: Border.all(
+  //         color: isDark
+  //             ? Colors.white.withValues(alpha: 0.08)
+  //             : Colors.black.withValues(alpha: 0.08),
+  //         width: 1.0,
+  //       ),
+  //     ),
+  //     padding: const EdgeInsets.symmetric(horizontal: 16),
+  //     child: Row(
+  //       children: [
+  //         Icon(
+  //           Icons.search_rounded,
+  //           color: isDark ? Colors.white54 : Colors.black45,
+  //         ),
+  //         const SizedBox(width: 10),
+  //         Expanded(
+  //           child: TextField(
+  //             decoration: InputDecoration(
+  //               hintText: 'Tìm kiếm sân chơi, câu lạc bộ...',
+  //               hintStyle: TextStyle(
+  //                 color: isDark ? Colors.white30 : Colors.black38,
+  //                 fontSize: 14,
+  //               ),
+  //               border: InputBorder.none,
+  //               enabledBorder: InputBorder.none,
+  //               focusedBorder: InputBorder.none,
+  //               contentPadding: const EdgeInsets.symmetric(vertical: 11),
+  //             ),
+  //             style: const TextStyle(fontSize: 14),
+  //           ),
+  //         ),
+  //         Icon(
+  //           Icons.tune_rounded,
+  //           color: isDark ? Colors.white54 : Colors.black45,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   /// Banner Khuyến Mãi (Horizontal Promo Banner Slider/Item)
   Widget _buildPromoBannersSection(bool isDark) {
@@ -729,9 +736,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openComments(CommunityPost post) async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(
-        builder: (_) => PostCommentsScreen(post: post),
-      ),
+      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: post)),
     );
 
     if (result != null && mounted) {

@@ -6,6 +6,9 @@ abstract class BookingRepository {
   /// Đặt sân mới.
   Future<ApiResponse<BookingResponse>> createBooking(CreateBookingRequest request);
 
+  /// Đặt nhiều sân cùng lúc (đơn hàng gộp).
+  Future<ApiResponse<BatchBookingResponse>> createBatchBooking(List<CreateBookingRequest> requests);
+
   /// Lấy danh sách lịch sử đặt sân của tôi có phân trang.
   Future<ApiResponse<PagedResult<BookingResponse>>> getMyBookings({
     required int pageNumber,

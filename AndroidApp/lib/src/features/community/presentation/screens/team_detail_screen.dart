@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
-import '../../../../shared/network/api_config.dart';
 import '../../data/data_sources/community_remote_data_source.dart';
 import '../../data/repositories/community_repository_impl.dart';
 import '../../data/models/community_models.dart';
@@ -20,6 +18,7 @@ import '../../../matchmaking/presentation/screens/match_requests_screen.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_media_image.dart';
 
 class TeamDetailScreen extends StatefulWidget {
   final String teamId;
@@ -729,10 +728,13 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
     final avatarId = member.avatarFileId?.isNotEmpty == true ? member.avatarFileId : _userAvatars[member.userId];
 
     if (avatarId != null && avatarId.isNotEmpty) {
-      return CircleAvatar(
-        radius: 24,
-        backgroundImage: CachedNetworkImageProvider(ApiConfig.getFileUrl(avatarId)),
-        backgroundColor: Colors.transparent,
+      return ClipOval(
+        child: AppMediaImage(
+          fileId: avatarId,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+        ),
       );
     } else {
       return CircleAvatar(

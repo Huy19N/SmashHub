@@ -57,10 +57,10 @@ public class TeamService : ITeamService
         return await GetTeamDetailAsync(team.TeamId);
     }
 
-    public async Task<PagedResult<TeamResponse>> GetTeamsAsync(string? search, PaginationParams pagination)
+    public async Task<PagedResult<TeamResponse>> GetTeamsAsync(Guid currentUserId, string? search, PaginationParams pagination)
     {
         var (items, totalCount) = await _unitOfWork.Teams.SearchAsync(
-            search, pagination.PageNumber, pagination.PageSize);
+            search, currentUserId, pagination.PageNumber, pagination.PageSize);
 
         return new PagedResult<TeamResponse>
         {
@@ -474,7 +474,8 @@ public class TeamService : ITeamService
             RoleName = tm.TeamRole?.RoleName,
             Wins = tm.Wins,
             Losses = tm.Losses,
-            JoinedAt = tm.JoinedAt
+            JoinedAt = tm.JoinedAt,
+            AvatarFileId = tm.User?.AvatarFileId
         };
     }
 
