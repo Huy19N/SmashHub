@@ -75,8 +75,8 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setAvatarDropdownOpen(false);
     navigate(PATHS.LOGIN);
   };
@@ -102,8 +102,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to={PATHS.HOME} className="flex items-center gap-2 group active:scale-95 transition-transform duration-200">
-            <div className="bg-emerald-500/10 dark:bg-primary/20 p-2 rounded-lg border border-emerald-500/20 dark:border-primary/30 group-hover:border-emerald-500 dark:group-hover:border-primary group-hover:bg-emerald-500/20 dark:group-hover:bg-primary/30 transition-all duration-300">
-              <Flame className="h-5 w-5 text-emerald-600 dark:text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+            <div className="bg-white p-0 h-9 w-9 rounded-full border border-slate-100 dark:border-white/10 group-hover:border-emerald-500 dark:group-hover:border-primary shadow-[0_3px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_3px_10px_rgba(0,0,0,0.2)] overflow-hidden flex items-center justify-center transition-all duration-300">
+              <img src="/Logo.png" alt="Logo" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
             <span className="text-xl font-bold tracking-tight font-display text-slate-900 dark:text-white">
               SMASH<span className="text-emerald-600 dark:text-primary font-black">HUB</span>

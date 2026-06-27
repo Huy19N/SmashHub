@@ -54,7 +54,7 @@ export default function SubscriptionPackages() {
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans relative overflow-hidden`}>
       <SportyWatermarks />
-      <Sidebar activeMenu="profile" />
+      <Sidebar activeMenu="subscriptions" />
       
       <main className="flex-1 overflow-y-auto h-screen p-6 lg:p-10 flex flex-col animate-page">
         <div className="max-w-7xl mx-auto w-full">

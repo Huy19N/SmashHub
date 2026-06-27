@@ -268,7 +268,7 @@ export default function BookingsPage() {
   return (
     <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a0d14] transition-colors duration-300 relative overflow-hidden">
       <SportyWatermarks />
-      <Sidebar activeMenu="Bookings" />
+      <Sidebar activeMenu="bookings" />
 
       <main className="flex-1 overflow-y-auto animate-page">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 space-y-10">

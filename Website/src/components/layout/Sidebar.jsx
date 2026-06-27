@@ -83,8 +83,8 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
           {/* Club/Group Profile Section */}
           <div className="p-4 group-hover:p-5 border-b border-gray-200 dark:border-border-dark/60 flex flex-col gap-4 transition-all duration-300 ease-in-out">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-primary/10 border border-emerald-500/20 dark:border-primary/20 flex items-center justify-center shrink-0 shadow-sm">
-                <Flame className="h-5 w-5 text-emerald-600 dark:text-primary animate-pulse" />
+              <div className="h-10 w-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-hidden">
+                <img src="/Logo.png" alt="Logo" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0 flex-1 w-0 opacity-0 group-hover:w-36 group-hover:opacity-100 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap">
                 <h3 className="text-gray-900 dark:text-white font-extrabold text-sm truncate font-display leading-tight">

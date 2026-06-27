@@ -29,8 +29,8 @@ export default function AuthLayout() {
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="h-10 w-10 rounded-xl bg-primary/20 border border-primary/50 flex items-center justify-center group-hover:bg-primary/30 transition-all">
-            <Flame className="h-6 w-6 text-primary animate-pulse-slow" />
+          <div className="h-10 w-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(0,0,0,0.12)] overflow-hidden transition-all group-hover:scale-105">
+            <img src="/Logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <span className="text-2xl font-bold font-display tracking-wider text-white">
             SMASH<span className="text-primary">HUB</span>
