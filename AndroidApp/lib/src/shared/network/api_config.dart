@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   // ĐỔI URL NÀY KHI DEPLOY APK THỰC TẾ
   // Sử dụng biến môi trường API_BASE_URL. Nếu không truyền sẽ mặc định dùng localhost của máy ảo Android.
@@ -9,11 +11,17 @@ class ApiConfig {
   /// Tạo URL file từ fileId để tải ảnh/video từ backend
   static String getFileUrl(String fileId) {
     if (fileId.isEmpty) return '';
-    return '$baseUrl/api/files/$fileId';
+    return '$baseUrl/api/files/$fileId/stream';
   }
 
   /// URL cho Chat Hub (SignalR)
   static String get chatHubUrl => '$baseUrl/hub/chat';
+
+  /// URL cho Notification Hub (SignalR)
+  static String get notificationHubUrl => '$baseUrl/hub/notifications';
+
+  /// ValueNotifier to notify screens when tab changes in MainWrapper
+  static final ValueNotifier<int> activeTabNotifier = ValueNotifier(-1);
 
   /// Cấu hình WebRTC ICE Servers (STUN/TURN)
   static const Map<String, dynamic> iceServers = {

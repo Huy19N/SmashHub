@@ -6,6 +6,7 @@ import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_badge.dart';
+import '../../../shared/services/signalr_service.dart';
 import '../../../shared/widgets/app_dropdown.dart';
 import '../../../shared/network/api_config.dart';
 
@@ -66,6 +67,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     _controller.addListener(_onControllerUpdate);
     _controller.fetchProfileData();
+    ApiConfig.activeTabNotifier.addListener(_onActiveTabChanged);
+  }
+
+  void _onActiveTabChanged() {
+    final targetTab = widget.isEmbedded ? 3 : -1;
+    if (ApiConfig.activeTabNotifier.value == targetTab && mounted) {
+      _controller.fetchProfileData();
+    }
   }
 
   void _onControllerUpdate() {
@@ -81,6 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    ApiConfig.activeTabNotifier.removeListener(_onActiveTabChanged);
     _controller.removeListener(_onControllerUpdate);
     _controller.dispose();
     _nameController.dispose();
@@ -1135,6 +1145,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () {
                           // Xóa toàn bộ token session
                           ApiClient.clearSession();
+                          // Ngắt kết nối SignalR
+                          SignalRService.instance.disconnect();
                           // Quay lại màn hình Login và xóa toàn bộ route trước đó
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -1225,6 +1237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: AppButton(
                 onPressed: () {
                   ApiClient.clearSession();
+                  SignalRService.instance.disconnect();
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                     (route) => false,

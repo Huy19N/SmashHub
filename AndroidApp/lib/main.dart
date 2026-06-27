@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:smashhub/src/app.dart';
+import 'package:smashhub/src/shared/services/notification_service.dart';
 
 /// Cho phép bỏ qua chứng chỉ SSL tự ký trong môi trường dev.
 /// CachedNetworkImage dùng HttpClient mặc định (không qua Dio)
@@ -14,8 +15,12 @@ class DevHttpOverrides extends HttpOverrides {
   }
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = DevHttpOverrides();
+  
+  // Khởi tạo dịch vụ thông báo cục bộ
+  await NotificationService.instance.initialize();
+
   runApp(const SmashHubApp());
 }

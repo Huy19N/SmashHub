@@ -52,8 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     _profileController.addListener(_onProfileControllerUpdate);
     ProfileController.profileUpdateNotifier.addListener(_onGlobalProfileUpdate);
+    ApiConfig.activeTabNotifier.addListener(_onActiveTabChanged);
 
     _loadData();
+  }
+
+  void _onActiveTabChanged() {
+    if (ApiConfig.activeTabNotifier.value == 0 && mounted) {
+      _loadData();
+    }
   }
 
   void _onProfileControllerUpdate() {
@@ -70,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    ApiConfig.activeTabNotifier.removeListener(_onActiveTabChanged);
     ProfileController.profileUpdateNotifier.removeListener(
       _onGlobalProfileUpdate,
     );

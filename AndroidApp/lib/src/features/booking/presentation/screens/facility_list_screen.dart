@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/network/api_config.dart';
 import '../../data/data_sources/booking_remote_data_source.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/repositories/booking_repository.dart';
@@ -19,12 +20,12 @@ class FacilityListScreen extends StatefulWidget {
 
 class _FacilityListScreenState extends State<FacilityListScreen> {
   late final BookingRepository _repository;
+  final TextEditingController _searchController = TextEditingController();
 
   List<FacilityResponse> _facilities = [];
   List<FacilityResponse> _filteredFacilities = [];
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _errorMessage;
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -34,13 +35,21 @@ class _FacilityListScreenState extends State<FacilityListScreen> {
     _repository = BookingRepositoryImpl(dataSource);
     _loadFacilities();
     _searchController.addListener(_onSearchChanged);
+    ApiConfig.activeTabNotifier.addListener(_onActiveTabChanged);
   }
 
   @override
   void dispose() {
+    ApiConfig.activeTabNotifier.removeListener(_onActiveTabChanged);
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onActiveTabChanged() {
+    if (ApiConfig.activeTabNotifier.value == 1 && mounted) {
+      _loadFacilities();
+    }
   }
 
   void _onSearchChanged() {

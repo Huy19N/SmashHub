@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
+import '../../../../shared/network/api_config.dart';
 import '../../data/data_sources/community_remote_data_source.dart';
 import '../../data/repositories/community_repository_impl.dart';
 import '../controllers/messages_controller.dart';
@@ -26,6 +27,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     _controller.addListener(_onControllerUpdate);
     _controller.fetchTeams();
+    ApiConfig.activeTabNotifier.addListener(_onActiveTabChanged);
+  }
+
+  void _onActiveTabChanged() {
+    if (ApiConfig.activeTabNotifier.value == 2 && mounted) {
+      _controller.fetchTeams();
+    }
   }
 
   void _onControllerUpdate() {
@@ -34,6 +42,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   void dispose() {
+    ApiConfig.activeTabNotifier.removeListener(_onActiveTabChanged);
     _controller.removeListener(_onControllerUpdate);
     _controller.dispose();
     super.dispose();

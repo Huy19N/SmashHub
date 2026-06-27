@@ -7,12 +7,14 @@ import '../../features/community/presentation/screens/create_team_screen.dart';
 import '../../features/booking/presentation/screens/owner_dashboard_screen.dart';
 import '../../features/booking/presentation/screens/owner_calendar_screen.dart';
 import '../../features/booking/presentation/screens/owner_court_management_screen.dart';
+import '../services/signalr_service.dart';
 import '../../features/booking/presentation/screens/create_facility_screen.dart';
 import '../../features/auth/presentation/controllers/profile_controller.dart';
 import '../../features/matchmaking/presentation/screens/matchmaking_dashboard_screen.dart';
 import '../../features/auth/data/repositories/profile_repository_impl.dart';
 import '../../features/auth/data/data_sources/profile_remote_data_source.dart';
 import '../network/api_client.dart';
+import '../network/api_config.dart';
 import '../theme/app_theme.dart';
 
 /// Lớp điều khiển giao diện chính chứa thanh điều hướng phía dưới (Bottom Navigation Bar)
@@ -24,7 +26,7 @@ class MainWrapper extends StatefulWidget {
   State<MainWrapper> createState() => _MainWrapperState();
 }
 
-class _MainWrapperState extends State<MainWrapper> {
+class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   /// Biến tăng dần để ép MessagesScreen rebuild lại sau khi tạo nhóm mới.
@@ -45,6 +47,7 @@ class _MainWrapperState extends State<MainWrapper> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _homeScreen = const HomeScreen();
     _bookingScreen = const FacilityListScreen();
     _profileScreen = const ProfileScreen(isEmbedded: true);
@@ -62,6 +65,17 @@ class _MainWrapperState extends State<MainWrapper> {
     _profileController.addListener(_onProfileControllerUpdate);
     ProfileController.profileUpdateNotifier.addListener(_onGlobalProfileUpdate);
     _profileController.fetchProfileData();
+
+    // Kết nối SignalR để nhận thông báo real-time khi vào app
+    SignalRService.instance.connect();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Trigger reload cho tab hiện tại khi app được mở lại từ background
+      ApiConfig.activeTabNotifier.value = _currentIndex;
+    }
   }
 
   void _onProfileControllerUpdate() {
@@ -85,10 +99,13 @@ class _MainWrapperState extends State<MainWrapper> {
     setState(() {
       _currentIndex = index;
     });
+    // Kích hoạt reload động trên Tab tương ứng khi click chuyển tab
+    ApiConfig.activeTabNotifier.value = index;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     ProfileController.profileUpdateNotifier.removeListener(
       _onGlobalProfileUpdate,
     );

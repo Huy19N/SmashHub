@@ -13,6 +13,7 @@ import '../../../auth/data/repositories/profile_repository_impl.dart';
 import 'dart:async';
 import 'video_call_screen.dart';
 import '../../../../shared/widgets/app_media_image.dart';
+import '../../../../shared/services/signalr_service.dart';
 
 class TeamChatScreen extends StatefulWidget {
   final String teamId;
@@ -37,7 +38,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
   final ScrollController _scrollController = ScrollController();
 
   String? _currentUserId;
-  Timer? _pollingTimer;
+  StreamSubscription<Map<String, dynamic>>? _messageSubscription;
   late final ProfileRepositoryImpl _profileRepository;
   final Map<String, String?> _userAvatars = {};
 
@@ -66,9 +67,11 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
     _controller.fetchMessages();
     _profileController.fetchProfileData();
 
-    // Setup polling for new messages every 5 seconds
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted && !_controller.isLoading && !_controller.isSending) {
+    // Thiết lập SignalRService để nhận tin nhắn real-time
+    SignalRService.instance.currentChatTeamId = widget.teamId;
+    _messageSubscription = SignalRService.instance.messageStream.listen((data) {
+      if (mounted && data['teamId']?.toString() == widget.teamId) {
+        // Tải lại tin nhắn khi có tin nhắn mới (hoặc có thể tự append vào list để tối ưu hơn)
         _controller.fetchMessages(isRefresh: true);
       }
     });
@@ -118,7 +121,8 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    SignalRService.instance.currentChatTeamId = null;
+    _messageSubscription?.cancel();
     _controller.removeListener(_onControllerUpdate);
     _profileController.removeListener(_onProfileControllerUpdate);
     _textController.dispose();
