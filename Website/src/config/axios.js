@@ -28,6 +28,11 @@ api.interceptors.request.use(
         } else {
             delete config.headers.Authorization;
         }
+
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
