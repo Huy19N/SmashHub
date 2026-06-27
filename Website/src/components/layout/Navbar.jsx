@@ -75,8 +75,8 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setAvatarDropdownOpen(false);
     navigate(PATHS.LOGIN);
   };
