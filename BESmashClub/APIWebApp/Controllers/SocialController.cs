@@ -22,6 +22,12 @@ public class SocialController : ControllerBase
     private Guid GetCurrentUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    private Guid? GetCurrentUserIdSafe()
+    {
+        var claim = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return string.IsNullOrEmpty(claim) ? null : Guid.Parse(claim);
+    }
+
     [HttpPost("posts")]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest request)
     {
@@ -33,7 +39,7 @@ public class SocialController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetPosts([FromQuery] PaginationParams pagination)
     {
-        var result = await _socialService.GetPostsAsync(pagination);
+        var result = await _socialService.GetPostsAsync(pagination, GetCurrentUserIdSafe());
         return Ok(ApiResponse<PagedResult<PostDto>>.SuccessResponse(result));
     }
 
@@ -41,7 +47,7 @@ public class SocialController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetPostsByFacility(int facilityId, [FromQuery] PaginationParams pagination)
     {
-        var result = await _socialService.GetPostsByFacilityAsync(facilityId, pagination);
+        var result = await _socialService.GetPostsByFacilityAsync(facilityId, pagination, GetCurrentUserIdSafe());
         return Ok(ApiResponse<PagedResult<PostDto>>.SuccessResponse(result));
     }
 
@@ -49,7 +55,7 @@ public class SocialController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetPostsByTeam(Guid teamId, [FromQuery] PaginationParams pagination)
     {
-        var result = await _socialService.GetPostsByTeamAsync(teamId, pagination);
+        var result = await _socialService.GetPostsByTeamAsync(teamId, pagination, GetCurrentUserIdSafe());
         return Ok(ApiResponse<PagedResult<PostDto>>.SuccessResponse(result));
     }
 
@@ -59,7 +65,7 @@ public class SocialController : ControllerBase
     {
         try
         {
-            var result = await _socialService.GetPostDetailAsync(postId);
+            var result = await _socialService.GetPostDetailAsync(postId, GetCurrentUserIdSafe());
             return Ok(ApiResponse<PostDto>.SuccessResponse(result));
         }
         catch (KeyNotFoundException ex)

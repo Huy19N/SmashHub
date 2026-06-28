@@ -39,7 +39,7 @@ public class SocialService : ISocialService
         return await GetPostDetailAsync(post.PostId);
     }
 
-    public async Task<PagedResult<PostDto>> GetPostsAsync(PaginationParams pagination)
+    public async Task<PagedResult<PostDto>> GetPostsAsync(PaginationParams pagination, Guid? currentUserId = null)
     {
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
             p => true,
@@ -49,20 +49,22 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostLikes)
+                .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
                 .ThenByDescending(p => p.CreatedAt)
         );
 
         return new PagedResult<PostDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = items.Select(p => MapToDto(p, currentUserId)).ToList(),
             TotalCount = totalCount,
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
     }
 
-    public async Task<PagedResult<PostDto>> GetPostsByFacilityAsync(int facilityId, PaginationParams pagination)
+    public async Task<PagedResult<PostDto>> GetPostsByFacilityAsync(int facilityId, PaginationParams pagination, Guid? currentUserId = null)
     {
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
             p => p.FacilityId == facilityId,
@@ -72,20 +74,22 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostLikes)
+                .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
                 .ThenByDescending(p => p.CreatedAt)
         );
 
         return new PagedResult<PostDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = items.Select(p => MapToDto(p, currentUserId)).ToList(),
             TotalCount = totalCount,
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
     }
 
-    public async Task<PagedResult<PostDto>> GetPostsByTeamAsync(Guid teamId, PaginationParams pagination)
+    public async Task<PagedResult<PostDto>> GetPostsByTeamAsync(Guid teamId, PaginationParams pagination, Guid? currentUserId = null)
     {
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
             p => p.TeamId == teamId,
@@ -95,19 +99,21 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostLikes)
+                .Include(p => p.PostComments)
                 .OrderByDescending(p => p.CreatedAt)
         );
 
         return new PagedResult<PostDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = items.Select(p => MapToDto(p, currentUserId)).ToList(),
             TotalCount = totalCount,
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
     }
 
-    public async Task<PostDto> GetPostDetailAsync(Guid postId)
+    public async Task<PostDto> GetPostDetailAsync(Guid postId, Guid? currentUserId = null)
     {
         var context = _unitOfWork.Posts.GetContext();
         var post = await context.Set<Post>()
@@ -121,7 +127,7 @@ public class SocialService : ISocialService
         if (post == null)
             throw new KeyNotFoundException("Không tìm thấy bài viết.");
 
-        return MapToDto(post);
+        return MapToDto(post, currentUserId);
     }
 
     public async Task LikePostAsync(Guid userId, Guid postId)
@@ -238,13 +244,14 @@ public class SocialService : ISocialService
         };
     }
 
-    private static PostDto MapToDto(Post p)
+    private static PostDto MapToDto(Post p, Guid? currentUserId = null)
     {
         return new PostDto
         {
             PostId = p.PostId,
             AuthorUserId = p.AuthorUserId,
             AuthorName = p.AuthorUser?.FullName ?? "Unknown",
+            AuthorAvatarId = p.AuthorUser?.AvatarFileId,
             FacilityId = p.FacilityId,
             FacilityName = p.Facility?.Name,
             TeamId = p.TeamId,
@@ -256,7 +263,8 @@ public class SocialService : ISocialService
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
             LikeCount = p.PostLikes?.Count ?? 0,
-            CommentCount = p.PostComments?.Count ?? 0
+            CommentCount = p.PostComments?.Count ?? 0,
+            IsLikedByCurrentUser = currentUserId.HasValue && p.PostLikes != null && p.PostLikes.Any(l => l.UserId == currentUserId.Value)
         };
     }
 }

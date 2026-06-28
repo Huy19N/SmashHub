@@ -51,11 +51,13 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/admin/profile' },
   ] : isFacilityOwner ? [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'social', label: 'Cộng đồng', shortLabel: 'Cộng đồng', icon: Flame, path: '/social' },
     { id: 'courts-management', label: 'Quản lý sân', shortLabel: 'Sân bãi', icon: Settings, path: '/courts-management' },
     { id: 'payment-management', label: 'Quản lý thanh toán', shortLabel: 'Thanh toán', icon: Wallet, path: '/payment-management' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ] : [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'social', label: 'Cộng đồng', shortLabel: 'Cộng đồng', icon: Flame, path: '/social' },
     { id: 'teams', label: 'Quản lý Nhóm', shortLabel: 'Nhóm', icon: Users, path: '/groups' },
     { id: 'matchmaking', label: 'Bắt kèo', shortLabel: 'Bắt kèo', icon: Flame, path: '/matchmaking' },
     { id: 'bookings', label: 'Đặt sân', shortLabel: 'Đặt sân', icon: CalendarCheck, path: '/bookings' },

@@ -26,6 +26,7 @@ const DashboardPage = lazy(() => import('../features/dashboard/pages/DashboardPa
 const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pages/CourtsManagementPage'));
 const PaymentManagementPage = lazy(() => import('../features/courtsManagement/pages/PaymentManagementPage'));
 const MatchmakingPage = lazy(() => import('../features/groups/pages/MatchmakingPage'));
+const SocialPage = lazy(() => import('../features/social/pages/SocialPage'));
 
 // Admin Features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
@@ -97,6 +98,10 @@ export const router = createBrowserRouter([
   {
     path: PATHS.PROFILE,
     element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.SOCIAL,
+    element: <ProtectedRoute><SocialPage /></ProtectedRoute>
   },
   {
     path: '/subscriptions',
