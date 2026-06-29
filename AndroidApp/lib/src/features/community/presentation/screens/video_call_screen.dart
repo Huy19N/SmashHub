@@ -3,7 +3,9 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_config.dart';
-import '../../../../shared/network/api_client.dart';
+
+import '../../../../shared/services/signalr_service.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 
@@ -38,20 +40,38 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isConnecting = true;
 
   final Map<String, dynamic> _iceServers = ApiConfig.iceServers;
+  StreamSubscription<Map<String, dynamic>>? _callEventSubscription;
 
   @override
   void initState() {
     super.initState();
     _initCall();
+
+    _callEventSubscription = SignalRService.instance.callEventStream.listen((data) {
+      if (mounted && data['event'] == 'CallEnded' && data['roomId'] == widget.roomId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cuộc gọi nhóm đã kết thúc.')),
+        );
+        _handleHangup();
+      }
+    });
   }
 
   Future<void> _initCall() async {
     await _localRenderer.initialize();
 
     try {
-      // 1. Get local media
+      // 1. Get local media with lower resolution to prevent lag
       _localStream = await navigator.mediaDevices.getUserMedia({
-        'video': true,
+        'video': {
+          'mandatory': {
+            'minWidth': '480',
+            'minHeight': '640',
+            'minFrameRate': '30',
+          },
+          'facingMode': 'user',
+          'optional': [],
+        },
         'audio': true,
       });
 
@@ -59,23 +79,20 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         _localRenderer.srcObject = _localStream;
       });
 
-      // 2. Connect to Hub
-      final hubUrl = ApiConfig.chatHubUrl;
-      final token = ApiClient.accessToken ?? '';
+      // 2. Use existing SignalR Connection to reduce connection latency
+      _connection = SignalRService.instance.connection;
+      if (_connection == null || _connection!.state != HubConnectionState.Connected) {
+        await SignalRService.instance.connect();
+        _connection = SignalRService.instance.connection;
+      }
 
-      _connection = HubConnectionBuilder()
-          .withUrl(hubUrl, options: HttpConnectionOptions(
-            accessTokenFactory: () async => token,
-          ))
-          .withAutomaticReconnect()
-          .build();
+      if (_connection == null) throw Exception("SignalR Connection failed");
 
       // 3. Register Events
       _connection!.on('UserJoinedCall', _onUserJoinedCall);
       _connection!.on('ReceiveSignal', _onReceiveSignal);
       _connection!.on('UserLeftCall', _onUserLeftCall);
 
-      await _connection!.start();
       setState(() {
         _isConnecting = false;
       });
@@ -233,7 +250,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     if (_connection != null && _connection!.state == HubConnectionState.Connected) {
       try {
         await _connection!.invoke('LeaveCall', args: [widget.roomId]);
-        await _connection!.stop();
+        // Bỏ đăng ký sự kiện để không bị trùng lặp khi vào lại phòng
+        _connection!.off('UserJoinedCall', method: _onUserJoinedCall);
+        _connection!.off('ReceiveSignal', method: _onReceiveSignal);
+        _connection!.off('UserLeftCall', method: _onUserLeftCall);
+        // KHÔNG TẮT (stop) KẾT NỐI VÌ ĐANG DÙNG CHUNG Ở SIGNALRSERVICE
       } catch (e) {
         developer.log('Error leaving call', error: e);
       }
@@ -261,6 +282,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
+    _callEventSubscription?.cancel();
     _handleHangup();
     super.dispose();
   }

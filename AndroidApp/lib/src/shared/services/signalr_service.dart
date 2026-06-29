@@ -11,6 +11,7 @@ class SignalRService {
   static final SignalRService instance = SignalRService._();
 
   HubConnection? _connection;
+  HubConnection? get connection => _connection;
   bool get isConnected => _connection?.state == HubConnectionState.Connected;
 
   /// ID của nhóm chat hiện tại mà user đang mở màn hình chat (để tránh hiện notification)
@@ -19,6 +20,10 @@ class SignalRService {
   /// StreamController để broadcast sự kiện có tin nhắn mới cho TeamChatScreen
   final _messageStreamController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get messageStream => _messageStreamController.stream;
+
+  /// StreamController để broadcast sự kiện cuộc gọi
+  final _callEventStreamController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get callEventStream => _callEventStreamController.stream;
 
   /// Khởi tạo và kết nối SignalR (Gọi sau khi đăng nhập thành công)
   Future<void> connect() async {
@@ -42,7 +47,9 @@ class SignalRService {
       // Đăng ký nhận sự kiện
       _connection!.on('ReceiveTeamMessage', _onReceiveTeamMessage);
       _connection!.on('MemberJoined', _onMemberJoined);
-      // Có thể thêm các sự kiện khác: ScheduleCreated, CallStarted...
+      _connection!.on('CallStarted', _onCallStarted);
+      _connection!.on('CallEnded', _onCallEnded);
+      // Có thể thêm các sự kiện khác: ScheduleCreated...
 
       await _connection!.start();
       debugPrint('[SignalRService] Connected successfully');
@@ -116,6 +123,40 @@ class SignalRService {
       );
     } catch (e) {
       debugPrint('[SignalRService] Error parsing MemberJoined: $e');
+    }
+  }
+
+  /// Xử lý sự kiện khi có cuộc gọi mới
+  void _onCallStarted(List<dynamic>? args) {
+    if (args == null || args.isEmpty) return;
+    try {
+      final roomId = args[0]?.toString();
+      final callerId = args.length > 1 ? args[1]?.toString() : null;
+      final teamId = roomId; // Trong hệ thống hiện tại, roomId thường trùng với teamId
+
+      _callEventStreamController.add({'event': 'CallStarted', 'roomId': roomId, 'callerId': callerId});
+
+      if (currentChatTeamId != teamId) {
+        NotificationService.instance.showNotification(
+          id: teamId.hashCode + 2,
+          title: 'Cuộc gọi video nhóm',
+          body: 'Đồng đội đang gọi video trong nhóm, hãy tham gia ngay!',
+          payload: teamId,
+        );
+      }
+    } catch (e) {
+      debugPrint('[SignalRService] Error parsing CallStarted: $e');
+    }
+  }
+
+  /// Xử lý sự kiện khi kết thúc cuộc gọi
+  void _onCallEnded(List<dynamic>? args) {
+    if (args == null || args.isEmpty) return;
+    try {
+      final roomId = args[0]?.toString();
+      _callEventStreamController.add({'event': 'CallEnded', 'roomId': roomId});
+    } catch (e) {
+      debugPrint('[SignalRService] Error parsing CallEnded: $e');
     }
   }
 }

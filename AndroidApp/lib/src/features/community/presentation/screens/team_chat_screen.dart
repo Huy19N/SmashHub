@@ -39,6 +39,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
 
   String? _currentUserId;
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
+  StreamSubscription<Map<String, dynamic>>? _callSubscription;
   late final ProfileRepositoryImpl _profileRepository;
   final Map<String, String?> _userAvatars = {};
 
@@ -72,6 +73,12 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
     _messageSubscription = SignalRService.instance.messageStream.listen((data) {
       if (mounted && data['teamId']?.toString() == widget.teamId) {
         // Tải lại tin nhắn khi có tin nhắn mới (hoặc có thể tự append vào list để tối ưu hơn)
+        _controller.fetchMessages(isRefresh: true);
+      }
+    });
+
+    _callSubscription = SignalRService.instance.callEventStream.listen((data) {
+      if (mounted && (data['roomId']?.toString() == widget.teamId || data['teamId']?.toString() == widget.teamId)) {
         _controller.fetchMessages(isRefresh: true);
       }
     });
@@ -123,6 +130,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
   void dispose() {
     SignalRService.instance.currentChatTeamId = null;
     _messageSubscription?.cancel();
+    _callSubscription?.cancel();
     _controller.removeListener(_onControllerUpdate);
     _profileController.removeListener(_onProfileControllerUpdate);
     _textController.dispose();
@@ -169,6 +177,8 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    final hasActiveCall = _controller.messages.any((m) => m.messageType == 4 && m.content.contains('STATUS:OPEN'));
 
     return Scaffold(
       appBar: AppBar(
@@ -231,9 +241,13 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(Icons.call_outlined),
+              icon: Icon(Icons.call_outlined, color: hasActiveCall ? Colors.grey : null),
               tooltip: 'Gọi video',
-              onPressed: () {
+              onPressed: hasActiveCall ? () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đang có cuộc gọi diễn ra trong nhóm')),
+                );
+              } : () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => VideoCallScreen(
@@ -261,6 +275,53 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
       ),
       body: Column(
         children: [
+          // Banner thông báo cuộc gọi đang diễn ra
+          if (hasActiveCall)
+            Container(
+              width: double.infinity,
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.videocam_rounded, color: AppTheme.primaryColor, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Đang có cuộc gọi video diễn ra...',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => VideoCallScreen(
+                            teamId: widget.teamId,
+                            roomId: widget.teamId,
+                            isInitiator: false,
+                          ),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Tham gia', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
           // Danh sách tin nhắn
           Expanded(
             child: _controller.isLoading && _controller.messages.isEmpty
@@ -532,17 +593,80 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                           ),
                         ),
                       // Hiển thị nội dung văn bản
-                      if (msg.content.isNotEmpty && msg.content != '[Hình ảnh]')
-                        Text(
-                          msg.content,
-                          style: TextStyle(
-                            color: isMine
-                                ? Colors.white // Chữ trắng trên nền xanh đậm
-                                : (isDark ? Colors.white : Colors.black87),
-                            fontSize: 14.5,
-                            height: 1.35,
-                          ),
-                        ),
+                      if (msg.content.isNotEmpty && msg.content != '[Hình ảnh]') ...[
+                        () {
+                          String displayText = msg.content;
+                          bool isClosed = false;
+                          String callRoomId = "";
+
+                          if (msg.messageType == 4) {
+                            isClosed = msg.content.contains('STATUS:CLOSED');
+                            final match = RegExp(r'ROOM_ID:([a-zA-Z0-9\-]+)').firstMatch(msg.content);
+                            if (match != null) {
+                              callRoomId = match.group(1)!;
+                            } else {
+                              callRoomId = widget.teamId;
+                            }
+                            displayText = isClosed ? "Cuộc gọi video đã kết thúc" : "Đã bắt đầu phòng gọi video nhóm.";
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayText,
+                                style: TextStyle(
+                                  color: isMine
+                                      ? Colors.white // Chữ trắng trên nền xanh đậm
+                                      : (isDark ? Colors.white : Colors.black87),
+                                  fontSize: 14.5,
+                                  height: 1.35,
+                                ),
+                              ),
+                              if (msg.messageType == 4) ...[
+                                const SizedBox(height: 8),
+                                ElevatedButton.icon(
+                                  onPressed: isClosed ? null : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => VideoCallScreen(
+                                          teamId: widget.teamId,
+                                          roomId: callRoomId.isNotEmpty ? callRoomId : widget.teamId,
+                                          isInitiator: false,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  icon: isClosed 
+                                      ? const Icon(Icons.call_end_rounded, size: 18) 
+                                      : const Icon(Icons.videocam_rounded, size: 18),
+                                  label: Text(isClosed ? 'Phòng đã đóng' : 'Tham gia', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isMine 
+                                        ? (isClosed ? Colors.white.withValues(alpha: 0.5) : Colors.white) 
+                                        : (isClosed ? Colors.grey.shade400 : AppTheme.primaryColor),
+                                    foregroundColor: isMine 
+                                        ? AppTheme.primaryColor 
+                                        : Colors.white,
+                                    disabledBackgroundColor: isMine 
+                                        ? Colors.white.withValues(alpha: 0.3) 
+                                        : Colors.grey.shade300,
+                                    disabledForegroundColor: isMine 
+                                        ? AppTheme.primaryColor.withValues(alpha: 0.5) 
+                                        : Colors.grey.shade600,
+                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }(),
+                      ],
+
                       const SizedBox(height: 6),
                       // Hiển thị thời gian gửi tin nhắn căn góc phải
                       Row(
@@ -566,7 +690,6 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
               ],
             ),
           ),
-          if (isMine) const SizedBox(width: 28), // Căn lề đều cho tin nhắn cá nhân ở góc phải
         ],
       ),
     );

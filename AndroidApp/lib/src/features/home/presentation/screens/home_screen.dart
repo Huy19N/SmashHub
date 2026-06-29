@@ -15,6 +15,12 @@ import '../../../../features/auth/data/data_sources/profile_remote_data_source.d
 import '../../../../features/auth/data/repositories/profile_repository_impl.dart';
 import '../../../../features/auth/presentation/controllers/profile_controller.dart';
 import '../../../matchmaking/presentation/screens/matchmaking_dashboard_screen.dart';
+import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../statistics/presentation/screens/statistics_screen.dart';
+import '../../../social/presentation/screens/community_feed_screen.dart';
+import '../../../social/data/data_sources/social_remote_data_source.dart';
+import '../../../social/data/repositories/social_repository_impl.dart';
+import '../../../social/data/models/post_model.dart';
 import 'post_comments_screen.dart';
 
 /// Màn hình Trang chủ chính (HomeScreen) với phong cách thiết kế thể thao hiện đại, cao cấp.
@@ -30,8 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
   late final HomeController _homeController;
   late final ProfileController _profileController;
 
+  late final SocialRepositoryImpl _socialRepository;
+
   List<HomeBanner> _banners = [];
-  List<CommunityPost> _posts = [];
+  List<PostModel> _posts = [];
   bool _isLoadingBanners = true;
   bool _isLoadingFeed = true;
 
@@ -44,6 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final remoteDataSource = HomeRemoteDataSource(apiClient);
     final repository = HomeRepositoryImpl(remoteDataSource);
     _homeController = HomeController(homeRepository: repository);
+
+    _socialRepository = SocialRepositoryImpl(SocialRemoteDataSource(apiClient));
 
     final profileRemoteDataSource = ProfileRemoteDataSource(apiClient);
     final profileRepository = ProfileRepositoryImpl(profileRemoteDataSource);
@@ -96,13 +106,13 @@ class _HomeScreenState extends State<HomeScreen> {
     // Gọi song song các API để tăng tốc độ tải trang
     final results = await Future.wait([
       _homeController.getBanners(),
-      _homeController.getCommunityFeed(),
+      _socialRepository.getPosts(limit: 3),
     ]);
 
     _profileController.fetchProfileData();
 
     final bannerResponse = results[0] as ApiResponse<List<HomeBanner>>;
-    final feedResponse = results[1] as ApiResponse<List<CommunityPost>>;
+    final feedResponse = results[1] as ApiResponse<List<PostModel>>;
 
     if (mounted) {
       setState(() {
@@ -110,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _banners = bannerResponse.data as List<HomeBanner>;
         }
         if (feedResponse.success && feedResponse.data != null) {
-          _posts = feedResponse.data as List<CommunityPost>;
+          _posts = feedResponse.data as List<PostModel>;
         }
         _isLoadingBanners = false;
         _isLoadingFeed = false;
@@ -252,7 +262,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 12),
                             _buildCircleIconButton(
                               icon: Icons.notifications_none_rounded,
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                                );
+                              },
                               isDark: isDark,
                               hasBadge: true,
                             ),
@@ -592,7 +607,12 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Thống kê hoạt động',
           color: Colors.blue,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StatisticsScreen()),
+            );
+          },
         ),
         _buildActionCard(
           icon: Icons.groups_rounded,
@@ -634,12 +654,17 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () {},
         ),
         _buildActionCard(
-          icon: Icons.settings_rounded,
-          title: 'Cài đặt',
-          subtitle: 'Cấu hình ứng dụng',
-          color: Colors.grey,
+          icon: Icons.public_rounded,
+          title: 'Cộng đồng',
+          subtitle: 'Giao lưu và chia sẻ',
+          color: Colors.green,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CommunityFeedScreen()),
+            );
+          },
         ),
       ],
     );
@@ -699,26 +724,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _togglePostLike(CommunityPost post) async {
-    final index = _posts.indexWhere((p) => p.id == post.id);
+  Future<void> _togglePostLike(PostModel post) async {
+    final index = _posts.indexWhere((p) => p.postId == post.postId);
     if (index == -1) return;
 
     final p = _posts[index];
-    final originalState = p.isLiked;
+    final originalState = p.isLikedByCurrentUser;
     final originalCount = p.likeCount;
 
-    final updatedPost = CommunityPost(
-      id: p.id,
-      userAvatarUrl: p.userAvatarUrl,
-      userName: p.userName,
-      timeAgo: p.timeAgo,
-      content: p.content,
-      featuredImageUrl: p.featuredImageUrl,
+    final updatedPost = p.copyWith(
       likeCount: originalState ? originalCount - 1 : originalCount + 1,
-      commentCount: p.commentCount,
-      shareCount: p.shareCount,
-      isLiked: !originalState,
-      tag: p.tag,
+      isLikedByCurrentUser: !originalState,
     );
 
     setState(() {
@@ -726,11 +742,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final apiClient = ApiClient();
       if (originalState) {
-        await apiClient.delete('/api/social/posts/${post.id}/like');
+        await _socialRepository.unlikePost(post.postId);
       } else {
-        await apiClient.post('/api/social/posts/${post.id}/like');
+        await _socialRepository.likePost(post.postId);
       }
     } catch (_) {
       if (mounted) {
@@ -741,37 +756,22 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openComments(CommunityPost post) async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: post)),
-    );
+  Future<void> _openComments(PostModel post) async {
+    // TODO: Pass actual post ID and integrate with PostCommentsScreen if needed
+    // Assuming PostCommentsScreen is updated to accept PostModel or you replace it with Social Feature's comment screen
+  }
 
-    if (result != null && mounted) {
-      final index = _posts.indexWhere((p) => p.id == post.id);
-      if (index != -1) {
-        final p = _posts[index];
-        setState(() {
-          _posts[index] = CommunityPost(
-            id: p.id,
-            userAvatarUrl: p.userAvatarUrl,
-            userName: p.userName,
-            timeAgo: p.timeAgo,
-            content: p.content,
-            featuredImageUrl: p.featuredImageUrl,
-            likeCount: result['likeCount'] as int? ?? p.likeCount,
-            commentCount: result['commentCount'] as int? ?? p.commentCount,
-            shareCount: p.shareCount,
-            isLiked: result['isLiked'] as bool? ?? p.isLiked,
-            tag: p.tag,
-          );
-        });
-      }
-    }
+  String _formatTimeAgo(DateTime? date) {
+    if (date == null) return 'Vừa xong';
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    return '${diff.inDays} ngày trước';
   }
 
   /// Từng Item bài viết trong bản tin cộng đồng (Community Feed Item)
-  Widget _buildCommunityPostItem(CommunityPost post, bool isDark) {
+  Widget _buildCommunityPostItem(PostModel post, bool isDark) {
     return AppCard(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -785,109 +785,99 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: CachedNetworkImage(
-                  imageUrl: post.userAvatarUrl,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.grey[800],
-                    child: const Icon(Icons.person_rounded, color: Colors.grey),
-                  ),
-                ),
+                child: post.authorAvatarId != null && post.authorAvatarId!.isNotEmpty
+                    ? AppMediaImage(
+                        fileId: post.authorAvatarId!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: 40,
+                        height: 40,
+                        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        alignment: Alignment.center,
+                        child: Text(
+                          post.authorName.isNotEmpty ? post.authorName[0] : 'U',
+                          style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      post.userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          post.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
                     Text(
-                      post.timeAgo,
-                      style: TextStyle(
-                        color: isDark ? Colors.grey[500] : Colors.grey[600],
-                        fontSize: 11,
-                      ),
+                      _formatTimeAgo(post.createdAt),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              if (post.tag != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    post.tag!,
-                    style: const TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              IconButton(
+                icon: const Icon(Icons.more_horiz_rounded),
+                onPressed: () {},
+                color: Colors.grey,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
-          // Nội dung văn bản của bài viết
-          Text(post.content, style: const TextStyle(fontSize: 14, height: 1.4)),
-          const SizedBox(height: 14),
+          // Nội dung bài viết
+          Text(
+            post.content,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.4,
+              color: isDark ? Colors.grey[300] : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
 
-          // Ảnh đính kèm (Ví dụ ảnh sân đấu cầu lông / tennis)
-          if (post.featuredImageUrl != null)
+          if (post.mediaFileId != null && post.mediaFileId!.isNotEmpty) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                imageUrl: post.featuredImageUrl!,
-                height: 180,
+              child: AppMediaImage(
+                fileId: post.mediaFileId!,
                 width: double.infinity,
+                height: 200,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => _buildShimmerContainer(
-                  height: 180,
-                  width: double.infinity,
-                  isDark: isDark,
-                ),
-                errorWidget: (context, url, error) => const SizedBox.shrink(),
               ),
             ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
 
-          // Footer bài viết: Các nút tương tác Like, Comment, Share
+          // Footer bài viết: Like, Comment, Share
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildInteractionButton(
-                icon: post.isLiked
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                label: post.likeCount.toString(),
-                color: post.isLiked ? Colors.redAccent : Colors.grey,
+                icon: post.isLikedByCurrentUser ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+                label: '${post.likeCount}',
+                color: post.isLikedByCurrentUser ? AppTheme.primaryColor : Colors.grey,
                 onTap: () => _togglePostLike(post),
               ),
+              const SizedBox(width: 24),
               _buildInteractionButton(
                 icon: Icons.chat_bubble_outline_rounded,
-                label: post.commentCount.toString(),
+                label: '${post.commentCount}',
                 color: Colors.grey,
                 onTap: () => _openComments(post),
               ),
+              const Spacer(),
               _buildInteractionButton(
-                icon: Icons.share_outlined,
-                label: 'Chia sẻ',
+                icon: Icons.share_rounded,
+                label: '',
                 color: Colors.grey,
                 onTap: () {},
               ),

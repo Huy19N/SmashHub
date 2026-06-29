@@ -163,7 +163,7 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
             messageId: `call_${roomId}`,
             senderId: callerId,
             senderName: callerName,
-            content: "Đã bắt đầu phòng gọi video nhóm.",
+            content: `ROOM_ID:${roomId}|STATUS:OPEN`,
             messageType: 4,
             roomId: roomId,
             sentAt: new Date().toISOString(),
@@ -181,12 +181,12 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
       if (activeCallRef.current && activeCallRef.current.connId === connId) {
         const endedRoomId = activeCallRef.current.roomId;
         setActiveCallState(null);
-        setMessages(prev => prev.map(m => m.roomId === endedRoomId ? { ...m, isEnded: true } : m));
+        setMessages(prev => prev.map(m => (m.roomId === endedRoomId || m.content?.includes(endedRoomId)) ? { ...m, isEnded: true, content: m.content.replace('STATUS:OPEN', 'STATUS:CLOSED') } : m));
       }
     });
 
     connection.on('CallEnded', (roomId) => {
-      setMessages(prev => prev.map(m => m.roomId === roomId ? { ...m, isEnded: true } : m));
+      setMessages(prev => prev.map(m => (m.roomId === roomId || m.content?.includes(roomId)) ? { ...m, isEnded: true, content: m.content.replace('STATUS:OPEN', 'STATUS:CLOSED') } : m));
       if (activeCallRef.current && activeCallRef.current.roomId === roomId) {
         setActiveCallState(null);
       }
@@ -404,16 +404,16 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                 messageId: `call_${rId}`,
                 senderId: currentUserId,
                 senderName: "Bạn",
-                content: "Đã bắt đầu phòng gọi video nhóm.",
+                content: `ROOM_ID:${rId}|STATUS:OPEN`,
                 messageType: 4,
                 roomId: rId,
                 sentAt: new Date().toISOString(),
                 isEnded: false
               }]);
             }}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${activeCall || connectionStatus !== 'connected' ? 'text-gray-300 dark:text-gray-600' : 'hover:text-emerald-600 dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${activeCall || connectionStatus !== 'connected' || messages.some(m => m.messageType === 4 && m.content.includes('STATUS:OPEN')) ? 'text-gray-300 dark:text-gray-600' : 'hover:text-emerald-600 dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
             title="Gọi nhóm"
-            disabled={connectionStatus !== 'connected'}
+            disabled={connectionStatus !== 'connected' || messages.some(m => m.messageType === 4 && m.content.includes('STATUS:OPEN'))}
           >
             <Phone className="h-5 w-5" />
           </button>
@@ -499,31 +499,37 @@ export default function TeamChat({ teamId, teamName = "Team", memberCount = 0 })
                           </div>
                         ) : null}
 
-                        {msg.messageType === 4 ? (
+                        {msg.messageType === 4 ? (() => {
+                          const isClosed = msg.isEnded || msg.content.includes('STATUS:CLOSED');
+                          const roomIdMatch = msg.content.match(/ROOM_ID:([a-zA-Z0-9\-]+)/);
+                          const rId = roomIdMatch ? roomIdMatch[1] : msg.roomId;
+                          
+                          return (
                           <div className="flex flex-col gap-2 min-w-[180px] sm:min-w-[200px]">
                             <div className="flex items-center gap-2 mb-1">
                               <div className="h-8 w-8 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center">
                                 <Video className="w-4 h-4" />
                               </div>
-                              <span className="font-bold font-label text-sm">{msg.isEnded ? "Đã đóng phòng" : msg.content}</span>
+                              <span className="font-bold font-label text-sm">{isClosed ? "Cuộc gọi video đã kết thúc" : "Đã bắt đầu phòng gọi video nhóm."}</span>
                             </div>
                             {!isMine(msg) && (
                               <button
                                 onClick={() => {
-                                  if (msg.isEnded) return;
-                                  setVideoCallRoom({ roomId: msg.roomId, isInitiator: false });
+                                  if (isClosed || !rId) return;
+                                  setVideoCallRoom({ roomId: rId, isInitiator: false });
                                 }}
-                                disabled={msg.isEnded}
-                                className={`w-full py-2 px-4 font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 font-label ${msg.isEnded
+                                disabled={isClosed}
+                                className={`w-full py-2 px-4 font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 font-label ${isClosed
                                     ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 cursor-not-allowed'
                                     : 'bg-white text-emerald-600 dark:bg-[#052e14] dark:text-primary hover:scale-[1.02] active:scale-95 cursor-pointer'
                                   }`}
                               >
-                                {msg.isEnded ? "Cuộc gọi đã kết thúc" : <><PhoneIncoming className="w-4 h-4" /> Tham gia ngay</>}
+                                {isClosed ? "Phòng đã đóng" : <><PhoneIncoming className="w-4 h-4" /> Tham gia ngay</>}
                               </button>
                             )}
                           </div>
-                        ) : (
+                          );
+                        })() : (
                           msg.content !== '[Hình ảnh]' && msg.content
                         )}
                         <div className={`text-[9px] mt-1.5 text-right font-bold uppercase tracking-wide font-label ${isMine(msg) ? 'text-emerald-100/80 dark:text-emerald-950/80' : 'text-gray-400 dark:text-gray-500'}`}>

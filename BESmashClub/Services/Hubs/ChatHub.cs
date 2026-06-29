@@ -62,6 +62,18 @@ namespace Services.Hubs
         {
             if (Guid.TryParse(Context.UserIdentifier, out var userId))
             {
+                var context = _unitOfWork.TeamMembers.GetContext();
+
+                // Kiểm tra xem phòng có đang mở hay không
+                var activeSession = await context.Set<VideoCallSession>()
+                    .FirstOrDefaultAsync(s => s.TeamId == teamId && s.EndedAt == null);
+
+                if (activeSession != null)
+                {
+                    // Phòng đã tồn tại, không cho mở phòng mới
+                    return;
+                }
+
                 // Thêm người gọi vào group video call
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"webrtc_room_{roomId}");
                 
@@ -70,7 +82,6 @@ namespace Services.Hubs
 
                 if (Guid.TryParse(roomId, out var sessionId))
                 {
-                    var context = _unitOfWork.TeamMembers.GetContext();
                     var session = new VideoCallSession
                     {
                         SessionId = sessionId,
@@ -94,7 +105,7 @@ namespace Services.Hubs
                         TeamId = teamId,
                         SenderId = userId,
                         MessageType = 4,
-                        Content = $"ROOM_ID:{roomId}",
+                        Content = $"ROOM_ID:{roomId}|STATUS:OPEN",
                         SentAt = DateTime.Now,
                         IsDeleted = false
                     };
@@ -171,6 +182,18 @@ namespace Services.Hubs
                     {
                         session.EndedAt = DateTime.Now;
                         context.Set<VideoCallSession>().Update(session);
+
+                        // Cập nhật lại tin nhắn trạng thái phòng thành ĐÓNG
+                        var callMessage = await context.Set<TeamMessage>()
+                            .Where(m => m.TeamId == session.TeamId && m.MessageType == 4 && m.Content.Contains($"ROOM_ID:{roomId}"))
+                            .OrderByDescending(m => m.SentAt)
+                            .FirstOrDefaultAsync();
+
+                        if (callMessage != null)
+                        {
+                            callMessage.Content = $"ROOM_ID:{roomId}|STATUS:CLOSED";
+                            context.Set<TeamMessage>().Update(callMessage);
+                        }
 
                         await Clients.Group(session.TeamId.ToString()).SendAsync("CallEnded", roomId);
                     }
