@@ -118,7 +118,7 @@ const PostCard = ({ post, onToggleLike }) => {
                 HOT DEAL
               </span>
               <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold font-label">
-                Hạn đăng ký đến hết chủ nhật tuần này.
+                Khuyến mãi cực hot săn liền tay.
               </p>
             </div>
           </div>
