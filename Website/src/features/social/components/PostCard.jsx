@@ -40,7 +40,7 @@ const PostCard = ({ post, onToggleLike }) => {
     const now = new Date();
     const diffMs = now - date;
     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    
+
     if (diffHrs < 1) {
       const diffMins = Math.floor(diffMs / (1000 * 60));
       return `${diffMins > 0 ? diffMins : 1} phút trước`;
@@ -72,7 +72,7 @@ const PostCard = ({ post, onToggleLike }) => {
         <div className="flex gap-3 items-center">
           <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-50 dark:bg-primary/20 flex items-center justify-center overflow-hidden border border-emerald-100 dark:border-primary/10">
             {post.authorAvatarId ? (
-              <MediaImage 
+              <MediaImage
                 fileId={post.authorAvatarId}
                 alt={post.authorName || 'User'}
                 className="w-full h-full object-cover"
@@ -95,7 +95,7 @@ const PostCard = ({ post, onToggleLike }) => {
             </p>
           </div>
         </div>
-        
+
         <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 cursor-pointer">
           <MoreHorizontal className="w-4.5 h-4.5" />
         </button>
@@ -115,7 +115,7 @@ const PostCard = ({ post, onToggleLike }) => {
             </div>
             <div>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-primary/20 dark:text-primary mb-1">
-                HOT DEAL / GIẢM 20%
+                HOT DEAL
               </span>
               <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold font-label">
                 Hạn đăng ký đến hết chủ nhật tuần này.
@@ -123,7 +123,7 @@ const PostCard = ({ post, onToggleLike }) => {
             </div>
           </div>
         )}
-        
+
         {/* Render attached image if it exists */}
         {post.mediaFileId && (
           <div className="mt-3 rounded-2xl overflow-hidden border border-gray-150 dark:border-white/5 shadow-sm">
@@ -139,7 +139,7 @@ const PostCard = ({ post, onToggleLike }) => {
             <Heart className={`w-4.5 h-4.5 ${post.isLikedByCurrentUser ? 'text-emerald-600 dark:text-primary fill-current' : ''}`} />
             <span>{post.likeCount || 0}</span>
           </button>
-          
+
           <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
             <MessageCircle className="w-4.5 h-4.5" />
             <span>{post.commentCount || 0}</span>
