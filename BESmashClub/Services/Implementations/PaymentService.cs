@@ -31,10 +31,20 @@ public class PaymentService : IPaymentService
         // Initialize PayOS client with platform credentials
         _payOSClient = new PayOSClient(new PayOSOptions
         {
-            ClientId = _payOSSettings.ClientId,
-            ApiKey = _payOSSettings.ApiKey,
-            ChecksumKey = _payOSSettings.ChecksumKey
+            ClientId = _payOSSettings.ClientId ?? "",
+            ApiKey = _payOSSettings.ApiKey ?? "",
+            ChecksumKey = _payOSSettings.ChecksumKey ?? ""
         });
+    }
+
+    private bool IsPayOSConfigured()
+    {
+        return !string.IsNullOrWhiteSpace(_payOSSettings.ClientId) &&
+               _payOSSettings.ClientId != "YOUR_PAYOS_CLIENT_ID" &&
+               !string.IsNullOrWhiteSpace(_payOSSettings.ApiKey) &&
+               _payOSSettings.ApiKey != "YOUR_PAYOS_API_KEY" &&
+               !string.IsNullOrWhiteSpace(_payOSSettings.ChecksumKey) &&
+               _payOSSettings.ChecksumKey != "YOUR_PAYOS_CHECKSUM_KEY";
     }
 
     #region Feature 1: Subscription Payment
@@ -88,7 +98,7 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=subscription&orderId={payment.PaymentId}"
         };
 
-        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        if (!IsPayOSConfigured())
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
@@ -157,7 +167,7 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        if (!IsPayOSConfigured())
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
@@ -206,7 +216,7 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        if (!IsPayOSConfigured())
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
@@ -272,7 +282,7 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (_payOSSettings.ClientId == "YOUR_PAYOS_CLIENT_ID")
+        if (!IsPayOSConfigured())
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
