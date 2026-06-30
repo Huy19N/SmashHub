@@ -1,18 +1,34 @@
 import { useState } from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Users, Flame } from 'lucide-react';
+import toast from 'react-hot-toast';
 import CommentSection from './CommentSection';
 import MediaImage from '../../../components/ui/MediaImage';
 import PostMediaGrid from './PostMediaGrid';
+import PostLightbox from './PostLightbox';
 
 const PostCard = ({ post, onToggleLike }) => {
   const [showComments, setShowComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [lightboxData, setLightboxData] = useState({ isOpen: false, initialIndex: 0 });
 
   const handleLike = async () => {
     if (isLiking) return;
     setIsLiking(true);
     await onToggleLike(post.postId, post.isLikedByCurrentUser);
     setIsLiking(false);
+  };
+
+  const handleShare = () => {
+    const postUrl = `${window.location.origin}${window.location.pathname}#post-${post.postId}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'SmashHub Post',
+        url: postUrl
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(postUrl);
+      toast.success('Đã sao chép liên kết bài viết!');
+    }
   };
 
   const getPostTypeBadge = (type) => {
@@ -67,7 +83,7 @@ const PostCard = ({ post, onToggleLike }) => {
   const viewsCount = (post.content ? post.content.length * 13 + 87 : 124) % 1900 + 35;
 
   return (
-    <div className="bg-white dark:bg-card-dark rounded-3xl p-5 shadow-md border border-gray-150/40 dark:border-border-dark/40 hover:shadow-lg transition-all duration-300">
+    <div id={`post-${post.postId}`} className="bg-white dark:bg-card-dark rounded-3xl p-5 shadow-md border border-gray-150/40 dark:border-border-dark/40 hover:shadow-lg transition-all duration-300">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex gap-3 items-center">
@@ -128,10 +144,16 @@ const PostCard = ({ post, onToggleLike }) => {
         {/* Render attached image(s) if any exist */}
         {post.mediaFileIds?.length > 0 ? (
           <div className="mt-3">
-            <PostMediaGrid mediaFileIds={post.mediaFileIds} />
+            <PostMediaGrid 
+              mediaFileIds={post.mediaFileIds} 
+              onImageClick={(index) => setLightboxData({ isOpen: true, initialIndex: index })}
+            />
           </div>
         ) : post.mediaFileId ? (
-          <div className="mt-3 rounded-2xl overflow-hidden border border-gray-150 dark:border-white/5 shadow-sm">
+          <div 
+            className="mt-3 rounded-2xl overflow-hidden border border-gray-150 dark:border-white/5 shadow-sm cursor-pointer hover:opacity-95 transition-opacity"
+            onClick={() => setLightboxData({ isOpen: true, initialIndex: 0 })}
+          >
             <MediaImage fileId={post.mediaFileId} alt="Post media" className="w-full h-auto object-cover max-h-[350px]" />
           </div>
         ) : null}
@@ -150,7 +172,7 @@ const PostCard = ({ post, onToggleLike }) => {
             <span>{post.commentCount || 0}</span>
           </button>
 
-          <button className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
+          <button onClick={handleShare} className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
             <Share2 className="w-4.5 h-4.5" />
             <span>Chia sẻ</span>
           </button>
@@ -164,6 +186,16 @@ const PostCard = ({ post, onToggleLike }) => {
       {/* Comments Area */}
       {showComments && (
         <CommentSection postId={post.postId} />
+      )}
+
+      {/* Full Screen Lightbox */}
+      {lightboxData.isOpen && (
+        <PostLightbox 
+          post={post}
+          initialIndex={lightboxData.initialIndex}
+          onClose={() => setLightboxData({ isOpen: false, initialIndex: 0 })}
+          onToggleLike={onToggleLike}
+        />
       )}
     </div>
   );
