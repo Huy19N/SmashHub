@@ -679,14 +679,17 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AppCard(
-        padding: const EdgeInsets.all(16.0),
-        borderRadius: 16.0,
-        backgroundColor: isDark ? null : Colors.white,
-        child: Column(
+    return Semantics(
+      button: true,
+      label: 'Mở tính năng: $title. Mô tả: $subtitle',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AppCard(
+          padding: const EdgeInsets.all(16.0),
+          borderRadius: 16.0,
+          backgroundColor: isDark ? null : Colors.white,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -720,6 +723,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

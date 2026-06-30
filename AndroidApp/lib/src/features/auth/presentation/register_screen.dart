@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import '../../onboarding/presentation/terms_permissions_screen.dart';
 import '../../../shared/theme/app_theme.dart';
-import '../../../shared/widgets/main_wrapper.dart';
 import 'login_screen.dart';
 import 'verify_email_screen.dart';
 import 'controllers/auth_controller.dart';
@@ -69,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vui lòng đồng ý với Điều khoản và Điều kiện'),
+          content: Text('Vui lòng đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -304,32 +305,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _agreeToTerms = !_agreeToTerms;
-                                });
-                              },
-                              child: Text.rich(
-                                TextSpan(
-                                  text: 'I agree to the ',
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black54,
-                                    fontSize: 13,
-                                  ),
-                                  children: const [
-                                    TextSpan(
-                                      text: 'Terms and Conditions',
-                                      style: TextStyle(
-                                        color: AppTheme.primaryColor,
-                                        fontWeight: FontWeight.bold,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ],
+                            child: Text.rich(
+                              TextSpan(
+                                text: 'Tôi đồng ý với ',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.black54,
+                                  fontSize: 13,
                                 ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    setState(() {
+                                      _agreeToTerms = !_agreeToTerms;
+                                    });
+                                  },
+                                children: [
+                                  TextSpan(
+                                    text: 'Điều khoản sử dụng và Chính sách quyền riêng tư',
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (context) => const SizedBox(
+                                            height: 600, // Đặt chiều cao cho modal
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                              child: TermsPermissionsScreen(isReadOnly: true),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                  ),
+                                ],
                               ),
                             ),
                           ),

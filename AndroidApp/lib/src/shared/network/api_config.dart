@@ -5,8 +5,11 @@ class ApiConfig {
   // Sử dụng biến môi trường API_BASE_URL. Nếu không truyền sẽ mặc định dùng localhost của máy ảo Android.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL', 
-    defaultValue: 'https://10.0.2.2:7020',
+    defaultValue: 'https://tad-min.io.vn',
   );
+
+  /// Khóa bảo mật dùng để giao tiếp với Backend, đảm bảo chỉ App này mới được truy cập
+  static const String appClientKey = 'smashhub_mobile_secure_key_2026';
   
   /// Tạo URL file từ fileId để tải ảnh/video từ backend
   static String getFileUrl(String fileId) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../shared/theme/app_theme.dart';
-import '../../auth/presentation/login_screen.dart';
+import 'terms_permissions_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -44,10 +44,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
-  void _navigateToLogin() {
+  void _navigateToTerms() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => const TermsPermissionsScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -63,7 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      _navigateToLogin();
+      _navigateToTerms();
     }
   }
 
@@ -263,7 +263,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: TextButton(
-                        onPressed: _navigateToLogin,
+                        onPressed: _navigateToTerms,
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           minimumSize: const Size(80, 40), // touch target bounds

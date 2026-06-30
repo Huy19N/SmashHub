@@ -36,6 +36,7 @@ class ApiClient {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'X-App-Client-Key': ApiConfig.appClientKey,
         },
       ),
     );

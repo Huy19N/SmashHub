@@ -133,9 +133,14 @@ builder.Services.AddSignalR();
 // ---- CORS ----
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("StrictPolicy", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.WithOrigins(
+                "https://tad-min.io.vn", 
+                "http://tad-min.io.vn", 
+                "http://localhost:3000",
+                "http://localhost:5173" // Vite default
+              )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -152,7 +157,36 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseCors("AllowAll");
+app.UseCors("StrictPolicy");
+
+// ---- App Security Middleware ----
+app.Use(async (context, next) =>
+{
+    // Bỏ qua Swagger và SignalR Hub connections (SignalR xử lý Auth riêng)
+    var path = context.Request.Path;
+    if (path.StartsWithSegments("/swagger") || path.StartsWithSegments("/hub"))
+    {
+        await next();
+        return;
+    }
+
+    var origin = context.Request.Headers["Origin"].ToString();
+    var clientKey = context.Request.Headers["X-App-Client-Key"].ToString();
+
+    // Nếu request không phải từ Web Browser (không có Origin)
+    // thì bắt buộc phải có khóa X-App-Client-Key hợp lệ từ Mobile App
+    if (string.IsNullOrEmpty(origin))
+    {
+        if (clientKey != "smashhub_mobile_secure_key_2026")
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync("Forbidden: Invalid App Client Key");
+            return;
+        }
+    }
+
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

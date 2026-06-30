@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
+import '../../auth/presentation/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -114,19 +116,24 @@ class _SplashScreenState extends State<SplashScreen>
     ]).animate(_controller);
 
     // Navigation trigger on complete
-    _controller.addStatusListener((status) {
+    _controller.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const OnboardingScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-            transitionDuration: const Duration(milliseconds: 800),
-          ),
-        );
+        final prefs = await SharedPreferences.getInstance();
+        final hasAgreed = prefs.getBool('agreedToTerms') ?? false;
+
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  hasAgreed ? const LoginScreen() : const OnboardingScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+              transitionDuration: const Duration(milliseconds: 800),
+            ),
+          );
+        }
       }
     });
 
