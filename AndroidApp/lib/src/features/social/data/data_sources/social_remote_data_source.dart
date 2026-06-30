@@ -13,8 +13,8 @@ class SocialRemoteDataSource {
       final response = await _apiClient.get(
         '/api/social/posts',
         queryParameters: {
-          'page': page,
-          'limit': limit,
+          'pageNumber': page,
+          'pageSize': limit,
         },
       );
 
@@ -44,13 +44,19 @@ class SocialRemoteDataSource {
     }
   }
 
-  Future<ApiResponse<PostModel>> createPost(String content, {String? mediaFileId}) async {
+  Future<ApiResponse<PostModel>> createPost({
+    required String content,
+    required int postType,
+    List<String> mediaFileIds = const [],
+  }) async {
     try {
       final response = await _apiClient.post(
         '/api/social/posts',
         data: {
           'content': content,
-          'mediaFileId': mediaFileId,
+          'postType': postType,
+          'mediaFileIds': mediaFileIds,
+          if (mediaFileIds.isNotEmpty) 'mediaFileId': mediaFileIds.first,
         },
       );
       if (response.statusCode == 200 && response.data != null) {

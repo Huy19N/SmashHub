@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_config.dart';
 
 /// Client API dùng để gửi các yêu cầu HTTP đến Backend.
@@ -8,9 +9,22 @@ import 'api_config.dart';
 class ApiClient {
   late final Dio _dio;
   
-  // Lưu trữ Token & Cookie tạm thời trong bộ nhớ (Có thể tích hợp SharedPreferences / FlutterSecureStorage sau này)
   static String? _accessToken;
   static String? _refreshTokenCookie;
+  static SharedPreferences? _prefs;
+
+  /// Khởi tạo các giá trị session lưu trữ cục bộ từ SharedPreferences
+  static Future<void> init() async {
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      _accessToken = _prefs?.getString('accessToken');
+      _refreshTokenCookie = _prefs?.getString('refreshTokenCookie');
+    } catch (e) {
+      // Fallback an toàn nếu SharedPreferences chưa kịp khởi tạo ở kênh native
+      _accessToken = null;
+      _refreshTokenCookie = null;
+    }
+  }
 
   ApiClient({String? baseUrl}) {
     _dio = Dio(
@@ -61,6 +75,7 @@ class ApiClient {
                 final parts = header.split(';');
                 if (parts.isNotEmpty) {
                   _refreshTokenCookie = parts[0];
+                  _prefs?.setString('refreshTokenCookie', _refreshTokenCookie!);
                 }
               }
             }
@@ -76,6 +91,8 @@ class ApiClient {
             if (options.path.contains('api/auth/refresh-token')) {
               _accessToken = null;
               _refreshTokenCookie = null;
+              _prefs?.remove('accessToken');
+              _prefs?.remove('refreshTokenCookie');
               return handler.next(error);
             }
 
@@ -87,6 +104,7 @@ class ApiClient {
                 if (data != null && data['success'] == true) {
                   final tokenData = data['data'];
                   _accessToken = tokenData['accessToken'];
+                  _prefs?.setString('accessToken', _accessToken!);
 
                   // Thực hiện gửi lại request ban đầu với Access Token mới
                   options.headers['Authorization'] = 'Bearer $_accessToken';
@@ -106,6 +124,8 @@ class ApiClient {
               // Làm mới token thất bại -> Đăng xuất và xóa session
               _accessToken = null;
               _refreshTokenCookie = null;
+              _prefs?.remove('accessToken');
+              _prefs?.remove('refreshTokenCookie');
             }
           }
 
@@ -121,6 +141,11 @@ class ApiClient {
   /// Thiết lập Access Token cho session hiện tại sau khi đăng nhập thành công.
   static void setAccessToken(String? token) {
     _accessToken = token;
+    if (token != null) {
+      _prefs?.setString('accessToken', token);
+    } else {
+      _prefs?.remove('accessToken');
+    }
   }
 
   /// Lấy Access Token hiện tại.
@@ -130,6 +155,8 @@ class ApiClient {
   static void clearSession() {
     _accessToken = null;
     _refreshTokenCookie = null;
+    _prefs?.remove('accessToken');
+    _prefs?.remove('refreshTokenCookie');
   }
 
   /// Hàm tiện ích hỗ trợ gửi request GET

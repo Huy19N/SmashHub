@@ -11,6 +11,7 @@ class PostModel {
   final String content;
   final String? mediaFileId;
   final String? mediaUrl;
+  final List<String> mediaFileIds;
   final bool isBoosted;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -31,6 +32,7 @@ class PostModel {
     required this.content,
     this.mediaFileId,
     this.mediaUrl,
+    this.mediaFileIds = const [],
     required this.isBoosted,
     this.createdAt,
     this.updatedAt,
@@ -53,6 +55,9 @@ class PostModel {
       content: json['content'] ?? '',
       mediaFileId: json['mediaFileId'],
       mediaUrl: json['mediaUrl'],
+      mediaFileIds: json['mediaFileIds'] != null
+          ? (json['mediaFileIds'] as List).map((e) => e.toString()).toList()
+          : [],
       isBoosted: json['isBoosted'] ?? false,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
@@ -76,6 +81,7 @@ class PostModel {
       'content': content,
       'mediaFileId': mediaFileId,
       'mediaUrl': mediaUrl,
+      'mediaFileIds': mediaFileIds,
       'isBoosted': isBoosted,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -98,6 +104,7 @@ class PostModel {
     String? content,
     String? mediaFileId,
     String? mediaUrl,
+    List<String>? mediaFileIds,
     bool? isBoosted,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -118,6 +125,7 @@ class PostModel {
       content: content ?? this.content,
       mediaFileId: mediaFileId ?? this.mediaFileId,
       mediaUrl: mediaUrl ?? this.mediaUrl,
+      mediaFileIds: mediaFileIds ?? this.mediaFileIds,
       isBoosted: isBoosted ?? this.isBoosted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

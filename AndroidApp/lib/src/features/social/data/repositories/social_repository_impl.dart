@@ -11,8 +11,16 @@ class SocialRepositoryImpl {
     return await _remoteDataSource.getPosts(page: page, limit: limit);
   }
 
-  Future<ApiResponse<PostModel>> createPost(String content, {String? mediaFileId}) async {
-    return await _remoteDataSource.createPost(content, mediaFileId: mediaFileId);
+  Future<ApiResponse<PostModel>> createPost({
+    required String content,
+    required int postType,
+    List<String> mediaFileIds = const [],
+  }) async {
+    return await _remoteDataSource.createPost(
+      content: content,
+      postType: postType,
+      mediaFileIds: mediaFileIds,
+    );
   }
 
   Future<ApiResponse<void>> likePost(String postId) async {

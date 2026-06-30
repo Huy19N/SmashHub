@@ -25,7 +25,8 @@ public class SocialController : ControllerBase
     private Guid? GetCurrentUserIdSafe()
     {
         var claim = User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        return string.IsNullOrEmpty(claim) ? null : Guid.Parse(claim);
+        if (string.IsNullOrEmpty(claim)) return null;
+        return Guid.TryParse(claim, out var parsedGuid) ? parsedGuid : null;
     }
 
     [HttpPost("posts")]
