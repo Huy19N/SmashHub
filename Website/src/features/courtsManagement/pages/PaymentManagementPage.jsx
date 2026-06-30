@@ -13,7 +13,9 @@ import {
   getBankAccountsAPI,
   createBankAccountAPI,
   updateBankAccountAPI,
-  deleteBankAccountAPI
+  deleteBankAccountAPI,
+  getFacilityPaymentConfigAPI,
+  updateFacilityPaymentConfigAPI
 } from '../api/courtsManagement.api';
 import toast from 'react-hot-toast';
 import DeleteBankAccountModal from '../components/DeleteBankAccountModal';
@@ -107,6 +109,12 @@ export default function PaymentManagementPage() {
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false);
+
+  // Payment Config State
+  const [paymentModel, setPaymentModel] = useState(1); // 1: Escrow, 3: BYOG
+  const [payosConfig, setPayosConfig] = useState({ clientId: '', apiKey: '', checksumKey: '' });
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
 
   // Form modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -159,13 +167,35 @@ export default function PaymentManagementPage() {
     fetchFacilities();
   }, [fetchFacilities]);
 
+  const fetchPaymentConfig = useCallback(async (facilityId) => {
+    if (!facilityId) return;
+    setIsLoadingConfig(true);
+    try {
+      const res = await getFacilityPaymentConfigAPI(facilityId);
+      const data = res?.data ?? res;
+      setPaymentModel(data.paymentModel || 1);
+      setPayosConfig({
+        clientId: data.clientId || '',
+        apiKey: data.apiKey || '',
+        checksumKey: data.checksumKey || ''
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi khi tải cấu hình thanh toán.');
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedFacilityId) {
       fetchBankAccounts(selectedFacilityId);
+      fetchPaymentConfig(selectedFacilityId);
     } else {
       setBankAccounts([]);
+      setPaymentModel(1);
     }
-  }, [selectedFacilityId, fetchBankAccounts]);
+  }, [selectedFacilityId, fetchBankAccounts, fetchPaymentConfig]);
 
   useEffect(() => {
     if (!isFacilityDropdownOpen) return;
@@ -285,6 +315,52 @@ export default function PaymentManagementPage() {
     }
   };
 
+  const handleSavePayOSConfig = async (e) => {
+    e.preventDefault();
+    if (!payosConfig.clientId || !payosConfig.apiKey || !payosConfig.checksumKey) {
+      toast.error('Vui lòng nhập đầy đủ 3 Key của PayOS.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await updateFacilityPaymentConfigAPI(selectedFacilityId, {
+        paymentModel: 3,
+        clientId: payosConfig.clientId,
+        apiKey: payosConfig.apiKey,
+        checksumKey: payosConfig.checksumKey
+      });
+      toast.success('Lưu cấu hình PayOS thành công.');
+      setIsEditingConfig(false);
+      fetchPaymentConfig(selectedFacilityId);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Lỗi khi lưu cấu hình.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSwitchModel = async (model) => {
+    if (model === paymentModel) return;
+    setIsSubmitting(true);
+    try {
+      await updateFacilityPaymentConfigAPI(selectedFacilityId, {
+        paymentModel: model,
+        clientId: payosConfig.clientId,
+        apiKey: payosConfig.apiKey,
+        checksumKey: payosConfig.checksumKey
+      });
+      setPaymentModel(model);
+      toast.success(`Đã chuyển sang mô hình ${model === 1 ? 'Thu Hộ' : 'Trực Tiếp'}.`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi khi chuyển mô hình.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const selectedFacility = facilities.find(f => f.facilityId === selectedFacilityId);
 
   return (
@@ -394,101 +470,240 @@ export default function PaymentManagementPage() {
             ) : (
               <div className="space-y-6">
 
-                {/* Add Button & Grid */}
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-extrabold text-gray-400 uppercase tracking-wider font-label">
-                    Danh sách tài khoản ngân hàng ({bankAccounts.length})
-                  </h3>
-                  <Button
-                    onClick={handleOpenAddModal}
-                    variant="primary"
-                    className="!py-2 !px-4 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                {/* Tabs to switch Payment Model */}
+                <div className="flex p-1 bg-gray-200/50 dark:bg-white/5 rounded-2xl w-fit">
+                  <button
+                    onClick={() => handleSwitchModel(1)}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all duration-300 ${
+                      paymentModel === 1 
+                        ? 'bg-white dark:bg-[#1e293b] text-emerald-600 dark:text-emerald-400 shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    }`}
                   >
-                    <Plus className="w-4 h-4" />
-                    Thêm tài khoản
-                  </Button>
+                    Thu hộ qua Nền tảng
+                  </button>
+                  <button
+                    onClick={() => handleSwitchModel(3)}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all duration-300 ${
+                      paymentModel === 3
+                        ? 'bg-white dark:bg-[#1e293b] text-emerald-600 dark:text-emerald-400 shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    PayOS Cá Nhân (BYOG)
+                  </button>
                 </div>
 
-                {isLoadingAccounts ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2].map((n) => (
-                      <div key={n} className="h-48 rounded-3xl bg-white dark:bg-[#0b0f19]/40 border border-gray-150 dark:border-white/5 animate-pulse" />
-                    ))}
-                  </div>
-                ) : bankAccounts.length === 0 ? (
-                  <div className="text-center py-16 bg-white dark:bg-[#0b0f19]/35 rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
-                    <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
-                    <p className="font-bold text-gray-700 dark:text-gray-300">Chưa có tài khoản ngân hàng nào</p>
-                    <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">Vui lòng bấm nút phía trên để liên kết tài khoản ngân hàng đầu tiên nhận tiền cho cơ sở này.</p>
-                  </div>
+                {paymentModel === 1 ? (
+                  <>
+                    {/* Add Button & Grid */}
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-extrabold text-gray-400 uppercase tracking-wider font-label">
+                        Danh sách tài khoản ngân hàng ({bankAccounts.length})
+                      </h3>
+                      <Button
+                        onClick={handleOpenAddModal}
+                        variant="primary"
+                        className="!py-2 !px-4 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Thêm tài khoản
+                      </Button>
+                    </div>
+
+                    {isLoadingAccounts ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2].map((n) => (
+                          <div key={n} className="h-48 rounded-3xl bg-white dark:bg-[#0b0f19]/40 border border-gray-150 dark:border-white/5 animate-pulse" />
+                        ))}
+                      </div>
+                    ) : bankAccounts.length === 0 ? (
+                      <div className="text-center py-16 bg-white dark:bg-[#0b0f19]/35 rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
+                        <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
+                        <p className="font-bold text-gray-700 dark:text-gray-300">Chưa có tài khoản ngân hàng nào</p>
+                        <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">Vui lòng bấm nút phía trên để liên kết tài khoản ngân hàng đầu tiên nhận tiền cho cơ sở này.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {bankAccounts.map((account, index) => {
+                          const theme = CARD_THEMES[index % CARD_THEMES.length];
+                          return (
+                            <div
+                              key={account.bankAccountId}
+                              className={`relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br ${theme.bg} ${theme.text} border ${theme.border} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-48`}
+                            >
+                              {/* Decorative card stripes */}
+                              <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-8 translate-y-8">
+                                <Landmark className="w-48 h-48" />
+                              </div>
+
+                              {/* Top Row: Bank Info and Primary status */}
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="flex items-center gap-2">
+                                  <Landmark className="w-5 h-5 text-white/90" />
+                                  <h4 className="font-black text-base tracking-wide truncate max-w-[180px] text-white drop-shadow-sm">{account.bankName}</h4>
+                                </div>
+
+                                {account.isPrimary ? (
+                                  <span className={`px-2.5 py-1 text-[10px] font-black rounded-full ${theme.badge} uppercase tracking-widest font-label shadow-sm`}>
+                                    Mặc định
+                                  </span>
+                                ) : (
+                                  <span className={`px-2.5 py-1 text-[10px] font-black rounded-full ${theme.badgeSecondary} uppercase tracking-widest font-label`}>
+                                    Phụ
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Mid Row: Account Number */}
+                              <div className="my-2">
+                                <div className={`text-xs font-bold ${theme.label} uppercase tracking-wider font-label`}>Số tài khoản</div>
+                                <div className="text-xl md:text-2xl font-mono font-extrabold tracking-widest mt-1 text-white drop-shadow-sm">
+                                  {account.accountNumber}
+                                </div>
+                              </div>
+
+                              {/* Bottom Row: Account Holder and Actions */}
+                              <div className="flex justify-between items-end border-t border-white/10 pt-3">
+                                <div>
+                                  <div className={`text-[11px] font-bold ${theme.label} uppercase tracking-wider font-label`}>Chủ tài khoản</div>
+                                  <div className="text-sm font-extrabold tracking-wider uppercase mt-0.5 text-white drop-shadow-sm">{account.accountHolder}</div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-2 relative z-10">
+                                  <button
+                                    onClick={() => handleOpenEditModal(account)}
+                                    className={`p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white ${theme.actionEdit} transition-colors cursor-pointer active:scale-90`}
+                                    title="Chỉnh sửa"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenDeleteModal(account)}
+                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-red-300 transition-colors cursor-pointer active:scale-90"
+                                    title="Xóa"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {bankAccounts.map((account, index) => {
-                      const theme = CARD_THEMES[index % CARD_THEMES.length];
-                      return (
-                        <div
-                          key={account.bankAccountId}
-                          className={`relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br ${theme.bg} ${theme.text} border ${theme.border} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-48`}
+                  <div className="bg-white dark:bg-[#0b0f19]/40 p-6 rounded-3xl border border-gray-150 dark:border-white/5 space-y-6 animate-fadeIn relative overflow-hidden">
+                    <div className="absolute right-0 top-0 opacity-[0.03] pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+                      <ShieldCheck className="w-64 h-64" />
+                    </div>
+                    
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-black dark:text-white flex items-center gap-2">
+                          <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                          Cấu hình PayOS Cá Nhân
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xl leading-relaxed">
+                          Nhập thông tin API Key từ trang quản trị PayOS của bạn. Tiền thanh toán của khách sẽ chuyển thẳng vào tài khoản ngân hàng của bạn.
+                        </p>
+                      </div>
+                      
+                      {!isEditingConfig && (
+                        <Button 
+                          onClick={() => setIsEditingConfig(true)}
+                          variant="secondary"
+                          className="!py-2 !px-4 text-xs font-bold"
                         >
-                          {/* Decorative card stripes */}
-                          <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-8 translate-y-8">
-                            <Landmark className="w-48 h-48" />
-                          </div>
+                          <Edit3 className="w-3.5 h-3.5 mr-1.5" /> Chỉnh sửa
+                        </Button>
+                      )}
+                    </div>
 
-                          {/* Top Row: Bank Info and Primary status */}
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex items-center gap-2">
-                              <Landmark className="w-5 h-5 text-white/90" />
-                              <h4 className="font-black text-base tracking-wide truncate max-w-[180px] text-white drop-shadow-sm">{account.bankName}</h4>
-                            </div>
-
-                            {account.isPrimary ? (
-                              <span className={`px-2.5 py-1 text-[10px] font-black rounded-full ${theme.badge} uppercase tracking-widest font-label shadow-sm`}>
-                                Mặc định
-                              </span>
-                            ) : (
-                              <span className={`px-2.5 py-1 text-[10px] font-black rounded-full ${theme.badgeSecondary} uppercase tracking-widest font-label`}>
-                                Phụ
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Mid Row: Account Number */}
-                          <div className="my-2">
-                            <div className={`text-xs font-bold ${theme.label} uppercase tracking-wider font-label`}>Số tài khoản</div>
-                            <div className="text-xl md:text-2xl font-mono font-extrabold tracking-widest mt-1 text-white drop-shadow-sm">
-                              {account.accountNumber}
-                            </div>
-                          </div>
-
-                          {/* Bottom Row: Account Holder and Actions */}
-                          <div className="flex justify-between items-end border-t border-white/10 pt-3">
-                            <div>
-                              <div className={`text-[11px] font-bold ${theme.label} uppercase tracking-wider font-label`}>Chủ tài khoản</div>
-                              <div className="text-sm font-extrabold tracking-wider uppercase mt-0.5 text-white drop-shadow-sm">{account.accountHolder}</div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-2 relative z-10">
-                              <button
-                                onClick={() => handleOpenEditModal(account)}
-                                className={`p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white ${theme.actionEdit} transition-colors cursor-pointer active:scale-90`}
-                                title="Chỉnh sửa"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleOpenDeleteModal(account)}
-                                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-red-300 transition-colors cursor-pointer active:scale-90"
-                                title="Xóa"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-200/50 dark:border-amber-500/20">
+                      <div className="flex gap-3">
+                        <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-sm font-bold text-amber-800 dark:text-amber-400 mb-1">Thiết lập Webhook PayOS</h4>
+                          <p className="text-xs text-amber-700/80 dark:text-amber-500/80 leading-relaxed mb-2">
+                            Bạn cần dán đường dẫn Webhook dưới đây vào mục Cài Đặt trên trang quản trị PayOS để hệ thống có thể tự động xác nhận đơn đặt sân khi khách chuyển khoản thành công.
+                          </p>
+                          <code className="block p-2 bg-white/50 dark:bg-black/20 rounded font-mono text-xs text-amber-900 dark:text-amber-300 select-all border border-amber-200 dark:border-amber-500/30">
+                            https://api.smashclub.com/api/payments/webhook/booking
+                          </code>
                         </div>
-                      );
-                    })}
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleSavePayOSConfig} className="space-y-4 relative z-10">
+                      <div className="grid grid-cols-1 gap-4 max-w-2xl">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-gray-550 dark:text-gray-400 font-label mb-1.5">
+                            Client ID
+                          </label>
+                          <input
+                            type="text"
+                            value={payosConfig.clientId}
+                            onChange={e => setPayosConfig({...payosConfig, clientId: e.target.value})}
+                            disabled={!isEditingConfig}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 dark:focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed text-sm font-mono dark:text-white"
+                            placeholder="Ví dụ: 12345678-abcd-1234..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-gray-550 dark:text-gray-400 font-label mb-1.5">
+                            API Key
+                          </label>
+                          <input
+                            type="password"
+                            value={payosConfig.apiKey}
+                            onChange={e => setPayosConfig({...payosConfig, apiKey: e.target.value})}
+                            disabled={!isEditingConfig}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 dark:focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed text-sm font-mono dark:text-white"
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-gray-550 dark:text-gray-400 font-label mb-1.5">
+                            Checksum Key
+                          </label>
+                          <input
+                            type="password"
+                            value={payosConfig.checksumKey}
+                            onChange={e => setPayosConfig({...payosConfig, checksumKey: e.target.value})}
+                            disabled={!isEditingConfig}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 dark:focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed text-sm font-mono dark:text-white"
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+                      </div>
+
+                      {isEditingConfig && (
+                        <div className="flex gap-3 pt-2 max-w-2xl">
+                          <Button 
+                            type="button" 
+                            variant="secondary" 
+                            className="flex-1"
+                            onClick={() => {
+                              setIsEditingConfig(false);
+                              fetchPaymentConfig(selectedFacilityId);
+                            }}
+                          >
+                            Hủy bỏ
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            variant="primary" 
+                            className="flex-1"
+                            isLoading={isSubmitting}
+                          >
+                            Lưu cấu hình
+                          </Button>
+                        </div>
+                      )}
+                    </form>
                   </div>
                 )}
               </div>

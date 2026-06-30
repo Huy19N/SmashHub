@@ -167,13 +167,50 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (!IsPayOSConfigured())
+        var activePayOSClient = _payOSClient;
+        var isConfigured = IsPayOSConfigured();
+
+        if (booking.Court?.FacilityId != null)
+        {
+            var context = _unitOfWork.Payments.GetContext();
+            var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                .FirstOrDefaultAsync(c => c.FacilityId == booking.Court.FacilityId && c.IsActive && c.PaymentModel == 3);
+
+            if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+            {
+                try
+                {
+                    var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                    if (keys != null)
+                    {
+                        var clientId = keys.GetValueOrDefault("ClientId");
+                        var apiKey = keys.GetValueOrDefault("ApiKey");
+                        var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                        {
+                            activePayOSClient = new PayOSClient(new PayOSOptions
+                            {
+                                ClientId = clientId,
+                                ApiKey = apiKey,
+                                ChecksumKey = checksumKey
+                            });
+                            payment.FacilityConfigId = facilityConfig.ConfigId;
+                            isConfigured = true;
+                        }
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        }
+
+        if (!isConfigured)
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
         else
         {
-            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+            var paymentLink = await activePayOSClient.PaymentRequests.CreateAsync(payosRequest);
             payment.Note = paymentLink.CheckoutUrl;
         }
 
@@ -273,6 +310,7 @@ public class PaymentService : IPaymentService
             CreatedAt = DateTime.Now
         };
 
+        // 5. Create PayOS payment link
         var payosRequest = new CreatePaymentLinkRequest
         {
             OrderCode = orderCode,
@@ -282,13 +320,49 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (!IsPayOSConfigured())
+        var activePayOSClient = _payOSClient;
+        var isConfigured = IsPayOSConfigured();
+
+        if (booking.Court?.FacilityId != null)
+        {
+            var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                .FirstOrDefaultAsync(c => c.FacilityId == booking.Court.FacilityId && c.IsActive && c.PaymentModel == 3);
+
+            if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+            {
+                try
+                {
+                    var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                    if (keys != null)
+                    {
+                        var clientId = keys.GetValueOrDefault("ClientId");
+                        var apiKey = keys.GetValueOrDefault("ApiKey");
+                        var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                        {
+                            activePayOSClient = new PayOSClient(new PayOSOptions
+                            {
+                                ClientId = clientId,
+                                ApiKey = apiKey,
+                                ChecksumKey = checksumKey
+                            });
+                            payment.FacilityConfigId = facilityConfig.ConfigId;
+                            isConfigured = true;
+                        }
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        }
+
+        if (!isConfigured)
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
         else
         {
-            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+            var paymentLink = await activePayOSClient.PaymentRequests.CreateAsync(payosRequest);
             payment.Note = paymentLink.CheckoutUrl;
         }
 
@@ -401,9 +475,11 @@ public class PaymentService : IPaymentService
                         booking.StatusId = 2; // Confirmed
                         await _unitOfWork.Booking.UpdateAsync(booking);
 
-                        // 5. Tạo payout record cho facility owner
+                        // 5. Tạo payout record cho facility owner nếu KHÔNG dùng BYOG
+                        var isByog = payment.FacilityConfigId.HasValue;
                         var facility = booking.Court?.Facility;
-                        if (facility != null)
+
+                        if (facility != null && !isByog)
                         {
                             var bankAccount = await _unitOfWork.FacilityBankAccounts
                                 .GetByFacilityIdAsync(facility.FacilityId);
@@ -447,7 +523,10 @@ public class PaymentService : IPaymentService
                                 context.Entry(wallet).State = EntityState.Modified;
                             }
                             await context.SaveChangesAsync();
+                        }
 
+                        if (facility != null)
+                        {
                             // Gửi email thông báo cho chủ sân
                             try
                             {

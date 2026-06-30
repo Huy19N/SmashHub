@@ -19,4 +19,6 @@ public interface IFacilityService
     Task<List<OperatingHourResponse>> UpdateOperatingHoursAsync(Guid userId, int facilityId, List<OperatingHourRequest> request);
     Task<List<SportPriceDetailResponse>> GetSportPricesAsync(int facilityId);
     Task ApproveRejectFacilityAsync(int facilityId, int statusId);
+    Task<FacilityPaymentConfigResponse> GetPaymentConfigAsync(Guid userId, int facilityId);
+    Task<FacilityPaymentConfigResponse> UpdatePaymentConfigAsync(Guid userId, int facilityId, FacilityPaymentConfigRequest request);
 }

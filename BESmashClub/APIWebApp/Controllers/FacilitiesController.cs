@@ -230,6 +230,50 @@ public class FacilitiesController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy cấu hình thanh toán của cơ sở (chỉ chủ sân).
+    /// </summary>
+    [HttpGet("{facilityId:int}/payment-config")]
+    public async Task<IActionResult> GetPaymentConfig(int facilityId)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _facilityService.GetPaymentConfigAsync(userId, facilityId);
+            return Ok(ApiResponse<FacilityPaymentConfigResponse>.SuccessResponse(result));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    /// Cập nhật cấu hình thanh toán của cơ sở (chỉ chủ sân).
+    /// </summary>
+    [HttpPut("{facilityId:int}/payment-config")]
+    public async Task<IActionResult> UpdatePaymentConfig(int facilityId, [FromBody] FacilityPaymentConfigRequest request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _facilityService.UpdatePaymentConfigAsync(userId, facilityId, request);
+            return Ok(ApiResponse<FacilityPaymentConfigResponse>.SuccessResponse(result, "Cập nhật cấu hình thanh toán thành công."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
     /// Lấy danh sách giờ hoạt động của cơ sở (public).
     /// </summary>
     [HttpGet("{facilityId:int}/operating-hours")]

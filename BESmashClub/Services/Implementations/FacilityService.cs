@@ -250,6 +250,95 @@ public class FacilityService : IFacilityService
         return result;
     }
 
+    public async Task<FacilityPaymentConfigResponse> GetPaymentConfigAsync(Guid userId, int facilityId)
+    {
+        var facility = await _unitOfWork.Facilities.GetByIdAsync(facilityId);
+        if (facility == null) throw new KeyNotFoundException("Không tìm thấy cơ sở.");
+        if (facility.OwnerId != userId) throw new UnauthorizedAccessException("Bạn không có quyền truy cập cấu hình này.");
+
+        var context = _unitOfWork.Facilities.GetContext();
+        var config = await context.Set<FacilityPaymentConfig>()
+            .FirstOrDefaultAsync(c => c.FacilityId == facilityId);
+
+        var response = new FacilityPaymentConfigResponse
+        {
+            FacilityId = facilityId,
+            PaymentModel = config?.PaymentModel ?? 1, // Default to Escrow
+            IsActive = config?.IsActive ?? false
+        };
+
+        if (config != null && config.PaymentModel == 3 && !string.IsNullOrEmpty(config.ApiKey))
+        {
+            try
+            {
+                var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(config.ApiKey);
+                if (keys != null)
+                {
+                    response.ClientId = keys.GetValueOrDefault("ClientId");
+                    response.ApiKey = keys.GetValueOrDefault("ApiKey");
+                    response.ChecksumKey = keys.GetValueOrDefault("ChecksumKey");
+                }
+            }
+            catch
+            {
+                // Ignore parse error
+            }
+            response.ConfigId = config.ConfigId;
+        }
+
+        return response;
+    }
+
+    public async Task<FacilityPaymentConfigResponse> UpdatePaymentConfigAsync(Guid userId, int facilityId, FacilityPaymentConfigRequest request)
+    {
+        var facility = await _unitOfWork.Facilities.GetByIdAsync(facilityId);
+        if (facility == null) throw new KeyNotFoundException("Không tìm thấy cơ sở.");
+        if (facility.OwnerId != userId) throw new UnauthorizedAccessException("Bạn không có quyền cập nhật cấu hình này.");
+
+        var context = _unitOfWork.Facilities.GetContext();
+        var config = await context.Set<FacilityPaymentConfig>()
+            .FirstOrDefaultAsync(c => c.FacilityId == facilityId);
+
+        var apiKeyJson = "";
+        if (request.PaymentModel == 3)
+        {
+            var keys = new Dictionary<string, string>
+            {
+                { "ClientId", request.ClientId ?? "" },
+                { "ApiKey", request.ApiKey ?? "" },
+                { "ChecksumKey", request.ChecksumKey ?? "" }
+            };
+            apiKeyJson = System.Text.Json.JsonSerializer.Serialize(keys);
+        }
+
+        if (config == null)
+        {
+            var gateway = await context.Set<PaymentGateway>().FirstOrDefaultAsync(g => g.GatewayCode == "PAYOS");
+            config = new FacilityPaymentConfig
+            {
+                ConfigId = Guid.NewGuid(),
+                FacilityId = facilityId,
+                PaymentModel = request.PaymentModel,
+                GatewayId = gateway?.GatewayId,
+                ApiKey = apiKeyJson,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+            await context.Set<FacilityPaymentConfig>().AddAsync(config);
+        }
+        else
+        {
+            config.PaymentModel = request.PaymentModel;
+            config.ApiKey = apiKeyJson;
+            config.UpdatedAt = DateTime.Now;
+            context.Entry(config).State = EntityState.Modified;
+        }
+
+        await context.SaveChangesAsync();
+
+        return await GetPaymentConfigAsync(userId, facilityId);
+    }
+
     #region Helpers
 
     private static FacilityResponse MapToResponse(Facility f)
