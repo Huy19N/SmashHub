@@ -65,8 +65,13 @@ const CreatePostWidget = ({ onCreatePost }) => {
       }
     }
 
+    let finalContent = content.trim();
+    if (!finalContent && selectedImage) {
+      finalContent = " ";
+    }
+
     const success = await onCreatePost({
-      content: content.trim(),
+      content: finalContent,
       postType: postTypeInt,
       visibility: 'Public',
       mediaFileId: mediaFileId
