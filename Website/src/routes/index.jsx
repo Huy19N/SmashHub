@@ -27,6 +27,7 @@ const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pag
 const PaymentManagementPage = lazy(() => import('../features/courtsManagement/pages/PaymentManagementPage'));
 const MatchmakingPage = lazy(() => import('../features/groups/pages/MatchmakingPage'));
 const SocialPage = lazy(() => import('../features/social/pages/SocialPage'));
+const SinglePostPage = lazy(() => import('../features/social/pages/SinglePostPage'));
 
 // Admin Features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
@@ -102,6 +103,10 @@ export const router = createBrowserRouter([
   {
     path: PATHS.SOCIAL,
     element: <ProtectedRoute><SocialPage /></ProtectedRoute>
+  },
+  {
+    path: '/social/post/:postId',
+    element: <ProtectedRoute><SinglePostPage /></ProtectedRoute>
   },
   {
     path: '/subscriptions',

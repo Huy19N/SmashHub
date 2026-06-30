@@ -80,7 +80,7 @@ const PostLightbox = ({ post, initialIndex = 0, onClose, onToggleLike }) => {
             <MediaImage 
               fileId={mediaFileIds[currentIndex]} 
               alt={`Media ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain select-none"
+              className="w-full h-full object-contain select-none"
             />
           )}
 
@@ -161,6 +161,21 @@ const PostLightbox = ({ post, initialIndex = 0, onClose, onToggleLike }) => {
               <button className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
                 <MessageCircle className="w-4.5 h-4.5" />
                 <span>{post.commentCount || 0}</span>
+              </button>
+
+              <button 
+                onClick={() => {
+                  const postUrl = `${window.location.origin}/social/post/${post.postId}`;
+                  if (navigator.share) {
+                    navigator.share({ title: 'SmashHub Post', url: postUrl }).catch(console.error);
+                  } else {
+                    navigator.clipboard.writeText(postUrl);
+                  }
+                }} 
+                className="flex items-center gap-1 hover:text-emerald-600 transition-colors"
+              >
+                <Share2 className="w-4.5 h-4.5" />
+                <span>Chia sẻ</span>
               </button>
             </div>
 

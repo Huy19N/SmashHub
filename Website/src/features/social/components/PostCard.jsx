@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Users, Flame } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CommentSection from './CommentSection';
@@ -19,7 +20,7 @@ const PostCard = ({ post, onToggleLike }) => {
   };
 
   const handleShare = () => {
-    const postUrl = `${window.location.origin}${window.location.pathname}#post-${post.postId}`;
+    const postUrl = `${window.location.origin}/social/post/${post.postId}`;
     if (navigator.share) {
       navigator.share({
         title: 'SmashHub Post',
@@ -107,9 +108,9 @@ const PostCard = ({ post, onToggleLike }) => {
               </h4>
               {getPostTypeBadge(post.postType)}
             </div>
-            <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 mt-0.5">
+            <Link to={`/social/post/${post.postId}`} className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 mt-0.5 hover:underline decoration-gray-400 block">
               {getSubtextLocation()}
-            </p>
+            </Link>
           </div>
         </div>
 
