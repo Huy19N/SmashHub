@@ -33,6 +33,21 @@ public class SocialService : ISocialService
             CreatedAt = DateTime.Now
         };
 
+        if (request.MediaFileIds != null && request.MediaFileIds.Any())
+        {
+            post.MediaFileId = request.MediaFileIds.First(); // Fallback
+            int order = 0;
+            foreach (var fileId in request.MediaFileIds)
+            {
+                post.PostMedias.Add(new PostMedia
+                {
+                    PostId = post.PostId,
+                    FileId = fileId,
+                    DisplayOrder = order++
+                });
+            }
+        }
+
         await _unitOfWork.Posts.CreateAsync(post);
 
         // Fetch to return
@@ -49,6 +64,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostMedias)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
@@ -74,6 +90,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostMedias)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
@@ -99,6 +116,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
+                .Include(p => p.PostMedias)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.CreatedAt)
@@ -120,6 +138,7 @@ public class SocialService : ISocialService
             .Include(p => p.AuthorUser)
             .Include(p => p.Facility)
             .Include(p => p.Team)
+            .Include(p => p.PostMedias)
             .Include(p => p.PostComments)
             .Include(p => p.PostLikes)
             .FirstOrDefaultAsync(p => p.PostId == postId);
@@ -259,6 +278,9 @@ public class SocialService : ISocialService
             PostType = p.PostType,
             Content = p.Content,
             MediaFileId = p.MediaFileId,
+            MediaFileIds = p.PostMedias != null && p.PostMedias.Any() 
+                ? p.PostMedias.OrderBy(m => m.DisplayOrder).Select(m => m.FileId).ToList() 
+                : (p.MediaFileId.HasValue ? new List<Guid> { p.MediaFileId.Value } : new List<Guid>()),
             IsBoosted = p.IsBoosted,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,

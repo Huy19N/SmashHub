@@ -653,6 +653,15 @@ CREATE TABLE PostLikes (
     CONSTRAINT FK_PostLikes_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE NO ACTION
 );
 
+CREATE TABLE PostMedias (
+    PostId UNIQUEIDENTIFIER NOT NULL,
+    FileId UNIQUEIDENTIFIER NOT NULL,
+    DisplayOrder INT NOT NULL DEFAULT 0,
+    CONSTRAINT PK_PostMedias PRIMARY KEY CLUSTERED (PostId ASC, FileId ASC),
+    CONSTRAINT FK_PostMedias_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
+    CONSTRAINT FK_PostMedias_StoredFiles FOREIGN KEY (FileId) REFERENCES StoredFiles(FileId) ON DELETE CASCADE
+);
+
 -- ==========================================
 -- INDEXES 
 -- ==========================================

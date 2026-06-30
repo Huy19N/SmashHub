@@ -14,6 +14,7 @@ public class PostDto
     public string Content { get; set; } = null!;
     public Guid? MediaFileId { get; set; }
     public string? MediaUrl { get; set; }
+    public List<Guid> MediaFileIds { get; set; } = new List<Guid>();
     public bool IsBoosted { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

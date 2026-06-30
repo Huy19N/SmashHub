@@ -76,6 +76,8 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<PostLike> PostLikes { get; set; }
 
+    public virtual DbSet<PostMedia> PostMedias { get; set; }
+
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
@@ -705,6 +707,19 @@ public partial class SmashClubContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PostLikes_Users");
+        });
+
+        modelBuilder.Entity<PostMedia>(entity =>
+        {
+            entity.HasKey(e => new { e.PostId, e.FileId });
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostMedias)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_PostMedias_Posts");
+
+            entity.HasOne(d => d.File).WithMany(p => p.PostMedias)
+                .HasForeignKey(d => d.FileId)
+                .HasConstraintName("FK_PostMedias_StoredFiles");
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>

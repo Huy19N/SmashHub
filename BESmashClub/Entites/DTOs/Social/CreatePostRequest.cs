@@ -15,4 +15,6 @@ public class CreatePostRequest
     public string Content { get; set; } = null!;
 
     public Guid? MediaFileId { get; set; }
+
+    public List<Guid>? MediaFileIds { get; set; }
 }

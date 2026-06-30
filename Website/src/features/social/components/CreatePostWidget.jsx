@@ -12,52 +12,62 @@ const CreatePostWidget = ({ onCreatePost }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState('General'); // 'General', 'FindOpponent', 'Promotion'
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const fileInputRef = useRef(null);
 
   const roleId = apiUser?.data?.roleId?.toString() || localStorage.getItem('roleId');
   const isFacilityOwner = roleId === '3';
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = [];
+    const validPreviews = [];
+
+    files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast.error('Kích thước ảnh tối đa là 5MB');
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
+      } else if (!file.type.startsWith('image/')) {
         toast.error('Vui lòng chọn file hình ảnh');
-        return;
+      } else {
+        validFiles.push(file);
+        validPreviews.push(URL.createObjectURL(file));
       }
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+    });
 
-  const clearImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+    if (validFiles.length > 0) {
+      setSelectedImages(prev => [...prev, ...validFiles]);
+      setImagePreviews(prev => [...prev, ...validPreviews]);
+    }
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const removeImage = (indexToRemove) => {
+    setSelectedImages(prev => prev.filter((_, index) => index !== indexToRemove));
+    setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim() && !selectedImage) return;
+    if (!content.trim() && selectedImages.length === 0) return;
 
     let postTypeInt = 3; // General
     if (selectedType === 'FindOpponent') postTypeInt = 2;
     else if (selectedType === 'Promotion') postTypeInt = 1;
 
     setIsSubmitting(true);
-    let mediaFileId = null;
+    let mediaFileIds = [];
 
-    if (selectedImage) {
+    if (selectedImages.length > 0) {
       try {
-        const uploadRes = await uploadFileAPI(selectedImage, 'ChatMedia');
-        mediaFileId = uploadRes?.data?.fileId || uploadRes?.fileId;
+        const uploadPromises = selectedImages.map(img => uploadFileAPI(img, 'ChatMedia'));
+        const results = await Promise.all(uploadPromises);
+        mediaFileIds = results.map(res => res?.data?.fileId || res?.fileId).filter(id => id);
       } catch (err) {
         toast.error(err.message || 'Tải ảnh lên thất bại');
         setIsSubmitting(false);
@@ -66,7 +76,7 @@ const CreatePostWidget = ({ onCreatePost }) => {
     }
 
     let finalContent = content.trim();
-    if (!finalContent && selectedImage) {
+    if (!finalContent && selectedImages.length > 0) {
       finalContent = " ";
     }
 
@@ -74,13 +84,14 @@ const CreatePostWidget = ({ onCreatePost }) => {
       content: finalContent,
       postType: postTypeInt,
       visibility: 'Public',
-      mediaFileId: mediaFileId
+      mediaFileIds: mediaFileIds
     });
 
     if (success) {
       setContent('');
       setSelectedType('General');
-      clearImage();
+      setSelectedImages([]);
+      setImagePreviews([]);
     }
     setIsSubmitting(false);
   };
@@ -132,20 +143,24 @@ const CreatePostWidget = ({ onCreatePost }) => {
               disabled={isSubmitting}
             />
 
-            {imagePreview && (
-              <div className="relative mt-3 inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="h-32 object-contain rounded-xl border border-gray-200 dark:border-white/10"
-                />
-                <button
-                  type="button"
-                  onClick={clearImage}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+            {imagePreviews.length > 0 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                {imagePreviews.map((preview, idx) => (
+                  <div key={idx} className="relative inline-block shrink-0">
+                    <img 
+                      src={preview} 
+                      alt="Preview" 
+                      className="h-24 w-auto object-contain rounded-xl border border-gray-200 dark:border-white/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors z-10"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -198,6 +213,7 @@ const CreatePostWidget = ({ onCreatePost }) => {
                 
                 <input 
                   type="file" 
+                  multiple
                   ref={fileInputRef} 
                   onChange={handleImageChange} 
                   accept="image/*" 
@@ -216,7 +232,7 @@ const CreatePostWidget = ({ onCreatePost }) => {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={(!content.trim() && !selectedImage) || isSubmitting}
+                disabled={(!content.trim() && selectedImages.length === 0) || isSubmitting}
                 isLoading={isSubmitting}
                 className="px-6 py-2.5 rounded-full text-xs font-extrabold flex items-center gap-2 cursor-pointer"
               >

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Users, Flame } from 'lucide-react';
 import CommentSection from './CommentSection';
 import MediaImage from '../../../components/ui/MediaImage';
+import PostMediaGrid from './PostMediaGrid';
 
 const PostCard = ({ post, onToggleLike }) => {
   const [showComments, setShowComments] = useState(false);
@@ -124,12 +125,16 @@ const PostCard = ({ post, onToggleLike }) => {
           </div>
         )}
 
-        {/* Render attached image if it exists */}
-        {post.mediaFileId && (
+        {/* Render attached image(s) if any exist */}
+        {post.mediaFileIds?.length > 0 ? (
+          <div className="mt-3">
+            <PostMediaGrid mediaFileIds={post.mediaFileIds} />
+          </div>
+        ) : post.mediaFileId ? (
           <div className="mt-3 rounded-2xl overflow-hidden border border-gray-150 dark:border-white/5 shadow-sm">
             <MediaImage fileId={post.mediaFileId} alt="Post media" className="w-full h-auto object-cover max-h-[350px]" />
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Interaction Counts */}
