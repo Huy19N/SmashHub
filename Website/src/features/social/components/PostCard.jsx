@@ -152,7 +152,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
                 if (isSinglePostView) {
                   setLightboxData({ isOpen: true, initialIndex: index });
                 } else {
-                  navigate(`/social/post/${post.postId}`);
+                  navigate(`/social/post/${post.postId}`, { state: { initialIndex: index } });
                 }
               }}
             />
@@ -164,7 +164,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
               if (isSinglePostView) {
                 setLightboxData({ isOpen: true, initialIndex: 0 });
               } else {
-                navigate(`/social/post/${post.postId}`);
+                navigate(`/social/post/${post.postId}`, { state: { initialIndex: 0 } });
               }
             }}
           >

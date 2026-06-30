@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getPostDetailAPI, likePostAPI, unlikePostAPI } from '../api/social.api';
-import PostCard from '../components/PostCard';
+import PostLightbox from '../components/PostLightbox';
 import Sidebar from '../../../components/layout/Sidebar';
 import SportyWatermarks from '../../../components/ui/SportyWatermarks';
 import { toast } from 'react-hot-toast';
@@ -10,6 +10,9 @@ import { toast } from 'react-hot-toast';
 const SinglePostPage = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialIndex = location.state?.initialIndex || 0;
+  
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,7 +73,12 @@ const SinglePostPage = () => {
                 <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
               </div>
             ) : post ? (
-              <PostCard post={post} onToggleLike={handleToggleLike} isSinglePostView={true} />
+              <PostLightbox 
+                post={post} 
+                initialIndex={initialIndex}
+                onClose={() => navigate('/social')}
+                onToggleLike={handleToggleLike}
+              />
             ) : null}
           </div>
           
