@@ -56,17 +56,22 @@ const CreatePostWidget = ({ onCreatePost }) => {
 
     if (selectedImage) {
       try {
-        const uploadRes = await uploadFileAPI(selectedImage, 'General');
+        const uploadRes = await uploadFileAPI(selectedImage, 'ChatMedia');
         mediaFileId = uploadRes?.data?.fileId || uploadRes?.fileId;
       } catch (err) {
-        toast.error('Tải ảnh lên thất bại');
+        toast.error(err.message || 'Tải ảnh lên thất bại');
         setIsSubmitting(false);
         return;
       }
     }
 
+    let finalContent = content.trim();
+    if (!finalContent && selectedImage) {
+      finalContent = " ";
+    }
+
     const success = await onCreatePost({
-      content: content.trim(),
+      content: finalContent,
       postType: postTypeInt,
       visibility: 'Public',
       mediaFileId: mediaFileId
