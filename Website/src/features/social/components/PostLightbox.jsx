@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Users, Flame } from 'lucide-react';
 import MediaImage from '../../../components/ui/MediaImage';
 import CommentSection from './CommentSection';
@@ -61,7 +62,7 @@ const PostLightbox = ({ post, initialIndex = 0, onClose, onToggleLike }) => {
 
   const viewsCount = (post.likeCount || 0) * 12 + (post.commentCount || 0) * 25 + 42; // Mock view count like in PostCard
 
-  return (
+  const lightboxContent = (
     <div className="fixed inset-0 z-[100] flex bg-black/95 animate-in fade-in duration-200" onClick={onClose}>
       
       {/* Left Panel - Image Carousel */}
@@ -193,6 +194,8 @@ const PostLightbox = ({ post, initialIndex = 0, onClose, onToggleLike }) => {
       </div>
     </div>
   );
+
+  return createPortal(lightboxContent, document.body);
 };
 
 export default PostLightbox;
