@@ -25,7 +25,7 @@ public class FileService : IFileService
     {
         // Check local files purposes and types constraints
         var allowedTypes = new[] { "Image", "Video", "Document" };
-        var allowedPurposes = new[] { "Avatar", "ChatMedia", "FacilityImage", "General" };
+        var allowedPurposes = new[] { "Avatar", "ChatMedia", "FacilityImage", "PostMedia", "General" };
 
         if (!allowedTypes.Contains(fileType))
             throw new ArgumentException("Mã loại tệp không hợp lệ (Image, Video, Document).");

@@ -4,22 +4,15 @@ export const uploadFileAPI = async (file, purpose = 'General') => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = getAccessToken();
-    const apiUrl = import.meta.env.VITE_API_URL || api.defaults.baseURL;
-
-    const response = await fetch(`${apiUrl}/files/upload?purpose=${purpose}`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'Authorization': `Bearer ${token}`
+    try {
+        const response = await api.post(`/files/upload?purpose=${purpose}`, formData);
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+            throw new Error(error.response.data.message);
         }
-    });
-
-    if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`);
+        throw error;
     }
-
-    return response.json();
 };
 
 export const getFileUrl = (fileId) => {
