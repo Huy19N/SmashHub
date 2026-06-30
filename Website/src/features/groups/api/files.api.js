@@ -8,8 +8,9 @@ export const uploadFileAPI = async (file, purpose = 'General') => {
         const response = await api.post(`/files/upload?purpose=${purpose}`, formData);
         return response.data;
     } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
-            throw new Error(error.response.data.message);
+        const errMsg = error.response?.data?.message || error.response?.data?.Message;
+        if (errMsg) {
+            throw new Error(errMsg);
         }
         throw error;
     }

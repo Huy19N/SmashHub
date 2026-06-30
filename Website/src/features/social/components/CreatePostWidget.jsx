@@ -56,7 +56,7 @@ const CreatePostWidget = ({ onCreatePost }) => {
 
     if (selectedImage) {
       try {
-        const uploadRes = await uploadFileAPI(selectedImage, 'General');
+        const uploadRes = await uploadFileAPI(selectedImage, 'ChatMedia');
         mediaFileId = uploadRes?.data?.fileId || uploadRes?.fileId;
       } catch (err) {
         toast.error(err.message || 'Tải ảnh lên thất bại');
