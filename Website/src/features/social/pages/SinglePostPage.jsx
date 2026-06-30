@@ -70,7 +70,7 @@ const SinglePostPage = () => {
                 <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
               </div>
             ) : post ? (
-              <PostCard post={post} onToggleLike={handleToggleLike} />
+              <PostCard post={post} onToggleLike={handleToggleLike} isSinglePostView={true} />
             ) : null}
           </div>
           

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Users, Flame } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CommentSection from './CommentSection';
@@ -7,7 +7,8 @@ import MediaImage from '../../../components/ui/MediaImage';
 import PostMediaGrid from './PostMediaGrid';
 import PostLightbox from './PostLightbox';
 
-const PostCard = ({ post, onToggleLike }) => {
+const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
+  const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [lightboxData, setLightboxData] = useState({ isOpen: false, initialIndex: 0 });
@@ -147,13 +148,25 @@ const PostCard = ({ post, onToggleLike }) => {
           <div className="mt-3">
             <PostMediaGrid 
               mediaFileIds={post.mediaFileIds} 
-              onImageClick={(index) => setLightboxData({ isOpen: true, initialIndex: index })}
+              onImageClick={(index) => {
+                if (isSinglePostView) {
+                  setLightboxData({ isOpen: true, initialIndex: index });
+                } else {
+                  navigate(`/social/post/${post.postId}`);
+                }
+              }}
             />
           </div>
         ) : post.mediaFileId ? (
           <div 
             className="mt-3 rounded-2xl overflow-hidden border border-gray-150 dark:border-white/5 shadow-sm cursor-pointer hover:opacity-95 transition-opacity"
-            onClick={() => setLightboxData({ isOpen: true, initialIndex: 0 })}
+            onClick={() => {
+              if (isSinglePostView) {
+                setLightboxData({ isOpen: true, initialIndex: 0 });
+              } else {
+                navigate(`/social/post/${post.postId}`);
+              }
+            }}
           >
             <MediaImage fileId={post.mediaFileId} alt="Post media" className="w-full h-auto object-cover max-h-[350px]" />
           </div>
