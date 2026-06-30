@@ -121,3 +121,15 @@ export const deleteBankAccountAPI = async (facilityId, bankAccountId) => {
   const response = await api.delete(`/facilities/${facilityId}/bank-accounts/${bankAccountId}`);
   return response.data;
 };
+
+/** Lấy cấu hình thanh toán (GET /api/facilities/{facilityId}/payment-config) */
+export const getFacilityPaymentConfigAPI = async (facilityId) => {
+  const response = await api.get(`/facilities/${facilityId}/payment-config`);
+  return response.data;
+};
+
+/** Cập nhật cấu hình thanh toán (PUT /api/facilities/{facilityId}/payment-config) */
+export const updateFacilityPaymentConfigAPI = async (facilityId, configData) => {
+  const response = await api.put(`/facilities/${facilityId}/payment-config`, configData);
+  return response.data;
+};
