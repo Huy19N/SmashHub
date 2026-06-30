@@ -273,12 +273,22 @@ export default function TeamManagementPage() {
       let data = res?.data ?? res;
 
       // Combine API user details with sport data from the team members API
-      if (member.sportName || member.sport || member.levelName || member.level || member.wins !== undefined) {
+      if (data.sportProfiles && data.sportProfiles.length > 0) {
+        data = {
+          ...data,
+          sportProfiles: data.sportProfiles.map((sp, idx) => ({
+            sportName: sp.sportName,
+            levelName: sp.levelName,
+            wins: idx === 0 ? (member.wins || 0) : 0,
+            losses: idx === 0 ? (member.losses || 0) : 0,
+          }))
+        };
+      } else {
         data = {
           ...data,
           sportProfiles: [{
-            sportName: member.sportName || member.sport || 'Chưa cập nhật',
-            levelName: member.levelName || member.level || 'Chưa cập nhật',
+            sportName: 'Chưa cập nhật',
+            levelName: 'Chưa cập nhật',
             wins: member.wins || 0,
             losses: member.losses || 0,
           }]

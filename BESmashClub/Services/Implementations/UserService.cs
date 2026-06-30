@@ -1,3 +1,4 @@
+using System.Linq;
 using Entites.DTOs.Users;
 using Repositories;
 using Services.Interfaces;
@@ -69,12 +70,23 @@ public class UserService : IUserService
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy user.");
 
+        var sportProfiles = await _unitOfWork.UserSportProfiles.GetByUserIdAsync(userId);
+        var sportProfileDtos = sportProfiles.Select(profile => new Entites.DTOs.Sports.UserSportProfileResponse
+        {
+            SportId = profile.SportId,
+            SportName = profile.SportLevel?.Sport?.SportName ?? "Unknown",
+            RankValue = profile.SportLevel?.RankValue ?? 0,
+            LevelName = profile.SportLevel?.LevelName ?? "Unknown",
+            UpdatedAt = profile.UpdatedAt
+        }).ToList();
+
         return new UserPublicResponse
         {
             UserId = user.UserId,
             FullName = user.FullName,
             CreatedAt = user.CreatedAt,
-            AvatarFileId = user.AvatarFileId
+            AvatarFileId = user.AvatarFileId,
+            SportProfiles = sportProfileDtos
         };
     }
 

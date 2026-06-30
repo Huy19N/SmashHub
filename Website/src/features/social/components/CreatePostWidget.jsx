@@ -4,6 +4,7 @@ import { useGetUserId } from '../../Auth/hooks/useAuth';
 import MediaImage from '../../../components/ui/MediaImage';
 import { uploadFileAPI } from '../../groups/api/files.api';
 import toast from 'react-hot-toast';
+import Button from '../../../components/ui/Button';
 
 const CreatePostWidget = ({ onCreatePost }) => {
   const { user: apiUser } = useGetUserId();
@@ -207,20 +208,16 @@ const CreatePostWidget = ({ onCreatePost }) => {
                 </button>
               </div>
 
-              <button
+              <Button
                 type="submit"
+                variant="primary"
                 disabled={(!content.trim() && !selectedImage) || isSubmitting}
-                className="bg-emerald-500 hover:bg-emerald-600 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] px-6 py-2.5 rounded-full text-xs font-extrabold shadow-md shadow-emerald-500/20 dark:shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 cursor-pointer"
+                isLoading={isSubmitting}
+                className="px-6 py-2.5 rounded-full text-xs font-extrabold flex items-center gap-2 cursor-pointer"
               >
-                {isSubmitting ? (
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5 fill-current rotate-45 -translate-y-0.5" />
-                    Đăng bài
-                  </>
-                )}
-              </button>
+                <Send className="w-3.5 h-3.5 fill-current rotate-45 -translate-y-0.5" />
+                Đăng bài
+              </Button>
             </div>
           </form>
         </div>

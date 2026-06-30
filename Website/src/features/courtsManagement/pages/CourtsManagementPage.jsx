@@ -4,7 +4,7 @@ import {
   MapPin, Loader2, Save, X, Activity, ToggleLeft, ToggleRight, Sparkles,
   ChevronDown
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Sidebar from '../../../components/layout/Sidebar';
@@ -49,6 +49,45 @@ const southSeaIcon = L.divIcon({
   iconSize: [200, 20],
   iconAnchor: [100, 10]
 });
+
+const VIETNAM_PROVINCES = {
+  "Hồ Chí Minh": [
+    "Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 6", "Quận 7", "Quận 8", "Quận 10", "Quận 11", "Quận 12",
+    "Quận Bình Thạnh", "Quận Bình Tân", "Quận Gò Vấp", "Quận Phú Nhuận", "Quận Tân Bình", "Quận Tân Phú",
+    "Thành phố Thủ Đức", "Huyện Bình Chánh", "Huyện Cần Giờ", "Huyện Củ Chi", "Huyện Hóc Môn", "Huyện Nhà Bè"
+  ],
+  "Hà Nội": [
+    "Quận Ba Đình", "Quận Bắc Từ Liêm", "Quận Cầu Giấy", "Quận Đống Đa", "Quận Hà Đông", "Quận Hai Bà Trưng",
+    "Quận Hoàn Kiếm", "Quận Hoàng Mai", "Quận Long Biên", "Quận Nam Từ Liêm", "Quận Tây Hồ", "Quận Thanh Xuân",
+    "Thị xã Sơn Tây", "Huyện Ba Vì", "Huyện Chương Mỹ", "Huyện Đan Phượng", "Huyện Đông Anh", "Huyện Gia Lâm",
+    "Huyện Hoài Đức", "Huyện Mê Linh", "Huyện Mỹ Đức", "Huyện Phú Xuyên", "Huyện Phúc Thọ", "Huyện Quốc Oai",
+    "Huyện Sóc Sơn", "Huyện Thạch Thất", "Huyện Thanh Oai", "Huyện Thanh Trì", "Huyện Thường Tín", "Huyện Ứng Hòa"
+  ],
+  "Đà Nẵng": [
+    "Quận Cẩm Lệ", "Quận Hải Châu", "Quận Liên Chiểu", "Quận Ngũ Hành Sơn", "Quận Sơn Trà", "Quận Thanh Khê",
+    "Huyện Hòa Vang"
+  ],
+  "Bình Dương": [
+    "Thành phố Thủ Dầu Một", "Thành phố Dĩ An", "Thành phố Thuận An", "Thành phố Tân Uyên", "Thành phố Bến Cát",
+    "Huyện Bắc Tân Uyên", "Huyện Dầu Tiếng", "Huyện Phú Giáo", "Huyện Bàu Bàng"
+  ],
+  "Đồng Nai": [
+    "Thành phố Biên Hòa", "Thành phố Long Khánh", "Huyện Cẩm Mỹ", "Huyện Định Quán", "Huyện Long Thành",
+    "Huyện Nhơn Trạch", "Huyện Tân Phú", "Huyện Thống Nhất", "Huyện Trảng Bom", "Huyện Vĩnh Cửu", "Huyện Xuân Lộc"
+  ],
+  "Cần Thơ": [
+    "Quận Bình Thủy", "Quận Cái Răng", "Quận Ninh Kiều", "Quận Ô Môn", "Quận Thốt Nốt",
+    "Huyện Cờ Đỏ", "Huyện Phong Điền", "Huyện Thới Lai", "Huyện Vĩnh Thạnh"
+  ]
+};
+
+function ChangeMapView({ coords }) {
+  const map = useMap();
+  useEffect(() => {
+    if (coords) map.setView(coords, 13);
+  }, [coords, map]);
+  return null;
+}
 
 export default function CourtsManagementPage() {
   const { theme } = useTheme();
@@ -109,12 +148,15 @@ export default function CourtsManagementPage() {
 
   // Add facility form state
   const [facName, setFacName] = useState('');
-  const [facCity, setFacCity] = useState('');
-  const [facDistrict, setFacDistrict] = useState('');
+  const [facCity, setFacCity] = useState('Hồ Chí Minh');
+  const [facDistrict, setFacDistrict] = useState('Quận 10');
   const [facAddress, setFacAddress] = useState('');
   const [facLatitude, setFacLatitude] = useState(null); // Force user to pick
   const [facLongitude, setFacLongitude] = useState(null);
   const [isLocationConfirmed, setIsLocationConfirmed] = useState(false);
+  const [useCommonHours, setUseCommonHours] = useState(true);
+  const [commonOpenTime, setCommonOpenTime] = useState('05:00');
+  const [commonCloseTime, setCommonCloseTime] = useState('23:00');
   const [operatingHours, setOperatingHours] = useState([
     { dayOfWeek: 2, label: 'Thứ 2', isOpen: true, openTime: '05:00', closeTime: '23:00' },
     { dayOfWeek: 3, label: 'Thứ 3', isOpen: true, openTime: '05:00', closeTime: '23:00' },
@@ -126,6 +168,36 @@ export default function CourtsManagementPage() {
   ]);
   const [isSubmittingFacility, setIsSubmittingFacility] = useState(false);
   const [facilityFormError, setFacilityFormError] = useState('');
+
+  const handleCommonTimeChange = (open, close) => {
+    setCommonOpenTime(open);
+    setCommonCloseTime(close);
+    setOperatingHours(prev => prev.map(h => ({
+      ...h,
+      openTime: open,
+      closeTime: close
+    })));
+  };
+
+  // Auto locate user location on form load
+  useEffect(() => {
+    if (activeTab === 'add-facility') {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            setFacLatitude(lat);
+            setFacLongitude(lng);
+            setIsLocationConfirmed(false); // Force explicit confirmation
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+          }
+        );
+      }
+    }
+  }, [activeTab]);
 
   // Add court form state
   const [courtNameInput, setCourtNameInput] = useState('');
@@ -348,6 +420,16 @@ export default function CourtsManagementPage() {
     ) : null;
   };
 
+  const ChangeMapView = ({ coords }) => {
+    const map = useMap();
+    useEffect(() => {
+      if (coords) {
+        map.setView(coords, 15);
+      }
+    }, [coords, map]);
+    return null;
+  };
+
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0c0f17]' : 'bg-gray-50'} flex relative overflow-hidden`}>
       <SportyWatermarks />
@@ -387,7 +469,7 @@ export default function CourtsManagementPage() {
             <div key={activeTab} className="animate-tab-panel">
               {facilities.length === 0 || activeTab === 'add-facility' ? (
                 /* SECTION: Create first Facility form */
-                <div className="max-w-xl mx-auto bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div className="max-w-5xl mx-auto bg-white dark:bg-card-dark border border-gray-200/80 dark:border-border-dark/60 rounded-3xl p-6 sm:p-8 shadow-sm">
                   <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-100 dark:border-border-dark/40">
                     <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-primary/10 flex items-center justify-center shrink-0">
                       <Building className="w-5 h-5 text-emerald-600 dark:text-primary" />
@@ -407,146 +489,251 @@ export default function CourtsManagementPage() {
                     </div>
                   )}
 
-                  <form onSubmit={handleCreateFacility} className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
-                        Tên cơ sở <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ví dụ: CLB Cầu lông SmashHub Arena Q10"
-                        value={facName}
-                        onChange={(e) => setFacName(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <form onSubmit={handleCreateFacility} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column (Inputs, Redesigned Hours, and Submit Buttons) */}
+                    <div className="lg:col-span-6 space-y-4">
                       <div>
                         <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
-                          Thành phố <span className="text-red-500">*</span>
+                          Tên cơ sở <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder="Ví dụ: Hồ Chí Minh"
-                          value={facCity}
-                          onChange={(e) => setFacCity(e.target.value)}
+                          placeholder="Ví dụ: CLB Cầu lông SmashHub Arena Q10"
+                          value={facName}
+                          onChange={(e) => setFacName(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
                         />
                       </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
+                            Thành phố <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            required
+                            value={facCity}
+                            onChange={(e) => {
+                              const selectedCity = e.target.value;
+                              setFacCity(selectedCity);
+                              const districts = VIETNAM_PROVINCES[selectedCity] || [];
+                              setFacDistrict(districts[0] || '');
+                            }}
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors cursor-pointer"
+                          >
+                            <option value="" disabled className="text-gray-400">-- Chọn Thành phố --</option>
+                            {Object.keys(VIETNAM_PROVINCES).map((prov) => (
+                              <option key={prov} value={prov} className="bg-white dark:bg-[#1a2130] text-gray-900 dark:text-white">
+                                {prov}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
+                            Quận / Huyện <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            required
+                            value={facDistrict}
+                            onChange={(e) => setFacDistrict(e.target.value)}
+                            disabled={!facCity}
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-white dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                          >
+                            <option value="" disabled className="text-gray-400">-- Chọn Quận / Huyện --</option>
+                            {(VIETNAM_PROVINCES[facCity] || []).map((dist) => (
+                              <option key={dist} value={dist} className="bg-white dark:bg-[#1a2130] text-gray-900 dark:text-white">
+                                {dist}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
-                          Quận / Huyện <span className="text-red-500">*</span>
+                          Địa chỉ chi tiết
                         </label>
                         <input
                           type="text"
-                          required
-                          placeholder="Ví dụ: Quận 10"
-                          value={facDistrict}
-                          onChange={(e) => setFacDistrict(e.target.value)}
+                          placeholder="Ví dụ: 285 Cách Mạng Tháng 8, Phường 12"
+                          value={facAddress}
+                          onChange={(e) => setFacAddress(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5">
-                        Địa chỉ chi tiết
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ví dụ: 285 Cách Mạng Tháng 8, Phường 12"
-                        value={facAddress}
-                        onChange={(e) => setFacAddress(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-border-dark text-sm bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-label transition-colors"
-                      />
-                    </div>
+                      {/* Redesigned Operating Hours */}
+                      <div className="bg-gray-50/50 dark:bg-white/[0.02] p-4.5 rounded-2xl border border-gray-150 dark:border-white/5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label">
+                            Lịch hoạt động & Giờ đóng/mở <span className="text-red-500">*</span>
+                          </label>
+                        </div>
 
-                    {/* Cấu hình giờ hoạt động 7 ngày */}
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-2">
-                        Giờ hoạt động
-                      </label>
-                      <div className="border border-gray-200 dark:border-border-dark rounded-xl overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
-                        {operatingHours.map((h, i) => (
-                          <div key={h.dayOfWeek} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white dark:bg-card-dark gap-3">
-                            <div className="flex items-center gap-3 min-w-[100px]">
-                              <input
-                                type="checkbox"
-                                checked={h.isOpen}
-                                onChange={(e) => {
+                        {/* Day selection pills */}
+                        <div className="flex flex-wrap gap-2">
+                          {operatingHours.map((h, i) => {
+                            const isSelected = h.isOpen;
+                            return (
+                              <button
+                                key={h.dayOfWeek}
+                                type="button"
+                                onClick={() => {
                                   const newHours = [...operatingHours];
-                                  newHours[i].isOpen = e.target.checked;
+                                  newHours[i].isOpen = !h.isOpen;
+                                  if (newHours[i].isOpen && useCommonHours) {
+                                    newHours[i].openTime = commonOpenTime;
+                                    newHours[i].closeTime = commonCloseTime;
+                                  }
                                   setOperatingHours(newHours);
                                 }}
-                                className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 cursor-pointer"
-                              />
-                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 border cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10 dark:bg-primary dark:text-[#052e14] dark:border-primary'
+                                    : 'bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border-gray-250/60 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/10'
+                                }`}
+                              >
                                 {h.label}
-                              </span>
-                            </div>
+                              </button>
+                            );
+                          })}
+                        </div>
 
-                            {h.isOpen ? (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="time"
-                                  value={h.openTime}
-                                  onChange={(e) => {
-                                    const newHours = [...operatingHours];
-                                    newHours[i].openTime = e.target.value;
-                                    setOperatingHours(newHours);
-                                  }}
-                                  className="px-2 py-1.5 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white cursor-text focus:outline-none focus:border-emerald-500"
-                                />
-                                <span className="text-gray-400 text-xs font-bold">-</span>
-                                <input
-                                  type="time"
-                                  value={h.closeTime}
-                                  onChange={(e) => {
-                                    const newHours = [...operatingHours];
-                                    newHours[i].closeTime = e.target.value;
-                                    setOperatingHours(newHours);
-                                  }}
-                                  className="px-2 py-1.5 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white cursor-text focus:outline-none focus:border-emerald-500"
-                                />
-                              </div>
-                            ) : (
-                              <div className="flex-1 text-right text-xs text-red-500 italic px-2 font-bold font-label">Đóng cửa</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="useCommonHours"
+                            checked={useCommonHours}
+                            onChange={(e) => {
+                              setUseCommonHours(e.target.checked);
+                              if (e.target.checked) {
+                                setOperatingHours(prev => prev.map(h => ({
+                                  ...h,
+                                  openTime: commonOpenTime,
+                                  closeTime: commonCloseTime
+                                })));
+                              }
+                            }}
+                            className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <label htmlFor="useCommonHours" className="text-xs font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                            Áp dụng khung giờ chung cho tất cả các ngày hoạt động
+                          </label>
+                        </div>
+
+                        {useCommonHours ? (
+                          <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-3 rounded-xl border border-gray-150 dark:border-white/5 max-w-sm">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Giờ mở cửa:</span>
+                            <input
+                              type="time"
+                              value={commonOpenTime}
+                              onChange={(e) => handleCommonTimeChange(e.target.value, commonCloseTime)}
+                              className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-gray-50 dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            />
+                            <span className="text-gray-400 text-xs font-bold">-</span>
+                            <input
+                              type="time"
+                              value={commonCloseTime}
+                              onChange={(e) => handleCommonTimeChange(commonOpenTime, e.target.value)}
+                              className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-border-dark text-xs bg-gray-50 dark:bg-card-dark text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            />
+                          </div>
+                        ) : (
+                          <div className="space-y-2 border-t border-gray-100 dark:border-white/5 pt-3 max-h-[220px] overflow-y-auto pr-1.5 custom-scrollbar">
+                            {operatingHours.filter(h => h.isOpen).map((h) => {
+                              const i = operatingHours.findIndex(item => item.dayOfWeek === h.dayOfWeek);
+                              return (
+                                <div key={h.dayOfWeek} className="flex items-center justify-between bg-white dark:bg-white/5 p-2 px-3 rounded-xl border border-gray-150 dark:border-white/5 gap-3">
+                                  <span className="text-xs font-black text-emerald-800 dark:text-primary">{h.label}</span>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="time"
+                                      value={h.openTime}
+                                      onChange={(e) => {
+                                        const newHours = [...operatingHours];
+                                        newHours[i].openTime = e.target.value;
+                                        setOperatingHours(newHours);
+                                      }}
+                                      className="px-2 py-1 rounded-lg border border-gray-250 dark:border-white/10 text-xs bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                    />
+                                    <span className="text-gray-400 text-xs font-bold">-</span>
+                                    <input
+                                      type="time"
+                                      value={h.closeTime}
+                                      onChange={(e) => {
+                                        const newHours = [...operatingHours];
+                                        newHours[i].closeTime = e.target.value;
+                                        setOperatingHours(newHours);
+                                      }}
+                                      className="px-2 py-1 rounded-lg border border-gray-250 dark:border-white/10 text-xs bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {operatingHours.filter(h => h.isOpen).length === 0 && (
+                              <p className="text-xs text-red-500 italic font-semibold">Vui lòng chọn ít nhất một ngày hoạt động phía trên.</p>
                             )}
                           </div>
-                        ))}
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
+                        <Button
+                          type="submit"
+                          isLoading={isSubmittingFacility}
+                          disabled={!isLocationConfirmed || isSubmittingFacility}
+                          className={`flex-1 ${!isLocationConfirmed ? 'opacity-40 cursor-not-allowed select-none' : ''}`}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Tạo cơ sở mới
+                        </Button>
+                        {facilities.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setActiveTab('list')}
+                            className="px-4 py-2.5 rounded-xl text-xs"
+                          >
+                            Hủy
+                          </Button>
+                        )}
                       </div>
                     </div>
 
-                    {/* Map Selection (chỉ hiển thị tham khảo vị trí) */}
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5 flex justify-between">
-                        <span>Vị trí tham khảo trên bản đồ</span>
-                        <span className="text-[10px] text-gray-400 font-normal">Click vào bản đồ để đánh dấu</span>
-                      </label>
-                      <div className="h-64 rounded-xl overflow-hidden border border-gray-200 dark:border-border-dark relative z-0">
-                        <MapContainer
-                          center={[10.762622, 106.660172]}
-                          zoom={13}
-                          minZoom={5}
-                          maxBounds={[[4.0, 100.0], [24.0, 122.0]]}
-                          maxBoundsViscosity={1.0}
-                          style={{ height: '100%', width: '100%' }}
-                        >
-                          <TileLayer
-                            attribution='&copy; Google Maps'
-                            url="https://mt1.google.com/vt/lyrs=m&hl=vi&gl=VN&x={x}&y={y}&z={z}"
-                          />
-                          <Marker position={[16.5, 112.0]} icon={hoangSaIcon} interactive={false} />
-                          <Marker position={[10.0, 114.0]} icon={truongSaIcon} interactive={false} />
-                          <Marker position={[14.0, 113.0]} icon={southSeaIcon} interactive={false} />
-                          <LocationPickerMarker />
-                        </MapContainer>
+                    {/* Right Column (Map, Auto-location, and Confirmation Status) */}
+                    <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
+                      <div className="flex-1 flex flex-col">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 font-label mb-1.5 flex justify-between">
+                          <span>Vị trí tham khảo trên bản đồ</span>
+                          <span className="text-[10px] text-gray-400 font-normal">Click vào bản đồ để đánh dấu</span>
+                        </label>
+                        <div className="h-[350px] lg:h-full min-h-[300px] rounded-xl overflow-hidden border border-gray-200 dark:border-border-dark relative z-0">
+                          <MapContainer
+                            center={[10.762622, 106.660172]}
+                            zoom={13}
+                            minZoom={5}
+                            maxBounds={[[4.0, 100.0], [24.0, 122.0]]}
+                            maxBoundsViscosity={1.0}
+                            style={{ height: '100%', width: '100%' }}
+                          >
+                            <TileLayer
+                              attribution='&copy; Google Maps'
+                              url="https://mt1.google.com/vt/lyrs=m&hl=vi&gl=VN&x={x}&y={y}&z={z}"
+                            />
+                            <Marker position={[16.5, 112.0]} icon={hoangSaIcon} interactive={false} />
+                            <Marker position={[10.0, 114.0]} icon={truongSaIcon} interactive={false} />
+                            <Marker position={[14.0, 113.0]} icon={southSeaIcon} interactive={false} />
+                            <LocationPickerMarker />
+                            <ChangeMapView coords={facLatitude && facLongitude ? [facLatitude, facLongitude] : null} />
+                          </MapContainer>
+                        </div>
                       </div>
+
                       {facLatitude && facLongitude ? (
-                        <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-150 dark:border-white/10 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-150 dark:border-white/10 animate-fade-in shadow-inner">
                           <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider font-label">Tọa độ đã chọn</span>
                             <span className="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
@@ -570,7 +757,7 @@ export default function CourtsManagementPage() {
                             <button
                               type="button"
                               onClick={() => setIsLocationConfirmed(true)}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary/95 text-white dark:text-[#052e14] text-xs font-black rounded-xl shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary/95 text-white dark:text-[#052e14] text-xs font-black rounded-xl shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 animate-pulse"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Xác nhận vị trí này
@@ -578,34 +765,12 @@ export default function CourtsManagementPage() {
                           )}
                         </div>
                       ) : (
-                        <div className="mt-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 flex items-center gap-2.5">
+                        <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 flex items-center gap-2.5">
                           <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0" />
                           <span className="text-xs text-amber-800 dark:text-amber-400/90 font-bold font-label">
                             Vui lòng click chọn một vị trí bất kỳ trên bản đồ ở trên.
                           </span>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-border-dark/40">
-                      <Button
-                        type="submit"
-                        isLoading={isSubmittingFacility}
-                        disabled={!isLocationConfirmed || isSubmittingFacility}
-                        className={`flex-1 ${!isLocationConfirmed ? 'opacity-40 cursor-not-allowed select-none' : ''}`}
-                      >
-                        <Plus className="w-4 h-4" />
-                        Tạo cơ sở mới
-                      </Button>
-                      {facilities.length > 0 && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => setActiveTab('list')}
-                          className="px-4 py-2.5 rounded-xl text-xs"
-                        >
-                          Hủy
-                        </Button>
                       )}
                     </div>
                   </form>
