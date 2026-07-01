@@ -134,28 +134,47 @@ builder.Services.AddSignalR();
 // ---- CORS ----
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("StrictPolicy", policy =>
-    {
-        policy.WithOrigins(
-                "https://tad-min.io.vn", 
-                "http://tad-min.io.vn", 
-                "http://localhost:3000",
-                "http://localhost:5173", // Vite default
-                "https://smash-club-khaki.vercel.app" // Vercel deployment
-              )
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
+      options.AddPolicy("StrictPolicy", policy =>
+      {
+          policy.SetIsOriginAllowed(origin => 
+                  new Uri(origin).Host == "localhost" || 
+                  new Uri(origin).Host.EndsWith(".vercel.app") || 
+                  new Uri(origin).Host == "tad-min.io.vn" || 
+                  origin.Contains("vercel.app")
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+      });
 });
 
 var app = builder.Build();
 
 // Swagger
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
+
+// Strict HTTPS enforcement Middleware (reject HTTP completely)
+app.Use(async (context, next) =>
+{
+    if (!context.Request.IsHttps)
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsync("HTTPS is strictly required. HTTP traffic is not allowed.");
+        return;
+    }
+    await next();
+});
 
 app.UseRouting();
 
