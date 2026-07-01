@@ -47,6 +47,10 @@ public class AuthController : ControllerBase
         {
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse(ex.Message));
+        }
     }
 
     /// <summary>
@@ -122,6 +126,10 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(ApiResponse.ErrorResponse(ex.Message));
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse(ex.Message));
+        }
     }
 
     /// <summary>
@@ -146,6 +154,10 @@ public class AuthController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse(ex.Message));
         }
     }
 
