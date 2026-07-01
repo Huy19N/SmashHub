@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   mongodb:
-    image: mongo:latest
+    image: mongo:4.4
     container_name: smashclub-mongodb
     ports:
       - "27017:27017"
