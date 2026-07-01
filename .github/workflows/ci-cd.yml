@@ -67,8 +67,8 @@ jobs:
             echo "PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}" >> .env
             echo "PAYOS_CHECKSUM_KEY=${{ secrets.PAYOS_CHECKSUM_KEY }}" >> .env
 
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
 
             # delete old image
             docker image prune -f
