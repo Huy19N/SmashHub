@@ -29,6 +29,7 @@ namespace Services.Implementations
                 .Where(p => p.StatusId == 2) // Paid
                 .SumAsync(p => p.Amount);
 
+
             // Recent 10 bookings
             var recentBookings = await _context.Bookings
                 .Include(b => b.Court).ThenInclude(c => c.Facility)
