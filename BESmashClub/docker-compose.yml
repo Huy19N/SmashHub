@@ -6,7 +6,7 @@ services:
     container_name: smashclub-mssql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "$${MSSQL_PASSWORD}"
+      SA_PASSWORD: "${MSSQL_PASSWORD}"
     ports:
       - "1433:1433"
     volumes:
@@ -36,7 +36,7 @@ services:
     container_name: smashclub-minio
     environment:
       MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "$${MINIO_ROOT_PASSWORD}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -57,15 +57,15 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashHub;User Id=sa;Password=$${MSSQL_PASSWORD};TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashHub;User Id=sa;Password=${MSSQL_PASSWORD};TrustServerCertificate=True;
       - ConnectionStrings__MongoDb=mongodb://mongodb:27017
       - MongoDbSettings__DatabaseName=SmashClubMongo
       - Redis__ConnectionString=redis:6379
-      - JwtSettings__Secret=$${JWT_SECRET}
-      - EmailSettings__AppPassword=$${EMAIL_APP_PASSWORD}
-      - PayOSSettings__ClientId=$${PAYOS_CLIENT_ID}
-      - PayOSSettings__ApiKey=$${PAYOS_API_KEY}
-      - PayOSSettings__ChecksumKey=$${PAYOS_CHECKSUM_KEY}
+      - JwtSettings__Secret=${JWT_SECRET}
+      - EmailSettings__AppPassword=${EMAIL_APP_PASSWORD}
+      - PayOSSettings__ClientId=${PAYOS_CLIENT_ID}
+      - PayOSSettings__ApiKey=${PAYOS_API_KEY}
+      - PayOSSettings__ChecksumKey=${PAYOS_CHECKSUM_KEY}
     restart: unless-stopped
 
 volumes:
