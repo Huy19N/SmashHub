@@ -28,6 +28,8 @@ CREATE TABLE Users (
     PhoneNumber NVARCHAR(20),
     AvatarFileId UNIQUEIDENTIFIER,   
     Cccd NVARCHAR(25),
+    BanReason NVARCHAR(MAX),
+    BanUntil DATETIME2,
     CreatedAt DATETIME CONSTRAINT DF_Users_CreatedAt DEFAULT GETDATE(),
     LastPwdChange DATETIME NOT NULL DEFAULT GETDATE(),
     IsActive BIT CONSTRAINT DF_Users_IsActive DEFAULT 1,
