@@ -2,11 +2,11 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "https://tad-min.io.vn:7020/api/:path*"
+            "destination": "https://tad-min.io.vn/api/:path*"
         },
         {
             "source": "/hub/:path*",
-            "destination": "https://tad-min.io.vn:7020/hub/:path*"
+            "destination": "https://tad-min.io.vn/hub/:path*"
         },
         {
             "source": "/(.*)",
