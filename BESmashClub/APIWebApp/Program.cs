@@ -184,6 +184,29 @@ using (var scope = app.Services.CreateScope())
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Failed to alter Users table for BanReason and BanUntil.");
     }
+
+    // Fix missing UserBlocks table
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='UserBlocks' and xtype='U')
+            BEGIN
+                CREATE TABLE UserBlocks (
+                    BlockerId uniqueidentifier NOT NULL,
+                    BlockedId uniqueidentifier NOT NULL,
+                    CreatedAt datetime2 NULL,
+                    CONSTRAINT PK_UserBlocks PRIMARY KEY (BlockerId, BlockedId),
+                    CONSTRAINT FK_UserBlocks_Users_BlockerId FOREIGN KEY (BlockerId) REFERENCES Users(UserId) ON DELETE NO ACTION,
+                    CONSTRAINT FK_UserBlocks_Users_BlockedId FOREIGN KEY (BlockedId) REFERENCES Users(UserId) ON DELETE NO ACTION
+                );
+            END
+        ");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Failed to create UserBlocks table.");
+    }
 }
 
 var forwardedHeadersOptions = new ForwardedHeadersOptions
@@ -263,6 +286,10 @@ app.MapHub<ChatHub>("/hub/chat", options =>
     options.LongPolling.PollTimeout = TimeSpan.FromSeconds(8);
 });
 app.MapHub<NotificationHub>("/hub/notifications", options =>
+{
+    options.LongPolling.PollTimeout = TimeSpan.FromSeconds(8);
+});
+app.MapHub<PresenceHub>("/hub", options =>
 {
     options.LongPolling.PollTimeout = TimeSpan.FromSeconds(8);
 });
