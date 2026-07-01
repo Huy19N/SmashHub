@@ -11,7 +11,7 @@ import MediaImage from '../../../components/ui/MediaImage';
 import { getAllUserByIdAPI } from '../../profiles/api/profiles.api.js';
 import toast from 'react-hot-toast';
 export default function UserManagement() {
-  const { users, isLoading, fetchUsers, changeRole, toggleStatus } = useAdminUsers();
+  const { users, isLoading, fetchUsers, changeRole, toggleStatus, banUser, unbanUser } = useAdminUsers();
   const [searchQuery, setSearchQuery] = useState('');
   const [avatars, setAvatars] = useState({});
   const [roleFilter, setRoleFilter] = useState('all');
@@ -55,6 +55,23 @@ export default function UserManagement() {
   // Handle status toggle
   const handleToggleStatus = async (userId) => {
     await toggleStatus(userId);
+  };
+
+  const handleBanUser = async (userId) => {
+    const days = window.prompt("Nhập số ngày cấm (ví dụ: 7):");
+    if (!days || isNaN(days)) return;
+    const reason = window.prompt("Nhập lý do cấm:");
+    if (!reason) return;
+
+    const untilDate = new Date();
+    untilDate.setDate(untilDate.getDate() + parseInt(days));
+
+    await banUser(userId, untilDate.toISOString(), reason);
+  };
+
+  const handleUnbanUser = async (userId) => {
+    if (!window.confirm("Bạn có chắc muốn bỏ cấm người dùng này?")) return;
+    await unbanUser(userId);
   };
   // Search & filter filtering logic
   const filteredUsers = users.filter(user => {
@@ -170,43 +187,57 @@ export default function UserManagement() {
                       {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-label uppercase ${u.isActive
-                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                        : 'bg-red-500/10 text-red-600 border border-red-500/20'
-                        }`}>
-                        {u.isActive ? (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                            Hoạt động
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                            Đang khóa
-                          </>
-                        )}
-                      </span>
+                      {u.banUntil && new Date(u.banUntil) > new Date() ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-label uppercase bg-red-500/10 text-red-600 border border-red-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                          Đang bị cấm
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-label uppercase ${u.isActive
+                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                          : 'bg-gray-500/10 text-gray-600 border border-gray-500/20'
+                          }`}>
+                          {u.isActive ? (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              Hoạt động
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                              Tạm ngưng
+                            </>
+                          )}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleStatus(u.userId)}
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold font-label cursor-pointer active:scale-95 transition-all border ${u.isActive
-                          ? 'bg-red-500/10 text-red-600 hover:bg-red-500/25 border-red-500/20'
-                          : 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20'
-                          }`}
-                      >
-                        {u.isActive ? (
-                          <>
-                            <UserX className="w-3.5 h-3.5" />
-                            Khóa
-                          </>
-                        ) : (
-                          <>
+                      <div className="flex justify-center gap-2">
+                        {u.banUntil && new Date(u.banUntil) > new Date() ? (
+                          <button
+                            onClick={() => handleUnbanUser(u.userId)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold font-label cursor-pointer active:scale-95 transition-all border bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/25 border-emerald-500/20"
+                          >
                             <UserCheck className="w-3.5 h-3.5" />
-                            Kích hoạt
-                          </>
+                            Bỏ cấm
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleBanUser(u.userId)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold font-label cursor-pointer active:scale-95 transition-all border bg-red-500/10 text-red-600 hover:bg-red-500/25 border-red-500/20"
+                          >
+                            <UserX className="w-3.5 h-3.5" />
+                            Cấm
+                          </button>
                         )}
-                      </button>
+                        <button
+                          onClick={() => handleToggleStatus(u.userId)}
+                          className="p-1.5 rounded-lg text-xs font-bold font-label cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                          title="Đổi trạng thái active"
+                        >
+                          <AlertCircle className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

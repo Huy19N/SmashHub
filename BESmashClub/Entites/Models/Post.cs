@@ -23,6 +23,10 @@ public partial class Post
 
     public bool IsBoosted { get; set; }
 
+    public int Status { get; set; } = 1;
+
+    public bool IsDeleted { get; set; } = false;
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
@@ -38,6 +42,8 @@ public partial class Post
     public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();
 
     public virtual ICollection<PostMedia> PostMedias { get; set; } = new List<PostMedia>();
+
+    public virtual ICollection<PostReport> PostReports { get; set; } = new List<PostReport>();
 
     public virtual Team Team { get; set; }
 }

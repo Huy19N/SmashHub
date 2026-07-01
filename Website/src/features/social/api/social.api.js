@@ -46,3 +46,24 @@ export const getCommentsAPI = async (postId, params) => {
   const response = await axios.get(`${SOCIAL_URL}/posts/${postId}/comments`, { params });
   return response.data;
 };
+
+// Moderation
+export const deletePostAPI = async (postId) => {
+  const response = await axios.delete(`${SOCIAL_URL}/posts/${postId}`);
+  return response.data;
+};
+
+export const deleteCommentAPI = async (commentId) => {
+  const response = await axios.delete(`${SOCIAL_URL}/comments/${commentId}`);
+  return response.data;
+};
+
+export const reportPostAPI = async (postId, reason) => {
+  const response = await axios.post(`${SOCIAL_URL}/posts/${postId}/report`, { reason });
+  return response.data;
+};
+
+export const blockUserAPI = async (userId) => {
+  const response = await axios.post(`/users/${userId}/block`);
+  return response.data;
+};

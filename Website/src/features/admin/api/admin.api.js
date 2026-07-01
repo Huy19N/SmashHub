@@ -77,3 +77,29 @@ export const deleteFacilityAPI = async (facilityId) => {
   const response = await axios.delete(`/admin/facilities/${facilityId}`);
   return response.data;
 };
+
+// Moderation
+export const getPendingPostsAPI = async (params) => {
+  const response = await axios.get('/admin/posts/pending', { params });
+  return response.data;
+};
+
+export const approvePostAPI = async (postId) => {
+  const response = await axios.post(`/admin/posts/${postId}/approve`);
+  return response.data;
+};
+
+export const rejectPostAPI = async (postId) => {
+  const response = await axios.post(`/admin/posts/${postId}/reject`);
+  return response.data;
+};
+
+export const banUserAPI = async (userId, until, reason) => {
+  const response = await axios.post(`/admin/users/${userId}/ban`, { until, reason });
+  return response.data;
+};
+
+export const unbanUserAPI = async (userId) => {
+  const response = await axios.post(`/admin/users/${userId}/unban`);
+  return response.data;
+};

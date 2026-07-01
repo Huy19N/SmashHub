@@ -78,6 +78,10 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<PostMedia> PostMedias { get; set; }
 
+    public virtual DbSet<PostReport> PostReports { get; set; }
+
+    public virtual DbSet<UserBlock> UserBlocks { get; set; }
+
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
@@ -1131,6 +1135,38 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<PostReport>(entity =>
+        {
+            entity.HasKey(e => e.ReportId);
+            entity.Property(e => e.ReportId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostReports)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_PostReports_Posts");
+
+            entity.HasOne(d => d.Reporter).WithMany(p => p.PostReports)
+                .HasForeignKey(d => d.ReporterId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PostReports_Users");
+        });
+
+        modelBuilder.Entity<UserBlock>(entity =>
+        {
+            entity.HasKey(e => new { e.BlockerId, e.BlockedId });
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+
+            entity.HasOne(d => d.Blocker).WithMany(p => p.BlocksCreated)
+                .HasForeignKey(d => d.BlockerId)
+                .HasConstraintName("FK_UserBlocks_Blocker");
+
+            entity.HasOne(d => d.Blocked).WithMany(p => p.BlocksReceived)
+                .HasForeignKey(d => d.BlockedId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserBlocks_Blocked");
         });
 
         OnModelCreatingPartial(modelBuilder);

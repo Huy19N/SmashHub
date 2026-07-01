@@ -142,4 +142,34 @@ public class UsersController : ControllerBase
         var isOnline = Services.Hubs.ChatHub.IsUserOnline(userId);
         return Ok(ApiResponse<object>.SuccessResponse(new { UserId = userId, IsOnline = isOnline }));
     }
+
+    [HttpPost("{userId:guid}/block")]
+    public async Task<IActionResult> BlockUser(Guid userId)
+    {
+        try
+        {
+            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _userService.BlockUserAsync(currentUserId, userId);
+            return Ok(ApiResponse.SuccessResponse("Đã chặn người dùng."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpDelete("{userId:guid}/block")]
+    public async Task<IActionResult> UnblockUser(Guid userId)
+    {
+        try
+        {
+            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _userService.UnblockUserAsync(currentUserId, userId);
+            return Ok(ApiResponse.SuccessResponse("Đã bỏ chặn người dùng."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

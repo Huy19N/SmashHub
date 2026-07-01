@@ -11,15 +11,19 @@ public class SocialService : ISocialService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
+    private readonly IContentModerationService _contentModeration;
 
-    public SocialService(UnitOfWork unitOfWork, INotificationService notificationService)
+    public SocialService(UnitOfWork unitOfWork, INotificationService notificationService, IContentModerationService contentModeration)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+        _contentModeration = contentModeration;
     }
 
     public async Task<PostDto> CreatePostAsync(Guid userId, CreatePostRequest request)
     {
+        bool isClean = await _contentModeration.IsContentCleanAsync(request.Content);
+
         var post = new Post
         {
             PostId = Guid.NewGuid(),
@@ -30,6 +34,8 @@ public class SocialService : ISocialService
             Content = request.Content,
             MediaFileId = request.MediaFileId,
             IsBoosted = false,
+            Status = isClean ? 1 : 3, // 1: Pending, 3: Rejected if bad words
+            IsDeleted = false,
             CreatedAt = DateTime.Now
         };
 
@@ -56,8 +62,18 @@ public class SocialService : ISocialService
 
     public async Task<PagedResult<PostDto>> GetPostsAsync(PaginationParams pagination, Guid? currentUserId = null)
     {
+        List<Guid> blockedUserIds = new List<Guid>();
+        if (currentUserId.HasValue)
+        {
+            // Get users blocked by current user, and users who blocked current user
+            var blocks = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .ToListAsync();
+            blockedUserIds.AddRange(blocks.Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId));
+        }
+
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
-            p => true,
+            p => p.Status == 2 && !p.IsDeleted && (!currentUserId.HasValue || !blockedUserIds.Contains(p.AuthorUserId)),
             pagination.PageNumber,
             pagination.PageSize,
             query => query
@@ -82,8 +98,17 @@ public class SocialService : ISocialService
 
     public async Task<PagedResult<PostDto>> GetPostsByFacilityAsync(int facilityId, PaginationParams pagination, Guid? currentUserId = null)
     {
+        List<Guid> blockedUserIds = new List<Guid>();
+        if (currentUserId.HasValue)
+        {
+            var blocks = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .ToListAsync();
+            blockedUserIds.AddRange(blocks.Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId));
+        }
+
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
-            p => p.FacilityId == facilityId,
+            p => p.FacilityId == facilityId && p.Status == 2 && !p.IsDeleted && (!currentUserId.HasValue || !blockedUserIds.Contains(p.AuthorUserId)),
             pagination.PageNumber,
             pagination.PageSize,
             query => query
@@ -108,8 +133,17 @@ public class SocialService : ISocialService
 
     public async Task<PagedResult<PostDto>> GetPostsByTeamAsync(Guid teamId, PaginationParams pagination, Guid? currentUserId = null)
     {
+        List<Guid> blockedUserIds = new List<Guid>();
+        if (currentUserId.HasValue)
+        {
+            var blocks = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .ToListAsync();
+            blockedUserIds.AddRange(blocks.Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId));
+        }
+
         var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
-            p => p.TeamId == teamId,
+            p => p.TeamId == teamId && p.Status == 2 && !p.IsDeleted && (!currentUserId.HasValue || !blockedUserIds.Contains(p.AuthorUserId)),
             pagination.PageNumber,
             pagination.PageSize,
             query => query
@@ -139,12 +173,12 @@ public class SocialService : ISocialService
             .Include(p => p.Facility)
             .Include(p => p.Team)
             .Include(p => p.PostMedias)
-            .Include(p => p.PostComments)
+            .Include(p => p.PostComments.Where(c => !c.IsDeleted))
             .Include(p => p.PostLikes)
-            .FirstOrDefaultAsync(p => p.PostId == postId);
+            .FirstOrDefaultAsync(p => p.PostId == postId && !p.IsDeleted);
 
         if (post == null)
-            throw new KeyNotFoundException("Không tìm thấy bài viết.");
+            throw new KeyNotFoundException("Không tìm thấy bài viết hoặc bài viết đã bị xóa.");
 
         return MapToDto(post, currentUserId);
     }
@@ -237,7 +271,7 @@ public class SocialService : ISocialService
     public async Task<PagedResult<CommentDto>> GetCommentsAsync(Guid postId, PaginationParams pagination)
     {
         var (items, totalCount) = await _unitOfWork.PostComments.GetPagedAsync(
-            c => c.PostId == postId,
+            c => c.PostId == postId && !c.IsDeleted,
             pagination.PageNumber,
             pagination.PageSize,
             query => query.Include(c => c.User).OrderBy(c => c.CreatedAt)
@@ -261,6 +295,89 @@ public class SocialService : ISocialService
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
+    }
+
+    public async Task SoftDeletePostAsync(Guid userId, Guid postId, bool isAdmin)
+    {
+        var post = await _unitOfWork.Posts.GetByIdAsync(postId);
+        if (post == null) throw new KeyNotFoundException("Bài viết không tồn tại.");
+
+        if (!isAdmin && post.AuthorUserId != userId)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa bài viết này.");
+
+        post.IsDeleted = true;
+        await _unitOfWork.Posts.UpdateAsync(post);
+    }
+
+    public async Task SoftDeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin)
+    {
+        var comment = await _unitOfWork.PostComments.GetByIdAsync(commentId);
+        if (comment == null) throw new KeyNotFoundException("Bình luận không tồn tại.");
+
+        if (!isAdmin && comment.UserId != userId)
+            throw new UnauthorizedAccessException("Bạn không có quyền xóa bình luận này.");
+
+        comment.IsDeleted = true;
+        await _unitOfWork.PostComments.UpdateAsync(comment);
+    }
+
+    public async Task ReportPostAsync(Guid userId, Guid postId, string reason)
+    {
+        var post = await _unitOfWork.Posts.GetByIdAsync(postId);
+        if (post == null || post.IsDeleted) throw new KeyNotFoundException("Bài viết không tồn tại.");
+
+        var report = new PostReport
+        {
+            ReportId = Guid.NewGuid(),
+            PostId = postId,
+            ReporterId = userId,
+            Reason = reason,
+            Status = 1, // Pending
+            CreatedAt = DateTime.Now
+        };
+
+        await _unitOfWork.Context.PostReports.AddAsync(report);
+        await _unitOfWork.Context.SaveChangesAsync();
+    }
+
+    public async Task<PagedResult<PostDto>> GetPendingPostsAsync(PaginationParams pagination)
+    {
+        var (items, totalCount) = await _unitOfWork.Posts.GetPagedAsync(
+            p => p.Status == 1 && !p.IsDeleted,
+            pagination.PageNumber,
+            pagination.PageSize,
+            query => query
+                .Include(p => p.AuthorUser)
+                .Include(p => p.Facility)
+                .Include(p => p.Team)
+                .OrderByDescending(p => p.CreatedAt)
+        );
+
+        return new PagedResult<PostDto>
+        {
+            Items = items.Select(p => MapToDto(p)).ToList(),
+            TotalCount = totalCount,
+            PageNumber = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task ApprovePostAsync(Guid postId)
+    {
+        var post = await _unitOfWork.Posts.GetByIdAsync(postId);
+        if (post == null) throw new KeyNotFoundException("Bài viết không tồn tại.");
+
+        post.Status = 2; // Approved
+        await _unitOfWork.Posts.UpdateAsync(post);
+    }
+
+    public async Task RejectPostAsync(Guid postId)
+    {
+        var post = await _unitOfWork.Posts.GetByIdAsync(postId);
+        if (post == null) throw new KeyNotFoundException("Bài viết không tồn tại.");
+
+        post.Status = 3; // Rejected
+        await _unitOfWork.Posts.UpdateAsync(post);
     }
 
     private static PostDto MapToDto(Post p, Guid? currentUserId = null)

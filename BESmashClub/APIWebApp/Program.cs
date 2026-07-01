@@ -53,6 +53,7 @@ builder.Services.AddScoped<IMatchmakingService, MatchmakingService>();
 builder.Services.AddScoped<ISocialService, SocialService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
+builder.Services.AddScoped<IContentModerationService, ContentModerationService>();
 
 // ---- Authentication ----
 builder.Services.AddAuthentication(options =>

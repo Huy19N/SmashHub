@@ -3,6 +3,8 @@ import { Send, UserCircle } from 'lucide-react';
 import { useComments } from '../hooks/useSocial';
 import { useGetUserId } from '../../Auth/hooks/useAuth';
 import MediaImage from '../../../components/ui/MediaImage';
+import { deleteCommentAPI } from '../api/social.api';
+import toast from 'react-hot-toast';
 
 const CommentSection = ({ postId }) => {
   const { user: apiUser } = useGetUserId();
@@ -28,6 +30,19 @@ const CommentSection = ({ postId }) => {
 
   const currentUserName = apiUser?.data?.fullName || localStorage.getItem('name') || 'User';
   const currentUserAvatarFileId = apiUser?.data?.avatarFileId;
+  const currentUserId = apiUser?.data?.userId;
+  const isAdmin = apiUser?.data?.roleId === 1;
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa bình luận này?")) return;
+    try {
+      await deleteCommentAPI(commentId);
+      toast.success("Đã xóa bình luận");
+      fetchComments(1, 5, true); // reload comments
+    } catch (error) {
+      toast.error("Không thể xóa bình luận");
+    }
+  };
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-border-dark/40">
@@ -52,7 +67,7 @@ const CommentSection = ({ postId }) => {
                     <UserCircle className="w-5 h-5 text-emerald-400 dark:text-primary/70" />
                   )}
                 </div>
-                <div className="flex-1 bg-gray-50 dark:bg-white/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5">
+                <div className="flex-1 bg-gray-50 dark:bg-white/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5 relative group">
                   <div className="flex items-baseline justify-between mb-0.5">
                     <span className="font-bold text-gray-900 dark:text-white text-[13px]">
                       {comment.userName || 'Người dùng'}
@@ -67,6 +82,18 @@ const CommentSection = ({ postId }) => {
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-[13px]">
                     {comment.content}
                   </p>
+
+                  {/* Delete button (visible on hover) */}
+                  {(currentUserId === comment.userId || isAdmin) && (
+                    <button
+                      onClick={() => handleDeleteComment(comment.commentId)}
+                      className="absolute -right-2 -top-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 text-gray-400"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

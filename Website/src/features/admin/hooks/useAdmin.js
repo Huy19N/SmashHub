@@ -87,7 +87,47 @@ export const useAdminUsers = () => {
     }
   };
 
-  return { users, isLoading, fetchUsers, changeRole, toggleStatus };
+  const banUser = async (userId, until, reason) => {
+    try {
+      const response = await adminApi.banUserAPI(userId, until, reason);
+      if (response.isSuccess) {
+        toast.success(response.message || 'Cấm tài khoản thành công.');
+        setUsers(prev => prev.map(u => 
+          u.userId === userId ? { ...u, banUntil: until } : u
+        ));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi cấm tài khoản.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Lỗi khi thực hiện cấm tài khoản.');
+      return false;
+    }
+  };
+
+  const unbanUser = async (userId) => {
+    try {
+      const response = await adminApi.unbanUserAPI(userId);
+      if (response.isSuccess) {
+        toast.success(response.message || 'Mở khóa tài khoản thành công.');
+        setUsers(prev => prev.map(u => 
+          u.userId === userId ? { ...u, banUntil: null } : u
+        ));
+        return true;
+      } else {
+        toast.error(response.message || 'Lỗi khi mở khóa tài khoản.');
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Lỗi khi thực hiện mở khóa tài khoản.');
+      return false;
+    }
+  };
+
+  return { users, isLoading, fetchUsers, changeRole, toggleStatus, banUser, unbanUser };
 };
 
 export const useAdminFacilities = () => {

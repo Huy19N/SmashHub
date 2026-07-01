@@ -29,6 +29,10 @@ public partial class User
 
     public bool? IsActive { get; set; }
 
+    public DateTime? BanUntil { get; set; }
+
+    public string BanReason { get; set; }
+
     public virtual StoredFile AvatarFile { get; set; }
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
@@ -50,6 +54,12 @@ public partial class User
     public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
+
+    public virtual ICollection<PostReport> PostReports { get; set; } = new List<PostReport>();
+
+    public virtual ICollection<UserBlock> BlocksCreated { get; set; } = new List<UserBlock>();
+
+    public virtual ICollection<UserBlock> BlocksReceived { get; set; } = new List<UserBlock>();
 
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 

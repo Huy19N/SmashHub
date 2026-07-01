@@ -12,6 +12,7 @@ export default function AdminLayout() {
     if (pathname.includes('/admin/payouts')) return 'payouts';
     if (pathname.includes('/admin/payment-settings')) return 'payment-settings';
     if (pathname.includes('/admin/revenue')) return 'revenue';
+    if (pathname.includes('/admin/posts')) return 'posts';
     if (pathname.includes('/admin/system-settings')) return 'system-settings';
     if (pathname.includes('/admin/profile')) return 'profile';
     return 'dashboard';

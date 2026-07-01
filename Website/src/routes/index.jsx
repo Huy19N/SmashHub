@@ -28,6 +28,7 @@ const PaymentManagementPage = lazy(() => import('../features/courtsManagement/pa
 const MatchmakingPage = lazy(() => import('../features/groups/pages/MatchmakingPage'));
 const SocialPage = lazy(() => import('../features/social/pages/SocialPage'));
 const SinglePostPage = lazy(() => import('../features/social/pages/SinglePostPage'));
+const CommunityStandardsPage = lazy(() => import('../features/social/pages/CommunityStandardsPage'));
 
 // Admin Features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
@@ -39,6 +40,7 @@ const PaymentSettings = lazy(() => import('../features/admin/pages/PaymentSettin
 const PayoutManagement = lazy(() => import('../features/admin/pages/PayoutManagement'));
 const AdminProfile = lazy(() => import('../features/admin/pages/AdminProfile'));
 const RevenueManagement = lazy(() => import('../features/admin/pages/RevenueManagement'));
+const PostManagement = lazy(() => import('../features/admin/pages/PostManagement'));
 
 /**
  * Global Routing Registry
@@ -109,6 +111,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute><SinglePostPage /></ProtectedRoute>
   },
   {
+    path: '/community-standards',
+    element: <CommunityStandardsPage />
+  },
+  {
     path: '/subscriptions',
     element: <ProtectedRoute><SubscriptionPackages /></ProtectedRoute>
   },
@@ -133,6 +139,7 @@ export const router = createBrowserRouter([
       { path: 'facilities', element: <AdminFacilities /> },
       { path: 'payouts', element: <PayoutManagement /> },
       { path: 'revenue', element: <RevenueManagement /> },
+      { path: 'posts', element: <PostManagement /> },
       { path: 'system-settings', element: <AdminSettings /> },
       { path: 'payment-settings', element: <PaymentSettings /> },
       { path: 'profile', element: <AdminProfile /> },

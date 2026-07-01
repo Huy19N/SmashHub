@@ -624,6 +624,8 @@ CREATE TABLE Posts (
     Content NVARCHAR(MAX) NOT NULL,
     MediaFileId UNIQUEIDENTIFIER,
     IsBoosted BIT DEFAULT 0 NOT NULL,
+    Status INT DEFAULT 1 NOT NULL, -- 1: Pending, 2: Approved, 3: Rejected
+    IsDeleted BIT DEFAULT 0 NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME,
     CONSTRAINT PK_Posts PRIMARY KEY (PostId),
@@ -638,6 +640,7 @@ CREATE TABLE PostComments (
     PostId UNIQUEIDENTIFIER NOT NULL,
     UserId UNIQUEIDENTIFIER NOT NULL,
     Content NVARCHAR(MAX) NOT NULL,
+    IsDeleted BIT DEFAULT 0 NOT NULL,
     CreatedAt DATETIME DEFAULT GETDATE(),
     CONSTRAINT PK_PostComments PRIMARY KEY (CommentId),
     CONSTRAINT FK_PostComments_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
@@ -660,6 +663,27 @@ CREATE TABLE PostMedias (
     CONSTRAINT PK_PostMedias PRIMARY KEY CLUSTERED (PostId ASC, FileId ASC),
     CONSTRAINT FK_PostMedias_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
     CONSTRAINT FK_PostMedias_StoredFiles FOREIGN KEY (FileId) REFERENCES StoredFiles(FileId) ON DELETE CASCADE
+);
+
+CREATE TABLE PostReports (
+    ReportId UNIQUEIDENTIFIER DEFAULT NEWID(),
+    PostId UNIQUEIDENTIFIER NOT NULL,
+    ReporterId UNIQUEIDENTIFIER NOT NULL,
+    Reason NVARCHAR(500) NOT NULL,
+    Status INT DEFAULT 1 NOT NULL, -- 1: Pending, 2: Resolved, 3: Dismissed
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_PostReports PRIMARY KEY (ReportId),
+    CONSTRAINT FK_PostReports_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
+    CONSTRAINT FK_PostReports_Users FOREIGN KEY (ReporterId) REFERENCES Users(UserId) ON DELETE NO ACTION
+);
+
+CREATE TABLE UserBlocks (
+    BlockerId UNIQUEIDENTIFIER NOT NULL,
+    BlockedId UNIQUEIDENTIFIER NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_UserBlocks PRIMARY KEY (BlockerId, BlockedId),
+    CONSTRAINT FK_UserBlocks_Blocker FOREIGN KEY (BlockerId) REFERENCES Users(UserId) ON DELETE CASCADE,
+    CONSTRAINT FK_UserBlocks_Blocked FOREIGN KEY (BlockedId) REFERENCES Users(UserId) ON DELETE NO ACTION
 );
 
 -- ==========================================

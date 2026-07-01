@@ -5,6 +5,8 @@ namespace Repositories;
 public class UnitOfWork : IDisposable
 {
     private readonly SmashClubContext _context;
+    
+    public SmashClubContext Context => _context;
 
     public UserRepository Users { get; }
     public RefreshTokenRepository RefreshTokens { get; }

@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Repositories.Context;
 using Services.Interfaces;
 using Entites.DTOs.SystemSettings;
+using Entites.DTOs.Users;
+using Entites.DTOs.Social;
 
 namespace APIWebApp.Controllers;
 
@@ -22,13 +24,17 @@ public class AdminController : ControllerBase
     private readonly IFacilityService _facilityService;
     private readonly ISystemSettingService _systemSettingService;
     private readonly INotificationService _notificationService;
+    private readonly ISocialService _socialService;
+    private readonly IUserService _userService;
 
-    public AdminController(SmashClubContext context, IFacilityService facilityService, ISystemSettingService systemSettingService, INotificationService notificationService)
+    public AdminController(SmashClubContext context, IFacilityService facilityService, ISystemSettingService systemSettingService, INotificationService notificationService, ISocialService socialService, IUserService userService)
     {
         _context = context;
         _facilityService = facilityService;
         _systemSettingService = systemSettingService;
         _notificationService = notificationService;
+        _socialService = socialService;
+        _userService = userService;
     }
 
     #region 1. Statistics & Dashboard
@@ -127,7 +133,8 @@ public class AdminController : ControllerBase
                 u.RoleId,
                 RoleName = u.Role.RoleName,
                 u.CreatedAt,
-                IsActive = u.IsActive ?? false
+                IsActive = u.IsActive ?? false,
+                u.BanUntil
             })
             .ToListAsync();
 
@@ -386,6 +393,80 @@ public class AdminController : ControllerBase
         }
     }
 
+    #endregion
+
+    #region 7. Moderation
+    
+    [HttpGet("posts/pending")]
+    public async Task<IActionResult> GetPendingPosts([FromQuery] PaginationParams pagination)
+    {
+        try
+        {
+            var result = await _socialService.GetPendingPostsAsync(pagination);
+            return Ok(ApiResponse<PagedResult<PostDto>>.SuccessResponse(result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("posts/{postId:guid}/approve")]
+    public async Task<IActionResult> ApprovePost(Guid postId)
+    {
+        try
+        {
+            await _socialService.ApprovePostAsync(postId);
+            return Ok(ApiResponse.SuccessResponse("Đã duyệt bài viết."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("posts/{postId:guid}/reject")]
+    public async Task<IActionResult> RejectPost(Guid postId)
+    {
+        try
+        {
+            await _socialService.RejectPostAsync(postId);
+            return Ok(ApiResponse.SuccessResponse("Đã từ chối bài viết."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("users/{userId:guid}/ban")]
+    public async Task<IActionResult> BanUser(Guid userId, [FromBody] BanUserRequest request)
+    {
+        try
+        {
+            await _userService.BanUserAsync(userId, request.Until, request.Reason);
+            return Ok(ApiResponse.SuccessResponse("Đã cấm tài khoản."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("users/{userId:guid}/unban")]
+    public async Task<IActionResult> UnbanUser(Guid userId)
+    {
+        try
+        {
+            await _userService.UnbanUserAsync(userId);
+            return Ok(ApiResponse.SuccessResponse("Đã mở khóa tài khoản."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+    
     #endregion
 }
 

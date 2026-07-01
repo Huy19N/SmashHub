@@ -117,4 +117,56 @@ public class SocialController : ControllerBase
         var result = await _socialService.GetCommentsAsync(postId, pagination);
         return Ok(ApiResponse<PagedResult<CommentDto>>.SuccessResponse(result));
     }
+
+    [HttpDelete("posts/{postId:guid}")]
+    public async Task<IActionResult> DeletePost(Guid postId)
+    {
+        try
+        {
+            bool isAdmin = User.IsInRole("Admin");
+            await _socialService.SoftDeletePostAsync(GetCurrentUserId(), postId, isAdmin);
+            return Ok(ApiResponse.SuccessResponse("Đã xóa bài viết."));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpDelete("comments/{commentId:guid}")]
+    public async Task<IActionResult> DeleteComment(Guid commentId)
+    {
+        try
+        {
+            bool isAdmin = User.IsInRole("Admin");
+            await _socialService.SoftDeleteCommentAsync(GetCurrentUserId(), commentId, isAdmin);
+            return Ok(ApiResponse.SuccessResponse("Đã xóa bình luận."));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("posts/{postId:guid}/report")]
+    public async Task<IActionResult> ReportPost(Guid postId, [FromBody] ReportPostRequest request)
+    {
+        try
+        {
+            await _socialService.ReportPostAsync(GetCurrentUserId(), postId, request.Reason);
+            return Ok(ApiResponse.SuccessResponse("Đã gửi báo cáo vi phạm."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

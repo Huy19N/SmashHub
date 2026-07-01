@@ -1,5 +1,7 @@
 using System.Linq;
 using Entites.DTOs.Users;
+using Entites.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Interfaces;
 
@@ -120,5 +122,56 @@ public class UserService : IUserService
             Cccd = user.Cccd,
             SubscriptionTier = subscriptionTier
         };
+    }
+
+    public async Task BlockUserAsync(Guid blockerId, Guid blockedId)
+    {
+        if (blockerId == blockedId) throw new InvalidOperationException("Không thể tự chặn chính mình.");
+
+        var existingBlock = await _unitOfWork.Context.UserBlocks
+            .FirstOrDefaultAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId);
+        
+        if (existingBlock == null)
+        {
+            await _unitOfWork.Context.UserBlocks.AddAsync(new UserBlock
+            {
+                BlockerId = blockerId,
+                BlockedId = blockedId,
+                CreatedAt = DateTime.Now
+            });
+            await _unitOfWork.Context.SaveChangesAsync();
+        }
+    }
+
+    public async Task UnblockUserAsync(Guid blockerId, Guid blockedId)
+    {
+        var existingBlock = await _unitOfWork.Context.UserBlocks
+            .FirstOrDefaultAsync(b => b.BlockerId == blockerId && b.BlockedId == blockedId);
+
+        if (existingBlock != null)
+        {
+            _unitOfWork.Context.UserBlocks.Remove(existingBlock);
+            await _unitOfWork.Context.SaveChangesAsync();
+        }
+    }
+
+    public async Task BanUserAsync(Guid userId, DateTime until, string reason)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null) throw new KeyNotFoundException("Người dùng không tồn tại.");
+
+        user.BanUntil = until;
+        user.BanReason = reason;
+        await _unitOfWork.Users.UpdateAsync(user);
+    }
+
+    public async Task UnbanUserAsync(Guid userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null) throw new KeyNotFoundException("Người dùng không tồn tại.");
+
+        user.BanUntil = null;
+        user.BanReason = null;
+        await _unitOfWork.Users.UpdateAsync(user);
     }
 }

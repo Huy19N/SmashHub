@@ -6,12 +6,52 @@ import CommentSection from './CommentSection';
 import MediaImage from '../../../components/ui/MediaImage';
 import PostMediaGrid from './PostMediaGrid';
 import PostLightbox from './PostLightbox';
+import useAuth from '../../Auth/hooks/useAuth';
+import { deletePostAPI, reportPostAPI, blockUserAPI } from '../api/social.api';
 
 const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showComments, setShowComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [lightboxData, setLightboxData] = useState({ isOpen: false, initialIndex: 0 });
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const isOwner = user?.userId === post.authorId;
+  const isAdmin = user?.roleId === 1;
+
+  const handleDeletePost = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
+    try {
+      await deletePostAPI(post.postId);
+      toast.success("Đã xóa bài viết");
+      window.location.reload(); // Quick refresh for now
+    } catch (error) {
+      toast.error("Không thể xóa bài viết");
+    }
+  };
+
+  const handleReportPost = async () => {
+    const reason = window.prompt("Nhập lý do báo cáo:");
+    if (!reason) return;
+    try {
+      await reportPostAPI(post.postId, reason);
+      toast.success("Đã gửi báo cáo vi phạm");
+    } catch (error) {
+      toast.error("Không thể báo cáo");
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn chặn người dùng này?")) return;
+    try {
+      await blockUserAPI(post.authorId);
+      toast.success("Đã chặn người dùng");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Không thể chặn người dùng");
+    }
+  };
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -115,9 +155,45 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
           </div>
         </div>
 
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 cursor-pointer">
-          <MoreHorizontal className="w-4.5 h-4.5" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 cursor-pointer"
+          >
+            <MoreHorizontal className="w-4.5 h-4.5" />
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-card-dark border border-gray-100 dark:border-border-dark rounded-xl shadow-lg z-10 overflow-hidden">
+              <div className="py-1">
+                {(isOwner || isAdmin) && (
+                  <button
+                    onClick={() => { setShowDropdown(false); handleDeletePost(); }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                  >
+                    Xóa bài viết
+                  </button>
+                )}
+                {!isOwner && (
+                  <>
+                    <button
+                      onClick={() => { setShowDropdown(false); handleReportPost(); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      Báo cáo vi phạm
+                    </button>
+                    <button
+                      onClick={() => { setShowDropdown(false); handleBlockUser(); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      Chặn người dùng
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}

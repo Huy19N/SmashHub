@@ -57,6 +57,9 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             throw new UnauthorizedAccessException("Email hoặc mật khẩu không đúng.");
 
+        if (user.BanUntil.HasValue && user.BanUntil.Value > DateTime.Now)
+            throw new UnauthorizedAccessException($"Tài khoản của bạn đã bị cấm đến {user.BanUntil.Value:dd/MM/yyyy HH:mm}. Lý do: {user.BanReason}");
+
         return GenerateTokenResponse(user, ipAddress, userAgent);
     }
 
