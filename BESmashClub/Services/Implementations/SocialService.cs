@@ -45,7 +45,7 @@ public class SocialService : ISocialService
             int order = 0;
             foreach (var fileId in request.MediaFileIds)
             {
-                post.PostMedias.Add(new PostMedia
+                post.PostMedia.Add(new PostMedia
                 {
                     PostId = post.PostId,
                     FileId = fileId,
@@ -80,7 +80,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
-                .Include(p => p.PostMedias)
+                .Include(p => p.PostMedia)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
@@ -115,7 +115,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
-                .Include(p => p.PostMedias)
+                .Include(p => p.PostMedia)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.IsBoosted)
@@ -150,7 +150,7 @@ public class SocialService : ISocialService
                 .Include(p => p.AuthorUser)
                 .Include(p => p.Facility)
                 .Include(p => p.Team)
-                .Include(p => p.PostMedias)
+                .Include(p => p.PostMedia)
                 .Include(p => p.PostLikes)
                 .Include(p => p.PostComments)
                 .OrderByDescending(p => p.CreatedAt)
@@ -172,7 +172,7 @@ public class SocialService : ISocialService
             .Include(p => p.AuthorUser)
             .Include(p => p.Facility)
             .Include(p => p.Team)
-            .Include(p => p.PostMedias)
+            .Include(p => p.PostMedia)
             .Include(p => p.PostComments.Where(c => !c.IsDeleted))
             .Include(p => p.PostLikes)
             .FirstOrDefaultAsync(p => p.PostId == postId && !p.IsDeleted);
@@ -395,8 +395,8 @@ public class SocialService : ISocialService
             PostType = p.PostType,
             Content = p.Content,
             MediaFileId = p.MediaFileId,
-            MediaFileIds = p.PostMedias != null && p.PostMedias.Any() 
-                ? p.PostMedias.OrderBy(m => m.DisplayOrder).Select(m => m.FileId).ToList() 
+            MediaFileIds = p.PostMedia != null && p.PostMedia.Any() 
+                ? p.PostMedia.OrderBy(m => m.DisplayOrder).Select(m => m.FileId).ToList() 
                 : (p.MediaFileId.HasValue ? new List<Guid> { p.MediaFileId.Value } : new List<Guid>()),
             IsBoosted = p.IsBoosted,
             CreatedAt = p.CreatedAt,
