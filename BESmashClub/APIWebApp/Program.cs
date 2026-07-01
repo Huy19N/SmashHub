@@ -54,6 +54,7 @@ builder.Services.AddScoped<ISocialService, SocialService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
 builder.Services.AddScoped<IContentModerationService, ContentModerationService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // ---- Authentication ----
 builder.Services.AddAuthentication(options =>
