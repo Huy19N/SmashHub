@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smashhub/src/app.dart';
+import 'package:smashhub/src/shared/di/di.dart';
 import 'package:smashhub/src/shared/services/notification_service.dart';
 import 'package:smashhub/src/shared/network/api_client.dart';
 
@@ -20,11 +22,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = DevHttpOverrides();
   
+  // Khởi tạo Dependency Injection (get_it)
+  await setupLocator();
+  
   // Khởi tạo ApiClient session từ lưu trữ cục bộ (SharedPreferences)
   await ApiClient.init();
   
   // Khởi tạo dịch vụ thông báo cục bộ
   await NotificationService.instance.initialize();
 
-  runApp(const SmashHubApp());
+  // Bọc ứng dụng bằng ProviderScope để Riverpod hoạt động
+  runApp(const ProviderScope(child: SmashHubApp()));
 }
