@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../auth/presentation/login_screen.dart';
@@ -176,6 +177,24 @@ class _TermsPermissionsScreenState extends State<TermsPermissionsScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    onPressed: () {
+                      SystemNavigator.pop();
+                    },
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text(
+                      'Từ chối và Thoát',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
@@ -198,11 +217,7 @@ class _TermsPermissionsScreenState extends State<TermsPermissionsScreen> {
             color: AppTheme.primaryColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.primaryColor,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppTheme.primaryColor, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(

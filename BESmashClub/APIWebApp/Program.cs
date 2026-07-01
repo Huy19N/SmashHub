@@ -139,7 +139,8 @@ builder.Services.AddCors(options =>
                 "https://tad-min.io.vn", 
                 "http://tad-min.io.vn", 
                 "http://localhost:3000",
-                "http://localhost:5173" // Vite default
+                "http://localhost:5173", // Vite default
+                "https://smash-club-khaki.vercel.app" // Vercel deployment
               )
               .AllowAnyMethod()
               .AllowAnyHeader()
