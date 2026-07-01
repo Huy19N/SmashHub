@@ -150,10 +150,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
-});
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Swagger
 if (app.Environment.IsDevelopment())
@@ -169,6 +172,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+app.UseCors("StrictPolicy");
+
 // Strict HTTPS enforcement Middleware (reject HTTP completely)
 app.Use(async (context, next) =>
 {
@@ -180,10 +187,6 @@ app.Use(async (context, next) =>
     }
     await next();
 });
-
-app.UseRouting();
-
-app.UseCors("StrictPolicy");
 
 // ---- App Security Middleware ----
 app.Use(async (context, next) =>
