@@ -7,6 +7,9 @@ using Entites.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Repositories;
+using Repositories.Redis;
+using Entites.Redis;
+using System.Text.Json;
 using Services.Interfaces;
 using Services.Settings;
 
@@ -14,12 +17,16 @@ namespace Services.Implementations;
 
 public class AuthService : IAuthService
 {
+    private readonly IRedisTokenRepository _redisTokenRepository;
+    private readonly IRedisEmailConfirmRepository _redisEmailConfirmRepository;
     private readonly UnitOfWork _unitOfWork;
     private readonly JwtSettings _jwtSettings;
     private readonly IEmailService _emailService;
 
-    public AuthService(UnitOfWork unitOfWork, IOptions<JwtSettings> jwtSettings, IEmailService emailService)
+    public AuthService(UnitOfWork unitOfWork, IOptions<JwtSettings> jwtSettings, IEmailService emailService, IRedisTokenRepository redisTokenRepository, IRedisEmailConfirmRepository redisEmailConfirmRepository)
     {
+        _redisTokenRepository = redisTokenRepository;
+        _redisEmailConfirmRepository = redisEmailConfirmRepository;
         _unitOfWork = unitOfWork;
         _jwtSettings = jwtSettings.Value;
         _emailService = emailService;
@@ -60,36 +67,36 @@ public class AuthService : IAuthService
         if (user.BanUntil.HasValue && user.BanUntil.Value > DateTime.Now)
             throw new UnauthorizedAccessException($"Tài khoản của bạn đã bị cấm đến {user.BanUntil.Value:dd/MM/yyyy HH:mm}. Lý do: {user.BanReason}");
 
-        return GenerateTokenResponse(user, ipAddress, userAgent);
+        return await GenerateTokenResponseAsync(user, ipAddress, userAgent);
     }
 
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken, string ipAddress, string userAgent)
     {
-        var storedToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken);
+        var storedToken = await _redisTokenRepository.GetRefreshTokenAsync(refreshToken);
 
-        if (storedToken == null || !storedToken.IsActive || storedToken.ExpiredAt < DateTime.Now)
+        if (storedToken == null)
             throw new UnauthorizedAccessException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
-        // Revoke the old refresh token
-        storedToken.IsActive = false;
-        await _unitOfWork.SaveChangesAsync();
+        await _redisTokenRepository.DeleteRefreshTokenAsync(refreshToken);
 
-        var user = storedToken.User;
-        return GenerateTokenResponse(user, ipAddress, userAgent);
+        var user = await _unitOfWork.Users.GetByIdAsync(storedToken.UserId);
+        if (user == null)
+            throw new UnauthorizedAccessException("Người dùng không tồn tại.");
+
+        return await GenerateTokenResponseAsync(user, ipAddress, userAgent);
     }
 
     public async Task LogoutAsync(Guid userId, string refreshToken)
     {
-        var storedToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken);
+        var storedToken = await _redisTokenRepository.GetRefreshTokenAsync(refreshToken);
 
         if (storedToken != null && storedToken.UserId == userId)
         {
-            storedToken.IsActive = false;
-            await _unitOfWork.SaveChangesAsync();
+            await _redisTokenRepository.DeleteRefreshTokenAsync(refreshToken);
         }
     }
 
-    private TokenResponse GenerateTokenResponse(User user, string? ipAddress, string? userAgent)
+    private async Task<TokenResponse> GenerateTokenResponseAsync(User user, string? ipAddress, string? userAgent)
     {
         var jwtId = Guid.NewGuid().ToString();
         var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
@@ -100,19 +107,17 @@ public class AuthService : IAuthService
         // Save refresh token to DB
         var refreshToken = new RefreshToken
         {
-            RefreshTokenId = Guid.NewGuid(),
             UserId = user.UserId,
             Token = refreshTokenValue,
             JwtId = jwtId,
-            CreatedAt = DateTime.Now,
-            ExpiredAt = DateTime.Now.AddDays(_jwtSettings.RefreshTokenExpirationDays),
+            CreatedAt = DateTime.UtcNow,
+            ExpiredAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
             IsActive = true,
             Ipaddress = ipAddress,
             UserAgent = userAgent
         };
 
-        _unitOfWork.RefreshTokens.PrepareCreate(refreshToken);
-        _unitOfWork.SaveChangesAsync().GetAwaiter().GetResult();
+        await _redisTokenRepository.SetRefreshTokenAsync(refreshToken.Token, refreshToken, TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays));
 
         return new TokenResponse
         {
@@ -139,8 +144,8 @@ public class AuthService : IAuthService
         user.IsActive = true;
         await _unitOfWork.Users.UpdateAsync(user);
 
-        // 4. Sinh Token tự động đăng nhập
-        return GenerateTokenResponse(user, ipAddress, userAgent);
+        // 4. Sinh Token        // Issue new token
+        return await GenerateTokenResponseAsync(user, "Unknown", "Google Login");
     }
 
     public async Task ResendVerificationCodeAsync(string email)

@@ -1,37 +1,43 @@
 using Entites.DTOs.Common;
 using Entites.DTOs.Notifications;
-using Entites.Models;
+using Entites.Mongo;
 using Microsoft.AspNetCore.SignalR;
-using Repositories;
+using Repositories.Mongo;
 using Services.Hubs;
 using Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using MongoDB.Driver;
 
 namespace Services.Implementations;
 
 public class NotificationService : INotificationService
 {
-    private readonly UnitOfWork _unitOfWork;
+    private readonly INotificationRepository _notificationRepository;
     private readonly IHubContext<NotificationHub> _hubContext;
 
-    public NotificationService(UnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext)
+    public NotificationService(INotificationRepository notificationRepository, IHubContext<NotificationHub> hubContext)
     {
-        _unitOfWork = unitOfWork;
+        _notificationRepository = notificationRepository;
         _hubContext = hubContext;
     }
 
     public async Task<PagedResult<NotificationDto>> GetUserNotificationsAsync(Guid userId, PaginationParams pagination)
     {
-        var (items, totalCount) = await _unitOfWork.Notifications.GetPagedAsync(
-            n => n.UserId == userId,
-            pagination.PageNumber,
-            pagination.PageSize,
-            query => query.OrderByDescending(n => n.CreatedAt)
-        );
+        var filter = Builders<Notification>.Filter.Eq(n => n.UserId, userId.ToString());
+        var items = await _notificationRepository.FindAsync(filter);
+
+        var pagedItems = items.OrderByDescending(n => n.CreatedAt)
+                              .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                              .Take(pagination.PageSize)
+                              .ToList();
 
         return new PagedResult<NotificationDto>
         {
-            Items = items.Select(MapToDto).ToList(),
-            TotalCount = totalCount,
+            Items = pagedItems.Select(MapToDto).ToList(),
+            TotalCount = items.Count,
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
@@ -39,27 +45,26 @@ public class NotificationService : INotificationService
 
     public async Task MarkAsReadAsync(Guid userId, Guid notificationId)
     {
-        var notification = await _unitOfWork.Notifications.GetByIdAsync(notificationId);
-        if (notification == null || notification.UserId != userId)
+        var notification = await _notificationRepository.GetByIdAsync(notificationId.ToString());
+        if (notification == null || notification.UserId != userId.ToString())
             throw new KeyNotFoundException("Không tìm thấy thông báo.");
 
         notification.IsRead = true;
-        await _unitOfWork.Notifications.UpdateAsync(notification);
+        await _notificationRepository.UpdateAsync(notification.Id, notification);
     }
 
     public async Task MarkAllAsReadAsync(Guid userId)
     {
-        var unread = await _unitOfWork.Notifications.FindAsync(n => n.UserId == userId && !n.IsRead);
+        var filter = Builders<Notification>.Filter.And(
+            Builders<Notification>.Filter.Eq(n => n.UserId, userId.ToString()),
+            Builders<Notification>.Filter.Eq(n => n.IsRead, false)
+        );
+
+        var unread = await _notificationRepository.FindAsync(filter);
         foreach (var n in unread)
         {
             n.IsRead = true;
-        }
-
-        if (unread.Any())
-        {
-            var context = _unitOfWork.Notifications.GetContext();
-            context.UpdateRange(unread);
-            await context.SaveChangesAsync();
+            await _notificationRepository.UpdateAsync(n.Id, n);
         }
     }
 
@@ -67,23 +72,20 @@ public class NotificationService : INotificationService
     {
         var notification = new Notification
         {
-            NotificationId = Guid.NewGuid(),
-            UserId = userId,
+            UserId = userId.ToString(),
             Title = title,
             Content = content,
             NotificationType = type,
-            RelatedEntityId = relatedId,
+            RelatedEntityId = relatedId?.ToString(),
             IsRead = false,
             CreatedAt = DateTime.Now
         };
 
-        await _unitOfWork.Notifications.CreateAsync(notification);
+        await _notificationRepository.CreateAsync(notification);
 
         var dto = MapToDto(notification);
 
         // SignalR Push
-        // Send to specific User by UserId if mapping is configured, or we can broadcast if needed.
-        // Assuming UserId maps to SignalR UserIdentifier
         await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", dto);
     }
 
@@ -91,12 +93,12 @@ public class NotificationService : INotificationService
     {
         return new NotificationDto
         {
-            NotificationId = n.NotificationId,
-            UserId = n.UserId,
+            NotificationId = Guid.TryParse(n.Id, out var parsedId) ? parsedId : Guid.Empty, // MongoDB uses string ObjectId, but DTO might still have Guid.
+            UserId = Guid.Parse(n.UserId),
             Title = n.Title,
             Content = n.Content,
             NotificationType = n.NotificationType,
-            RelatedEntityId = n.RelatedEntityId,
+            RelatedEntityId = n.RelatedEntityId != null ? Guid.Parse(n.RelatedEntityId) : null,
             IsRead = n.IsRead,
             CreatedAt = n.CreatedAt
         };

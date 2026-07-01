@@ -15,5 +15,9 @@ namespace Entites.Mongo
         public string SenderId { get; set; }
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int MessageType { get; set; }
+        public string FileUrl { get; set; }
+        public Guid? MediaFileId { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

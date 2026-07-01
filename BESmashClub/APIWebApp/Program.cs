@@ -10,6 +10,9 @@ using Services.Hubs;
 using Services.Implementations;
 using Services.Interfaces;
 using Services.Settings;
+using Repositories.Mongo;
+using Repositories.Redis;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +28,20 @@ builder.Services.AddDbContext<SmashClubContext>(options =>
 
 // ---- Repositories ----
 builder.Services.AddScoped<UnitOfWork>();
+
+// Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379"));
+builder.Services.AddScoped<IRedisTokenRepository, RedisTokenRepository>();
+builder.Services.AddScoped<IRedisEmailConfirmRepository, RedisEmailConfirmRepository>();
+
+// Mongo
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<IPostCommentRepository, PostCommentRepository>();
+builder.Services.AddScoped<IPostLikeRepository, PostLikeRepository>();
+builder.Services.AddScoped<IPostReportRepository, PostReportRepository>();
+builder.Services.AddScoped<ITeamMessageRepository, TeamMessageRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // ---- MinIO ----
 var minioConfig = builder.Configuration.GetSection("MinIOSettings");

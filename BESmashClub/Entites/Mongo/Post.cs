@@ -17,5 +17,13 @@ namespace Entites.Mongo
         public int LikeCount { get; set; }
         public int CommentCount { get; set; }
         public DateTime CreatedAt { get; set; }
+        
+        // Extended for compatibility with old SQL model
+        public int PostType { get; set; }
+        public Guid? TeamId { get; set; }
+        public int? FacilityId { get; set; }
+        public bool IsDeleted { get; set; }
+        public int Status { get; set; } // 1: Pending, 2: Approved, 3: Rejected
+        public List<Guid> MediaFileIds { get; set; } = new List<Guid>();
     }
 }

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Repositories;
 using Entites.Models;
+using Entites.Mongo;
+using Repositories.Mongo;
 using Microsoft.EntityFrameworkCore;
 
 namespace Services.Hubs
@@ -15,11 +17,13 @@ namespace Services.Hubs
     public class ChatHub : Hub
     {
         private readonly UnitOfWork _unitOfWork;
+        private readonly ITeamMessageRepository _teamMessageRepository;
         private static readonly ConcurrentDictionary<Guid, HashSet<string>> _onlineUsers = new();
 
-        public ChatHub(UnitOfWork unitOfWork)
+        public ChatHub(UnitOfWork unitOfWork, ITeamMessageRepository teamMessageRepository)
         {
             _unitOfWork = unitOfWork;
+            _teamMessageRepository = teamMessageRepository;
         }
 
         /// <summary>
@@ -99,17 +103,16 @@ namespace Services.Hubs
                     };
                     context.Set<VideoCallParticipant>().Add(participant);
                     
-                    var callMessage = new TeamMessage
+                    var callMessage = new Entites.Mongo.TeamMessage
                     {
-                        MessageId = Guid.NewGuid(),
-                        TeamId = teamId,
-                        SenderId = userId,
+                        Id = Guid.NewGuid().ToString(),
+                        TeamId = teamId.ToString(),
+                        SenderId = userId.ToString(),
+                        Content = $"ROOM_ID:{roomId}",
                         MessageType = 4,
-                        Content = $"ROOM_ID:{roomId}|STATUS:OPEN",
-                        SentAt = DateTime.Now,
-                        IsDeleted = false
+                        CreatedAt = DateTime.Now
                     };
-                    context.Set<TeamMessage>().Add(callMessage);
+                    await _teamMessageRepository.CreateAsync(callMessage);
 
                     await context.SaveChangesAsync();
                 }
@@ -184,15 +187,19 @@ namespace Services.Hubs
                         context.Set<VideoCallSession>().Update(session);
 
                         // Cập nhật lại tin nhắn trạng thái phòng thành ĐÓNG
-                        var callMessage = await context.Set<TeamMessage>()
-                            .Where(m => m.TeamId == session.TeamId && m.MessageType == 4 && m.Content.Contains($"ROOM_ID:{roomId}"))
-                            .OrderByDescending(m => m.SentAt)
-                            .FirstOrDefaultAsync();
+                        var builder = MongoDB.Driver.Builders<Entites.Mongo.TeamMessage>.Filter;
+                        var filter = builder.And(
+                            builder.Eq(m => m.TeamId, session.TeamId.ToString()),
+                            builder.Eq(m => m.MessageType, 4),
+                            builder.Regex(m => m.Content, new MongoDB.Bson.BsonRegularExpression($"ROOM_ID:{roomId}"))
+                        );
+                        var callMessages = await _teamMessageRepository.FindAsync(filter);
+                        var callMessage = callMessages.OrderByDescending(m => m.CreatedAt).FirstOrDefault();
 
                         if (callMessage != null)
                         {
                             callMessage.Content = $"ROOM_ID:{roomId}|STATUS:CLOSED";
-                            context.Set<TeamMessage>().Update(callMessage);
+                            await _teamMessageRepository.UpdateAsync(callMessage.Id, callMessage);
                         }
 
                         await Clients.Group(session.TeamId.ToString()).SendAsync("CallEnded", roomId);

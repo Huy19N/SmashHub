@@ -15,5 +15,6 @@ namespace Entites.Mongo
         public string UserId { get; set; }
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

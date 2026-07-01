@@ -3,6 +3,8 @@ using System.Net.Mail;
 using Entites.Models;
 using Microsoft.Extensions.Options;
 using Repositories;
+using Repositories.Redis;
+using Entites.Redis;
 using Services.Interfaces;
 using Services.Settings;
 
@@ -12,11 +14,13 @@ public class EmailService : IEmailService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly EmailSettings _emailSettings;
+    private readonly IRedisEmailConfirmRepository _redisEmailConfirmRepository;
 
-    public EmailService(UnitOfWork unitOfWork, IOptions<EmailSettings> emailSettings)
+    public EmailService(UnitOfWork unitOfWork, IOptions<EmailSettings> emailSettings, IRedisEmailConfirmRepository redisEmailConfirmRepository)
     {
         _unitOfWork = unitOfWork;
         _emailSettings = emailSettings.Value;
+        _redisEmailConfirmRepository = redisEmailConfirmRepository;
     }
 
     public async Task SendEmailConfirmationAsync(string email)
@@ -28,13 +32,12 @@ public class EmailService : IEmailService
         var code = Path.GetRandomFileName().Replace(".", "").Substring(0, 5);
         var confirm = new EmailConfirm
         {
-            Code = code,
+            ConfirmationCode = code,
             Email = email,
-            CreatedAt = DateTime.Now,
-            ExpiredAt = DateTime.Now.AddMinutes(15)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
         };
-        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
-        await _unitOfWork.EmailConfirms.CreateAsync(confirm);
+        await _redisEmailConfirmRepository.DeleteEmailConfirmAsync(email);
+        await _redisEmailConfirmRepository.SetEmailConfirmAsync(email, confirm, TimeSpan.FromMinutes(15));
 
         var subject = "SmashClub - Xác nhận Email";
         var body = BuildConfirmEmailBody(user.FullName, code, _emailSettings.CodeExpirationMinutes);
@@ -44,12 +47,9 @@ public class EmailService : IEmailService
 
     public async Task<bool> VerifyEmailNoDeleteAsync(string code, string email)
     {
-        var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
-        if (confirm == null)
-            throw new KeyNotFoundException("Mã xác nhận không hợp lệ.");
-
-        if (confirm.ExpiredAt < DateTime.Now)
-            throw new InvalidOperationException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        var confirm = await _redisEmailConfirmRepository.GetEmailConfirmAsync(email);
+        if (confirm == null || confirm.ConfirmationCode != code)
+            throw new KeyNotFoundException("Mã xác nhận không hợp lệ hoặc đã hết hạn.");
 
         return true;
     }
@@ -58,19 +58,16 @@ public class EmailService : IEmailService
     {
 
         var user = await _unitOfWork.Users.GetByEmailAsync(email);
-        var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
+        var confirm = await _redisEmailConfirmRepository.GetEmailConfirmAsync(email);
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
-        if (confirm == null)
-            throw new KeyNotFoundException("Mã xác nhận không hợp lệ.");
-        if (confirm.ExpiredAt < DateTime.Now)
-            throw new InvalidOperationException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
-        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
-        if (confirm != null)
-        {
-            user.IsActive = true;
-            await _unitOfWork.Users.UpdateAsync(user);
-        }
+        if (confirm == null || confirm.ConfirmationCode != code)
+            throw new KeyNotFoundException("Mã xác nhận không hợp lệ hoặc đã hết hạn.");
+            
+        await _redisEmailConfirmRepository.DeleteEmailConfirmAsync(email);
+
+        user.IsActive = true;
+        await _unitOfWork.Users.UpdateAsync(user);
         return true;
     }
 
@@ -84,13 +81,12 @@ public class EmailService : IEmailService
 
         var confirm = new EmailConfirm
         {
-            Code = code,
+            ConfirmationCode = code,
             Email = email,
-            CreatedAt = DateTime.Now,
-            ExpiredAt = DateTime.Now.AddMinutes(_emailSettings.CodeExpirationMinutes)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_emailSettings.CodeExpirationMinutes)
         };
-        await _unitOfWork.EmailConfirms.DeleteAllOldCodeAsync(email);
-        await _unitOfWork.EmailConfirms.CreateAsync(confirm);
+        await _redisEmailConfirmRepository.DeleteEmailConfirmAsync(email);
+        await _redisEmailConfirmRepository.SetEmailConfirmAsync(email, confirm, TimeSpan.FromMinutes(_emailSettings.CodeExpirationMinutes));
 
         var subject = "SmashClub - Đặt lại mật khẩu";
         var body = BuildResetPasswordBody(user.FullName, code, _emailSettings.CodeExpirationMinutes);
@@ -100,12 +96,10 @@ public class EmailService : IEmailService
 
     public async Task ResetPasswordAsync(string code, string email, string newPassword)
     {
-        var confirm = await _unitOfWork.EmailConfirms.GetByCodeAndEmailAsync(code, email);
-        if (confirm == null)
-            throw new KeyNotFoundException("Mã xác nhận không hợp lệ.");
-
-        if (confirm.ExpiredAt < DateTime.Now)
-            throw new InvalidOperationException("Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại.");
+        var confirm = await _redisEmailConfirmRepository.GetEmailConfirmAsync(email);
+        if (confirm == null || confirm.ConfirmationCode != code)
+            throw new KeyNotFoundException("Mã xác nhận không hợp lệ hoặc đã hết hạn.");
+        await _redisEmailConfirmRepository.DeleteEmailConfirmAsync(email);
 
         var user = await _unitOfWork.Users.GetByEmailAsync(email);
         if (user == null)
@@ -113,7 +107,6 @@ public class EmailService : IEmailService
 
         user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.LastPwdChange = DateTime.Now;
-
         await _unitOfWork.Users.UpdateAsync(user);
     }
     #region Private Helpers

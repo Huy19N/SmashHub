@@ -9,18 +9,15 @@ public class UnitOfWork : IDisposable
     public SmashClubContext Context => _context;
 
     public UserRepository Users { get; }
-    public RefreshTokenRepository RefreshTokens { get; }
     public SportRepository Sports { get; }
     public SportLevelRepository SportLevels { get; }
     public UserSportProfileRepository UserSportProfiles { get; }
     public TeamRepository Teams { get; }
     public TeamMemberRepository TeamMembers { get; }
-    public TeamMessageRepository TeamMessages { get; }
     public TeamInviteRepository TeamInvites { get; }
     public ScheduleRepository Schedules { get; }
     public ScheduleParticipantRepository ScheduleParticipants { get; }
     public BookingRepository Booking { get; }
-    public EmailConfirmRepository EmailConfirms { get; }
     public FacilityRepository Facilities { get; }
     public CourtRepository Courts { get; }
     public CourtCostRepository CourtCosts { get; }
@@ -32,27 +29,20 @@ public class UnitOfWork : IDisposable
     public MatchChallengeRepository MatchChallenges { get; }
     public MatchAcceptanceRepository MatchAcceptances { get; }
     public SystemSettingRepository SystemSettings { get; }
-    public NotificationRepository Notifications { get; }
-    public PostRepository Posts { get; }
-    public PostCommentRepository PostComments { get; }
-    public PostLikeRepository PostLikes { get; }
 
     public UnitOfWork(SmashClubContext context)
     {
         _context = context;
         Users = new UserRepository(context);
-        RefreshTokens = new RefreshTokenRepository(context);
         Sports = new SportRepository(context);
         SportLevels = new SportLevelRepository(context);
         UserSportProfiles = new UserSportProfileRepository(context);
         Teams = new TeamRepository(context);
         TeamMembers = new TeamMemberRepository(context);
-        TeamMessages = new TeamMessageRepository(context);
         TeamInvites = new TeamInviteRepository(context);
         Schedules = new ScheduleRepository(context);
         ScheduleParticipants = new ScheduleParticipantRepository(context);
         Booking = new BookingRepository(context);
-        EmailConfirms = new EmailConfirmRepository(context);
         Facilities = new FacilityRepository(context);
         Courts = new CourtRepository(context);
         CourtCosts = new CourtCostRepository(context);
@@ -64,10 +54,6 @@ public class UnitOfWork : IDisposable
         MatchChallenges = new MatchChallengeRepository(context);
         MatchAcceptances = new MatchAcceptanceRepository(context);
         SystemSettings = new SystemSettingRepository(context);
-        Notifications = new NotificationRepository(context);
-        Posts = new PostRepository(context);
-        PostComments = new PostCommentRepository(context);
-        PostLikes = new PostLikeRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

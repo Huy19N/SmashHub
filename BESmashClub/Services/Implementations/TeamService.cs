@@ -3,6 +3,10 @@ using Entites.DTOs.Teams;
 using Entites.Models;
 using Microsoft.AspNetCore.SignalR;
 using Repositories;
+using Repositories.Mongo;
+using Entites.Mongo;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using Services.Hubs;
 using Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +16,13 @@ namespace Services.Implementations;
 public class TeamService : ITeamService
 {
     private readonly UnitOfWork _unitOfWork;
+    private readonly ITeamMessageRepository _teamMessageRepository;
     private readonly IHubContext<ChatHub> _hubContext;
 
-    public TeamService(UnitOfWork unitOfWork, IHubContext<ChatHub> hubContext)
+    public TeamService(UnitOfWork unitOfWork, ITeamMessageRepository teamMessageRepository, IHubContext<ChatHub> hubContext)
     {
         _unitOfWork = unitOfWork;
+        _teamMessageRepository = teamMessageRepository;
         _hubContext = hubContext;
     }
 
@@ -308,55 +314,59 @@ public class TeamService : ITeamService
     public async Task<TeamMessageResponse> SendTeamMessageAsync(Guid currentUserId, Guid teamId, CreateTeamMessageRequest request)
     {
         if (!await _unitOfWork.TeamMembers.IsMemberAsync(teamId, currentUserId))
-            throw new InvalidOperationException("Bạn không phải là thành viên của nhóm này.");
+            throw new InvalidOperationException("Ban khong phai la thanh vien cua nhom nay.");
 
-        if (request.MessageType == 1 || request.MessageType == 2 || request.MessageType == 3)
+        if (request.MessageType == 2 || request.MessageType == 3)
         {
             var sub = await _unitOfWork.UserSubscriptions.GetActiveSubscriptionAsync(currentUserId);
             var tierName = sub?.Plan?.Tier?.TierName ?? "Free";
 
-            if (tierName == "Free")
-                throw new InvalidOperationException("Gói Free không hỗ trợ gửi file phương tiện. Vui lòng nâng cấp gói Basic hoặc Pro.");
-
             if (tierName == "Basic")
             {
-                var todayMediaCount = await _unitOfWork.TeamMessages.GetTodayMediaCountAsync(currentUserId);
+                var startOfDay = DateTime.Today;
+                var endOfDay = startOfDay.AddDays(1);
+                var filter = Builders<Entites.Mongo.TeamMessage>.Filter.And(
+                    Builders<Entites.Mongo.TeamMessage>.Filter.Eq(m => m.SenderId, currentUserId.ToString()),
+                    Builders<Entites.Mongo.TeamMessage>.Filter.Gte(m => m.CreatedAt, startOfDay),
+                    Builders<Entites.Mongo.TeamMessage>.Filter.Lt(m => m.CreatedAt, endOfDay),
+                    Builders<Entites.Mongo.TeamMessage>.Filter.Or(
+                        Builders<Entites.Mongo.TeamMessage>.Filter.Eq(m => m.MessageType, 2),
+                        Builders<Entites.Mongo.TeamMessage>.Filter.Eq(m => m.MessageType, 3)
+                    )
+                );
+                var todayMediaCount = await _teamMessageRepository.CountAsync(filter);
+
                 if (todayMediaCount >= 5)
-                    throw new InvalidOperationException("Gói Basic chỉ cho phép gửi tối đa 5 file phương tiện mỗi ngày. Vui lòng nâng cấp gói Pro để không giới hạn.");
+                    throw new InvalidOperationException("Goi Basic chi cho phep gui toi da 5 file phuong tien moi ngay.");
             }
         }
 
-        var message = new TeamMessage
+        var message = new Entites.Mongo.TeamMessage
         {
-            MessageId = Guid.NewGuid(),
-            SenderId = currentUserId,
-            TeamId = teamId,
+            Id = Guid.NewGuid().ToString(),
+            SenderId = currentUserId.ToString(),
+            TeamId = teamId.ToString(),
             Content = request.Content,
             MessageType = request.MessageType,
-            MediaFileId = request.MediaFileId,
-            SentAt = DateTime.Now,
+            CreatedAt = DateTime.Now,
             IsDeleted = false
         };
 
-        await _unitOfWork.TeamMessages.CreateAsync(message);
+        await _teamMessageRepository.CreateAsync(message);
 
-        // Reload with Sender included
-        var created = await _unitOfWork.TeamMessages.GetMessageWithSenderAsync(message.MessageId);
+        var sender = await _unitOfWork.Users.GetByIdAsync(currentUserId);
 
         var response = new TeamMessageResponse
         {
-            MessageId = created!.MessageId,
-            TeamId = created.TeamId,
-            SenderId = created.SenderId,
-            SenderName = created.Sender?.FullName,
-            Content = created.Content,
-            MessageType = created.MessageType,
-            MediaFileId = created.MediaFileId,
-            MediaUrl = created.MediaFileId.HasValue ? $"/api/files/{created.MediaFileId.Value}" : null,
-            SentAt = created.SentAt
+            MessageId = Guid.Parse(message.Id),
+            TeamId = Guid.Parse(message.TeamId),
+            SenderId = Guid.Parse(message.SenderId),
+            SenderName = sender?.FullName ?? "Unknown",
+            Content = message.Content,
+            MessageType = request.MessageType,
+            SentAt = message.CreatedAt
         };
 
-        // Broadcast to the team group via SignalR
         await _hubContext.Clients.Group(teamId.ToString())
             .SendAsync("ReceiveTeamMessage", response);
 
@@ -366,56 +376,65 @@ public class TeamService : ITeamService
     public async Task<PagedResult<TeamMessageResponse>> GetTeamMessagesAsync(
         Guid teamId, string? search, PaginationParams pagination)
     {
-        var (items, totalCount) = await _unitOfWork.TeamMessages
-            .GetMessagesByTeamIdAsync(teamId, search, pagination.PageNumber, pagination.PageSize);
-
-        var context = _unitOfWork.TeamMessages.GetContext();
-        var roomIds = items.Where(m => m.MessageType == 4 && m.Content != null && m.Content.StartsWith("ROOM_ID:"))
+        var builder = Builders<Entites.Mongo.TeamMessage>.Filter;
+        var filter = builder.Eq(m => m.TeamId, teamId.ToString());
+        if (!string.IsNullOrEmpty(search)) {
+            filter = builder.And(filter, builder.Regex(m => m.Content, new BsonRegularExpression(search, "i")));
+        }
+        
+        var allMessages = await _teamMessageRepository.FindAsync(filter);
+        var paged = allMessages.OrderByDescending(m => m.CreatedAt)
+                               .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                               .Take(pagination.PageSize)
+                               .ToList();
+        
+        var context = _unitOfWork.Users.GetContext();
+        var roomIds = paged.Where(m => m.MessageType == 4 && m.Content != null && m.Content.StartsWith("ROOM_ID:"))
                            .Select(m => m.Content.Replace("ROOM_ID:", ""))
                            .ToList();
-        
+
         var endedSessions = new HashSet<string>();
         if (roomIds.Any())
         {
-            var sessions = await context.Set<VideoCallSession>()
-                .Where(s => roomIds.Contains(s.SessionId.ToString()))
+            var sessions = await context.Set<Entites.Models.VideoCallSession>()
+                .Where(v => roomIds.Contains(v.SessionId.ToString()) && v.EndedAt.HasValue)
+                .Select(v => v.SessionId.ToString())
                 .ToListAsync();
-            foreach (var s in sessions)
+            endedSessions = new HashSet<string>(sessions);
+        }
+
+        var items = new List<TeamMessageResponse>();
+        foreach(var m in paged) {
+            var sender = await _unitOfWork.Users.GetByIdAsync(Guid.Parse(m.SenderId));
+            string? roomId = null;
+            bool isEnded = false;
+            string content = m.Content;
+
+            if (m.MessageType == 4 && content != null && content.StartsWith("ROOM_ID:"))
             {
-                if (s.EndedAt != null) endedSessions.Add(s.SessionId.ToString());
+                roomId = content.Replace("ROOM_ID:", "");
+                isEnded = endedSessions.Contains(roomId);
+                content = "Da bat dau phong goi video.";
             }
+
+            items.Add(new TeamMessageResponse
+            {
+                MessageId = Guid.Parse(m.Id),
+                TeamId = Guid.Parse(m.TeamId),
+                SenderId = Guid.Parse(m.SenderId),
+                SenderName = sender?.FullName ?? "Unknown",
+                Content = m.IsDeleted ? "Tin nhan da bi thu hoi" : content,
+                MessageType = m.MessageType,
+                SentAt = m.CreatedAt,
+                RoomId = roomId,
+                IsEnded = isEnded
+            });
         }
 
         return new PagedResult<TeamMessageResponse>
         {
-            Items = items.Select(m => {
-                string? roomId = null;
-                bool isEnded = false;
-                string content = m.Content;
-
-                if (m.MessageType == 4 && content != null && content.StartsWith("ROOM_ID:"))
-                {
-                    roomId = content.Replace("ROOM_ID:", "");
-                    content = "Đã bắt đầu phòng gọi video nhóm.";
-                    isEnded = endedSessions.Contains(roomId);
-                }
-
-                return new TeamMessageResponse
-                {
-                    MessageId = m.MessageId,
-                    TeamId = m.TeamId,
-                    SenderId = m.SenderId,
-                    SenderName = m.Sender?.FullName,
-                    Content = content,
-                    MessageType = m.MessageType,
-                    MediaFileId = m.MediaFileId,
-                    MediaUrl = m.MediaFileId.HasValue ? $"/api/files/{m.MediaFileId.Value}" : null,
-                    SentAt = m.SentAt,
-                    RoomId = roomId,
-                    IsEnded = isEnded
-                };
-            }).ToList(),
-            TotalCount = totalCount,
+            Items = items.OrderBy(x => x.SentAt).ToList(),
+            TotalCount = allMessages.Count,
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
         };
@@ -423,22 +442,21 @@ public class TeamService : ITeamService
 
     public async Task RemoveTeamMessageAsync(Guid currentUserId, Guid messageId)
     {
-        var message = await _unitOfWork.TeamMessages.GetMessageWithSenderAsync(messageId);
+        var message = await _teamMessageRepository.GetByIdAsync(messageId.ToString());
         if (message == null)
-            throw new KeyNotFoundException("Không tìm thấy tin nhắn.");
+            throw new KeyNotFoundException("Khong tim thay tin nhan.");
 
-        // Only the sender or team leader can delete
-        var isLeader = await _unitOfWork.TeamMembers.IsLeaderAsync(message.TeamId, currentUserId);
-        if (message.SenderId != currentUserId && !isLeader)
-            throw new UnauthorizedAccessException("Bạn không có quyền xóa tin nhắn này.");
+        var isLeader = await _unitOfWork.TeamMembers.IsLeaderAsync(Guid.Parse(message.TeamId), currentUserId);
+        if (message.SenderId != currentUserId.ToString() && !isLeader)
+        {
+            throw new UnauthorizedAccessException("Ban khong co quyen xoa tin nhan.");
+        }
 
-        // Soft delete
         message.IsDeleted = true;
-        await _unitOfWork.TeamMessages.UpdateAsync(message);
+        await _teamMessageRepository.UpdateAsync(message.Id, message);
 
-        // Notify group about deletion
         await _hubContext.Clients.Group(message.TeamId.ToString())
-            .SendAsync("MessageDeleted", messageId);
+            .SendAsync("MessageRemoved", messageId);
     }
 
     #endregion
