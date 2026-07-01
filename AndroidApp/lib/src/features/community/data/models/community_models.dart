@@ -182,6 +182,8 @@ class TeamMessageResponse {
   final String? mediaFileId;
   final String? mediaUrl;
   final DateTime? sentAt;
+  final String? roomId;
+  final bool isEnded;
 
   TeamMessageResponse({
     required this.messageId,
@@ -193,6 +195,8 @@ class TeamMessageResponse {
     this.mediaFileId,
     this.mediaUrl,
     this.sentAt,
+    this.roomId,
+    this.isEnded = false,
   });
 
   factory TeamMessageResponse.fromJson(Map<String, dynamic> json) {
@@ -208,6 +212,8 @@ class TeamMessageResponse {
       sentAt: json['sentAt'] != null
           ? DateTime.parse(json['sentAt'] as String)
           : null,
+      roomId: json['roomId'] as String?,
+      isEnded: json['isEnded'] as bool? ?? false,
     );
   }
 }

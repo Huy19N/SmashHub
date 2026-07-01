@@ -600,13 +600,8 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                           String callRoomId = "";
 
                           if (msg.messageType == 4) {
-                            isClosed = msg.content.contains('STATUS:CLOSED');
-                            final match = RegExp(r'ROOM_ID:([a-zA-Z0-9\-]+)').firstMatch(msg.content);
-                            if (match != null) {
-                              callRoomId = match.group(1)!;
-                            } else {
-                              callRoomId = widget.teamId;
-                            }
+                            isClosed = msg.isEnded || msg.content.contains('STATUS:CLOSED');
+                            callRoomId = msg.roomId ?? widget.teamId;
                             displayText = isClosed ? "Cuộc gọi video đã kết thúc" : "Đã bắt đầu phòng gọi video nhóm.";
                           }
 

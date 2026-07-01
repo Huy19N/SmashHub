@@ -63,13 +63,14 @@ const SocialFeed = ({ posts, isLoading, error, hasMore, onFetchMore, onToggleLik
   }
 
   return (
-    <div className="space-y-5">
-      {posts.map((post) => (
-        <PostCard 
-          key={post.postId} 
-          post={post} 
-          onToggleLike={onToggleLike} 
-        />
+    <div className="space-y-6 animate-cascade-down">
+      {posts.map((post, index) => (
+        <div key={post.postId || index} style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }} className="animate-slide-up opacity-0">
+          <PostCard 
+            post={post} 
+            onToggleLike={onToggleLike} 
+          />
+        </div>
       ))}
       
       {hasMore && (

@@ -125,7 +125,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const viewsCount = (post.content ? post.content.length * 13 + 87 : 124) % 1900 + 35;
 
   return (
-    <div id={`post-${post.postId}`} className="bg-white dark:bg-card-dark rounded-3xl p-5 shadow-md border border-gray-150/40 dark:border-border-dark/40 hover:shadow-lg transition-all duration-300">
+    <div id={`post-${post.postId}`} className="bg-white dark:bg-card-dark rounded-3xl p-5 shadow-sm border border-gray-150/40 dark:border-border-dark/40 hover:shadow-lg hover:border-primary/20 dark:hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-1">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex gap-3 items-center">
