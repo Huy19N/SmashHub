@@ -3,11 +3,14 @@ GO
  
 DROP DATABASE IF EXISTS SmashClub;
 GO
- 
-CREATE DATABASE SmashClub;
+
+DROP DATABASE IF EXISTS SmashHub;
+GO
+
+CREATE DATABASE SmashHub;
 GO
  
-USE SmashClub;
+USE SmashHub;
 GO
  
 -- ==========================================

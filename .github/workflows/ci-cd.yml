@@ -66,6 +66,8 @@ jobs:
             echo "PAYOS_CLIENT_ID=${{ secrets.PAYOS_CLIENT_ID }}" >> .env
             echo "PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}" >> .env
             echo "PAYOS_CHECKSUM_KEY=${{ secrets.PAYOS_CHECKSUM_KEY }}" >> .env
+            echo "MSSQL_PASSWORD=${{ secrets.MSSQL_PASSWORD }}" >> .env
+            echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
 
             docker compose pull
             docker compose up -d

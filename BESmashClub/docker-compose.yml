@@ -6,7 +6,7 @@ services:
     container_name: smashclub-mssql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "YourStrong!Password" # Change in production
+      SA_PASSWORD: "$${MSSQL_PASSWORD}"
     ports:
       - "1433:1433"
     volumes:
@@ -36,7 +36,7 @@ services:
     container_name: smashclub-minio
     environment:
       MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "adminpassword" # Change in production
+      MINIO_ROOT_PASSWORD: "$${MINIO_ROOT_PASSWORD}"
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -57,7 +57,7 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashSportDatabase;User Id=sa;Password=YourStrong!Password;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashHub;User Id=sa;Password=$${MSSQL_PASSWORD};TrustServerCertificate=True;
       - ConnectionStrings__MongoDb=mongodb://mongodb:27017
       - MongoDbSettings__DatabaseName=SmashClubMongo
       - Redis__ConnectionString=redis:6379
