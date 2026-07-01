@@ -32,6 +32,17 @@ jobs:
             tadminm/smashhub:latest
             tadminm/smashhub:${{ steps.vars.outputs.sha_short }}
 
+      - name: Copy docker-compose via scp
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "./BESmashClub/docker-compose.yml"
+          target: "~/app/SmashClub"
+          strip_components: 2
+
       - name: Deploy to Linux Server
         uses: appleboy/ssh-action@v1
         env:
@@ -44,30 +55,20 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           envs: DOCKER_USERNAME,DOCKER_ACCESS_TOKEN
           script: |
+            cd ~/app/SmashClub
+            
             # login Docker Hub on server (private repo)
             echo "$DOCKER_ACCESS_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            
+            # Generate .env file
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
+            echo "EMAIL_APP_PASSWORD=${{ secrets.EMAIL_APP_PASSWORD }}" >> .env
+            echo "PAYOS_CLIENT_ID=${{ secrets.PAYOS_CLIENT_ID }}" >> .env
+            echo "PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}" >> .env
+            echo "PAYOS_CHECKSUM_KEY=${{ secrets.PAYOS_CHECKSUM_KEY }}" >> .env
 
-            docker pull tadminm/smashhub:latest
-
-            # delete old container
-            docker stop smashhub_api || true
-            docker rm smashhub_api || true
-
-            # create network if not exists
-            docker network create smashhub_net || true
-
-            # run api with override environment variables
-            docker run -d -p 5000:8080 \
-              --name smashhub_api \
-              --network smashhub_net \
-              --restart always \
-              -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRING }}" \
-              -e JwtSettings__Secret="${{ secrets.JWT_SECRET }}" \
-              -e EmailSettings__AppPassword="${{ secrets.EMAIL_APP_PASSWORD }}" \
-              -e PayOSSettings__ClientId="${{ secrets.PAYOS_CLIENT_ID }}" \
-              -e PayOSSettings__ApiKey="${{ secrets.PAYOS_API_KEY }}" \
-              -e PayOSSettings__ChecksumKey="${{ secrets.PAYOS_CHECKSUM_KEY }}" \
-              tadminm/smashhub:latest
+            docker-compose pull
+            docker-compose up -d
 
             # delete old image
             docker image prune -f

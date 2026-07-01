@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: smashclub-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Password" # Change in production
+    ports:
+      - "1433:1433"
+    volumes:
+      - /mnt/data/mssql:/var/opt/mssql
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    container_name: smashclub-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - /mnt/data/mongodb:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: smashclub-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /mnt/data/redis:/data
+    restart: unless-stopped
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: smashclub-minio
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "adminpassword" # Change in production
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /mnt/data/minio:/data
+    restart: unless-stopped
+
+  api:
+    image: tadminm/smashhub:latest
+    container_name: smashclub-api
+    depends_on:
+      - mssql
+      - mongodb
+      - redis
+      - minio
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashSportDatabase;User Id=sa;Password=YourStrong!Password;TrustServerCertificate=True;
+      - ConnectionStrings__MongoDb=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=SmashClubMongo
+      - Redis__ConnectionString=redis:6379
+      - JwtSettings__Secret=$${JWT_SECRET}
+      - EmailSettings__AppPassword=$${EMAIL_APP_PASSWORD}
+      - PayOSSettings__ClientId=$${PAYOS_CLIENT_ID}
+      - PayOSSettings__ApiKey=$${PAYOS_API_KEY}
+      - PayOSSettings__ChecksumKey=$${PAYOS_CHECKSUM_KEY}
+    restart: unless-stopped
+
+volumes:
+  mssql-data:
+    driver: local
+  mongo-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+
