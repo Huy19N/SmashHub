@@ -189,23 +189,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Remove UseHttpsRedirection because Nginx handles HTTPS
+// app.UseHttpsRedirection();
 
 app.UseRouting();
 
 app.UseCors("StrictPolicy");
-
-// Strict HTTPS enforcement Middleware (reject HTTP completely)
-app.Use(async (context, next) =>
-{
-    if (!context.Request.IsHttps)
-    {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        await context.Response.WriteAsync("HTTPS is strictly required. HTTP traffic is not allowed.");
-        return;
-    }
-    await next();
-});
 
 // ---- App Security Middleware ----
 app.Use(async (context, next) =>
