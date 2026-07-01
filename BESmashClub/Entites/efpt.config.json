@@ -131,6 +131,14 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[PostMedias]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostReports]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Posts]",
          "ObjectType": 0
       },
@@ -167,6 +175,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[SystemSettings]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[TeamInvites]",
          "ObjectType": 0
       },
@@ -188,6 +200,10 @@
       },
       {
          "Name": "[dbo].[TierFeatures]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserBlocks]",
          "ObjectType": 0
       },
       {
