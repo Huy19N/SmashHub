@@ -62,21 +62,7 @@ CREATE TABLE StoredFiles (
 ALTER TABLE Users
     ADD CONSTRAINT FK_Users_AvatarFile FOREIGN KEY (AvatarFileId) REFERENCES StoredFiles(FileId);
  
-CREATE TABLE RefreshTokens (
-    RefreshTokenId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    Token VARCHAR(255) NOT NULL,
-    JwtId VARCHAR(255) NOT NULL,
-    CreatedAt DATETIME NOT NULL,
-    ExpiredAt DATETIME NOT NULL,
-    IsActive BIT CONSTRAINT DF_RefreshTokens_IsActive DEFAULT 1 NOT NULL,
-    IPAddress NVARCHAR(255),
-    UserAgent NVARCHAR(MAX),
-    CONSTRAINT PK_RefreshTokens PRIMARY KEY (RefreshTokenId),
-    CONSTRAINT FK_RefreshTokens_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE,
-    CONSTRAINT UQ_RefreshTokens_Token UNIQUE (Token)
-);
- 
+
 -- ==========================================
 -- 2. SPORT & PROFILE MODULE
 -- ==========================================
@@ -363,17 +349,7 @@ CREATE TABLE MatchAcceptances (
     CONSTRAINT UQ_MatchAcceptances_ChallengeTeam UNIQUE (ChallengeId, ChallengerTeamId)
 );
  
--- ==========================================
--- 7. EMAIL MODULE
--- ==========================================
-CREATE TABLE EmailConfirms(
-    Code VARCHAR(5) NOT NULL,
-    Email VARCHAR(255) NOT NULL,
-    CreatedAt DATETIME DEFAULT GETDATE() NOT NULL,
-    ExpiredAt DATETIME NOT NULL,
-    CONSTRAINT PK_EmailConfirms PRIMARY KEY (Code, Email)
-);
- 
+
 -- ==========================================
 -- 8. SUBSCRIPTION MODULE
 -- ==========================================
@@ -429,26 +405,7 @@ CREATE TABLE TierFeatures (
 -- ==========================================
 -- 9. CHAT MODULE 
 -- ==========================================
-CREATE TABLE TeamMessages (
-    MessageId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    TeamId UNIQUEIDENTIFIER NOT NULL,
-    SenderId UNIQUEIDENTIFIER NOT NULL,
-    MessageType INT NOT NULL DEFAULT 0, --0: message, 1: image, 2: video, 3: document, 4: video call
-    Content NVARCHAR(MAX),
-    MediaFileId UNIQUEIDENTIFIER,
-    SentAt DATETIME DEFAULT GETDATE(),
-    IsDeleted BIT DEFAULT 0 NOT NULL,
-    CONSTRAINT PK_TeamMessages PRIMARY KEY (MessageId),
-    CONSTRAINT FK_TeamMessages_Teams FOREIGN KEY (TeamId) REFERENCES Teams(TeamId) ON DELETE CASCADE,
-    CONSTRAINT FK_TeamMessages_Users FOREIGN KEY (SenderId) REFERENCES Users(UserId) ON DELETE NO ACTION,
-    CONSTRAINT FK_TeamMessages_Media FOREIGN KEY (MediaFileId) REFERENCES StoredFiles(FileId),
-    CONSTRAINT CK_TeamMessages_Type CHECK (MessageType >=0 AND MessageType <=4),
-    CONSTRAINT CK_TeamMessages_Content CHECK (
-        ((MessageType = 0 OR MessageType = 4) AND Content IS NOT NULL) OR
-        (MessageType >=1 AND MessageType <=3 AND MediaFileId IS NOT NULL)
-    )
-);
- 
+
 CREATE TABLE VideoCallSessions (
     SessionId UNIQUEIDENTIFIER DEFAULT NEWID(),
     TeamId UNIQUEIDENTIFIER NOT NULL,
@@ -604,83 +561,6 @@ CREATE TABLE Payouts (
 );
 GO
 
--- ==========================================
--- 12. NOTIFICATION & SOCIAL MODULE
--- ==========================================
-CREATE TABLE Notifications (
-    NotificationId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    Title NVARCHAR(255) NOT NULL,
-    Content NVARCHAR(MAX) NOT NULL,
-    NotificationType NVARCHAR(50) NOT NULL,
-    RelatedEntityId UNIQUEIDENTIFIER, 
-    IsRead BIT DEFAULT 0 NOT NULL,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    CONSTRAINT PK_Notifications PRIMARY KEY (NotificationId),
-    CONSTRAINT FK_Notifications_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
-);
-
-CREATE TABLE Posts (
-    PostId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    AuthorUserId UNIQUEIDENTIFIER NOT NULL,
-    FacilityId INT NULL,
-    TeamId UNIQUEIDENTIFIER NULL,
-    PostType INT NOT NULL, -- 1: FacilityPromo, 2: TeamRecruitment, 3: General
-    Content NVARCHAR(MAX) NOT NULL,
-    MediaFileId UNIQUEIDENTIFIER,
-    IsBoosted BIT DEFAULT 0 NOT NULL,
-    Status INT DEFAULT 1 NOT NULL, -- 1: Pending, 2: Approved, 3: Rejected
-    IsDeleted BIT DEFAULT 0 NOT NULL,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME,
-    CONSTRAINT PK_Posts PRIMARY KEY (PostId),
-    CONSTRAINT FK_Posts_Users FOREIGN KEY (AuthorUserId) REFERENCES Users(UserId) ON DELETE CASCADE,
-    CONSTRAINT FK_Posts_Facilities FOREIGN KEY (FacilityId) REFERENCES Facilities(FacilityId),
-    CONSTRAINT FK_Posts_Teams FOREIGN KEY (TeamId) REFERENCES Teams(TeamId),
-    CONSTRAINT FK_Posts_Media FOREIGN KEY (MediaFileId) REFERENCES StoredFiles(FileId)
-);
-
-CREATE TABLE PostComments (
-    CommentId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    PostId UNIQUEIDENTIFIER NOT NULL,
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    Content NVARCHAR(MAX) NOT NULL,
-    IsDeleted BIT DEFAULT 0 NOT NULL,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    CONSTRAINT PK_PostComments PRIMARY KEY (CommentId),
-    CONSTRAINT FK_PostComments_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
-    CONSTRAINT FK_PostComments_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE NO ACTION
-);
-
-CREATE TABLE PostLikes (
-    PostId UNIQUEIDENTIFIER NOT NULL,
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    CONSTRAINT PK_PostLikes PRIMARY KEY (PostId, UserId),
-    CONSTRAINT FK_PostLikes_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
-    CONSTRAINT FK_PostLikes_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE NO ACTION
-);
-
-CREATE TABLE PostMedias (
-    PostId UNIQUEIDENTIFIER NOT NULL,
-    FileId UNIQUEIDENTIFIER NOT NULL,
-    DisplayOrder INT NOT NULL DEFAULT 0,
-    CONSTRAINT PK_PostMedias PRIMARY KEY CLUSTERED (PostId ASC, FileId ASC),
-    CONSTRAINT FK_PostMedias_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
-    CONSTRAINT FK_PostMedias_StoredFiles FOREIGN KEY (FileId) REFERENCES StoredFiles(FileId) ON DELETE CASCADE
-);
-
-CREATE TABLE PostReports (
-    ReportId UNIQUEIDENTIFIER DEFAULT NEWID(),
-    PostId UNIQUEIDENTIFIER NOT NULL,
-    ReporterId UNIQUEIDENTIFIER NOT NULL,
-    Reason NVARCHAR(500) NOT NULL,
-    Status INT DEFAULT 1 NOT NULL, -- 1: Pending, 2: Resolved, 3: Dismissed
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    CONSTRAINT PK_PostReports PRIMARY KEY (ReportId),
-    CONSTRAINT FK_PostReports_Posts FOREIGN KEY (PostId) REFERENCES Posts(PostId) ON DELETE CASCADE,
-    CONSTRAINT FK_PostReports_Users FOREIGN KEY (ReporterId) REFERENCES Users(UserId) ON DELETE NO ACTION
-);
 
 CREATE TABLE UserBlocks (
     BlockerId UNIQUEIDENTIFIER NOT NULL,
@@ -756,22 +636,3 @@ INSERT INTO TierFeatures (TierId, FeatureId) SELECT @PremId, FeatureId FROM Feat
 INSERT INTO SystemSettings (SettingKey, SettingValue, Description) VALUES (N'PlatformFeePercentage', N'5', N'Phần trăm phí hoa hồng thu từ chủ sân cho mỗi booking');
 GO
  
--- ==========================================
--- EF CORE MIGRATION HISTORY BASELINE
--- ==========================================
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[__EFMigrationsHistory]') AND type in (N'U'))
-BEGIN
-    CREATE TABLE [dbo].[__EFMigrationsHistory] (
-        [MigrationId] nvarchar(150) NOT NULL,
-        [ProductVersion] nvarchar(32) NOT NULL,
-        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
-    );
-END
-GO
-
-IF NOT EXISTS (SELECT * FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'20260701074203_Baseline')
-BEGIN
-    INSERT INTO [dbo].[__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20260701074203_Baseline', N'8.0.24');
-END
-GO

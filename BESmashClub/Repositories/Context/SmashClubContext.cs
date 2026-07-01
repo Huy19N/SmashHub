@@ -28,8 +28,6 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<CourtStatus> CourtStatuses { get; set; }
 
-    public virtual DbSet<EmailConfirm> EmailConfirms { get; set; }
-
     public virtual DbSet<Facility> Facilities { get; set; }
 
     public virtual DbSet<FacilityBankAccount> FacilityBankAccounts { get; set; }
@@ -56,8 +54,6 @@ public partial class SmashClubContext : DbContext
 
     public virtual DbSet<MatchChallengeStatus> MatchChallengeStatuses { get; set; }
 
-    public virtual DbSet<Notification> Notifications { get; set; }
-
     public virtual DbSet<Payment> Payments { get; set; }
 
     public virtual DbSet<PaymentGateway> PaymentGateways { get; set; }
@@ -69,18 +65,6 @@ public partial class SmashClubContext : DbContext
     public virtual DbSet<PayoutRequest> PayoutRequests { get; set; }
 
     public virtual DbSet<PayoutStatus> PayoutStatuses { get; set; }
-
-    public virtual DbSet<Post> Posts { get; set; }
-
-    public virtual DbSet<PostComment> PostComments { get; set; }
-
-    public virtual DbSet<PostLike> PostLikes { get; set; }
-
-    public virtual DbSet<PostMedia> PostMedias { get; set; }
-
-    public virtual DbSet<PostReport> PostReports { get; set; }
-
-    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
@@ -103,8 +87,6 @@ public partial class SmashClubContext : DbContext
     public virtual DbSet<TeamInvite> TeamInvites { get; set; }
 
     public virtual DbSet<TeamMember> TeamMembers { get; set; }
-
-    public virtual DbSet<TeamMessage> TeamMessages { get; set; }
 
     public virtual DbSet<TeamRole> TeamRoles { get; set; }
 
@@ -215,22 +197,6 @@ public partial class SmashClubContext : DbContext
 
             entity.Property(e => e.StatusId).ValueGeneratedNever();
             entity.Property(e => e.StatusName).HasMaxLength(50);
-        });
-
-        modelBuilder.Entity<EmailConfirm>(entity =>
-        {
-            entity.HasKey(e => new { e.Code, e.Email });
-
-            entity.Property(e => e.Code)
-                .HasMaxLength(5)
-                .IsUnicode(false);
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Facility>(entity =>
@@ -482,25 +448,6 @@ public partial class SmashClubContext : DbContext
                 .HasMaxLength(50);
         });
 
-        modelBuilder.Entity<Notification>(entity =>
-        {
-            entity.Property(e => e.NotificationId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Content).IsRequired();
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.NotificationType)
-                .IsRequired()
-                .HasMaxLength(50);
-            entity.Property(e => e.Title)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Notifications_Users");
-        });
-
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.HasIndex(e => e.OrderCode, "IX_Payments_OrderCode");
@@ -647,134 +594,6 @@ public partial class SmashClubContext : DbContext
             entity.Property(e => e.StatusName)
                 .IsRequired()
                 .HasMaxLength(50);
-        });
-
-        modelBuilder.Entity<Post>(entity =>
-        {
-            entity.Property(e => e.PostId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Content).IsRequired();
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Status).HasDefaultValue(1);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-
-            entity.HasOne(d => d.AuthorUser).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.AuthorUserId)
-                .HasConstraintName("FK_Posts_Users");
-
-            entity.HasOne(d => d.Facility).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.FacilityId)
-                .HasConstraintName("FK_Posts_Facilities");
-
-            entity.HasOne(d => d.MediaFile).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.MediaFileId)
-                .HasConstraintName("FK_Posts_Media");
-
-            entity.HasOne(d => d.Team).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.TeamId)
-                .HasConstraintName("FK_Posts_Teams");
-        });
-
-        modelBuilder.Entity<PostComment>(entity =>
-        {
-            entity.HasKey(e => e.CommentId);
-
-            entity.Property(e => e.CommentId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Content).IsRequired();
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.PostComments)
-                .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK_PostComments_Posts");
-
-            entity.HasOne(d => d.User).WithMany(p => p.PostComments)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PostComments_Users");
-        });
-
-        modelBuilder.Entity<PostLike>(entity =>
-        {
-            entity.HasKey(e => new { e.PostId, e.UserId });
-
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.PostLikes)
-                .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK_PostLikes_Posts");
-
-            entity.HasOne(d => d.User).WithMany(p => p.PostLikes)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PostLikes_Users");
-        });
-
-        modelBuilder.Entity<PostMedia>(entity =>
-        {
-            entity.HasKey(e => new { e.PostId, e.FileId });
-
-            entity.HasOne(d => d.File).WithMany(p => p.PostMedia)
-                .HasForeignKey(d => d.FileId)
-                .HasConstraintName("FK_PostMedias_StoredFiles");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.PostMedia)
-                .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK_PostMedias_Posts");
-        });
-
-        modelBuilder.Entity<PostReport>(entity =>
-        {
-            entity.HasKey(e => e.ReportId);
-
-            entity.Property(e => e.ReportId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Reason)
-                .IsRequired()
-                .HasMaxLength(500);
-            entity.Property(e => e.Status).HasDefaultValue(1);
-
-            entity.HasOne(d => d.Post).WithMany(p => p.PostReports)
-                .HasForeignKey(d => d.PostId)
-                .HasConstraintName("FK_PostReports_Posts");
-
-            entity.HasOne(d => d.Reporter).WithMany(p => p.PostReports)
-                .HasForeignKey(d => d.ReporterId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PostReports_Users");
-        });
-
-        modelBuilder.Entity<RefreshToken>(entity =>
-        {
-            entity.HasIndex(e => e.Token, "UQ_RefreshTokens_Token").IsUnique();
-
-            entity.Property(e => e.RefreshTokenId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.ExpiredAt).HasColumnType("datetime");
-            entity.Property(e => e.Ipaddress)
-                .HasMaxLength(255)
-                .HasColumnName("IPAddress");
-            entity.Property(e => e.IsActive)
-                .HasDefaultValue(true)
-                .HasAnnotation("Relational:DefaultConstraintName", "DF_RefreshTokens_IsActive");
-            entity.Property(e => e.JwtId)
-                .IsRequired()
-                .HasMaxLength(255)
-                .IsUnicode(false);
-            entity.Property(e => e.Token)
-                .IsRequired()
-                .HasMaxLength(255)
-                .IsUnicode(false);
-
-            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_RefreshTokens_Users");
         });
 
         modelBuilder.Entity<Schedule>(entity =>
@@ -949,7 +768,7 @@ public partial class SmashClubContext : DbContext
         {
             entity.HasKey(e => e.InviteId);
 
-            entity.HasIndex(e => e.InviteToken, "UQ__TeamInvi__AB479560A57C8DDE").IsUnique();
+            entity.HasIndex(e => e.InviteToken, "UQ__TeamInvi__AB4795603D42F134").IsUnique();
 
             entity.Property(e => e.InviteId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CreatedAt)
@@ -994,29 +813,6 @@ public partial class SmashClubContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.TeamMembers)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_TeamMembers_Users");
-        });
-
-        modelBuilder.Entity<TeamMessage>(entity =>
-        {
-            entity.HasKey(e => e.MessageId);
-
-            entity.Property(e => e.MessageId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.SentAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
-            entity.HasOne(d => d.MediaFile).WithMany(p => p.TeamMessages)
-                .HasForeignKey(d => d.MediaFileId)
-                .HasConstraintName("FK_TeamMessages_Media");
-
-            entity.HasOne(d => d.Sender).WithMany(p => p.TeamMessages)
-                .HasForeignKey(d => d.SenderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_TeamMessages_Users");
-
-            entity.HasOne(d => d.Team).WithMany(p => p.TeamMessages)
-                .HasForeignKey(d => d.TeamId)
-                .HasConstraintName("FK_TeamMessages_Teams");
         });
 
         modelBuilder.Entity<TeamRole>(entity =>

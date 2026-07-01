@@ -39,10 +39,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[EmailConfirms]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Facilities]",
          "ObjectType": 0
       },
@@ -95,10 +91,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Notifications]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[PaymentGateways]",
          "ObjectType": 0
       },
@@ -120,30 +112,6 @@
       },
       {
          "Name": "[dbo].[PayoutStatuses]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PostComments]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PostLikes]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PostMedias]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PostReports]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Posts]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[RefreshTokens]",
          "ObjectType": 0
       },
       {
@@ -184,10 +152,6 @@
       },
       {
          "Name": "[dbo].[TeamMembers]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[TeamMessages]",
          "ObjectType": 0
       },
       {
