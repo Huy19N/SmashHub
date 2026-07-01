@@ -164,6 +164,26 @@ using (var scope = app.Services.CreateScope())
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating the database.");
     }
+    
+    // Fix missing columns for Users table that causes Register to fail
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF COL_LENGTH('Users', 'BanReason') IS NULL
+            BEGIN
+                ALTER TABLE Users ADD BanReason nvarchar(max) NULL;
+            END
+            IF COL_LENGTH('Users', 'BanUntil') IS NULL
+            BEGIN
+                ALTER TABLE Users ADD BanUntil datetime2 NULL;
+            END
+        ");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Failed to alter Users table for BanReason and BanUntil.");
+    }
 }
 
 var forwardedHeadersOptions = new ForwardedHeadersOptions
