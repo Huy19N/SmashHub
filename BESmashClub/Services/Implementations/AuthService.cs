@@ -52,8 +52,17 @@ public class AuthService : IAuthService
 
         await _unitOfWork.Users.CreateAsync(user);
 
-        // Gửi mã OTP xác nhận tài khoản
-        await _emailService.SendEmailConfirmationAsync(user.Email);
+        try
+        {
+            // Gửi mã OTP xác nhận tài khoản
+            await _emailService.SendEmailConfirmationAsync(user.Email);
+        }
+        catch (Exception ex)
+        {
+            // Nếu gửi email thất bại (ví dụ sai mật khẩu SMTP), xóa user vừa tạo để tránh tạo user rác không thể active
+            await _unitOfWork.Users.RemoveAsync(user);
+            throw new InvalidOperationException($"Lỗi gửi email xác nhận: {ex.Message}. Vui lòng thử lại.");
+        }
 
         return new TokenResponse { AccessToken = string.Empty, RefreshToken = string.Empty };
     }

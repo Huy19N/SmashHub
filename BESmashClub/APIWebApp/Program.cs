@@ -30,8 +30,12 @@ builder.Services.AddDbContext<SmashClubContext>(options =>
 builder.Services.AddScoped<UnitOfWork>();
 
 // Redis
+string redisConnStr = builder.Configuration.GetConnectionString("RedisConnection") 
+                      ?? builder.Configuration["RedisConnection"] 
+                      ?? builder.Configuration["Redis:ConnectionString"] 
+                      ?? "localhost:6379";
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
-    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379"));
+    ConnectionMultiplexer.Connect(redisConnStr));
 builder.Services.AddScoped<IRedisTokenRepository, RedisTokenRepository>();
 builder.Services.AddScoped<IRedisEmailConfirmRepository, RedisEmailConfirmRepository>();
 
