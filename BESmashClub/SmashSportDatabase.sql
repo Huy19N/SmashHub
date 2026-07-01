@@ -754,6 +754,24 @@ INSERT INTO TierFeatures (TierId, FeatureId) SELECT @StdId, FeatureId FROM Featu
 INSERT INTO TierFeatures (TierId, FeatureId) SELECT @PremId, FeatureId FROM Features WHERE FeatureCode IN ('MEMBER_100', 'TEAM_UNL', 'MEDIA_UNL', 'CALL_FULL');
  
 INSERT INTO SystemSettings (SettingKey, SettingValue, Description) VALUES (N'PlatformFeePercentage', N'5', N'Phần trăm phí hoa hồng thu từ chủ sân cho mỗi booking');
+GO
  
+-- ==========================================
+-- EF CORE MIGRATION HISTORY BASELINE
+-- ==========================================
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[__EFMigrationsHistory]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END
+GO
 
-
+IF NOT EXISTS (SELECT * FROM [dbo].[__EFMigrationsHistory] WHERE [MigrationId] = N'20260701074203_Baseline')
+BEGIN
+    INSERT INTO [dbo].[__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260701074203_Baseline', N'8.0.24');
+END
+GO
