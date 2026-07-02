@@ -21,6 +21,8 @@ export const PATHS = {
   PROFILE: '/profile',
   COURTS_MANAGEMENT: '/courts-management',
   PAYMENT_MANAGEMENT: '/payment-management',
+  PAYMENT_HISTORY: '/payment-history',
+  PAYMENT_RESULT: '/payment-result',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_USERS: '/admin/users',
   ADMIN_FACILITIES: '/admin/facilities',

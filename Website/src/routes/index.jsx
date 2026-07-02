@@ -22,6 +22,8 @@ const BookingsPage = lazy(() => import('../features/bookings/pages/BookingsPage'
 const SchedulesPage = lazy(() => import('../features/schedules/pages/SchedulesPage'));
 const ProfilePage = lazy(() => import('../features/profiles/pages/ProfilePage'));
 const SubscriptionPackages = lazy(() => import('../features/profiles/pages/SubscriptionPackages'));
+const PaymentHistoryPage = lazy(() => import('../features/payments/pages/PaymentHistoryPage'));
+const PaymentResultPage = lazy(() => import('../features/payments/pages/PaymentResultPage'));
 const DashboardPage = lazy(() => import('../features/dashboard/pages/DashboardPage'));
 const CourtsManagementPage = lazy(() => import('../features/courtsManagement/pages/CourtsManagementPage'));
 const PaymentManagementPage = lazy(() => import('../features/courtsManagement/pages/PaymentManagementPage'));
@@ -129,6 +131,14 @@ export const router = createBrowserRouter([
   {
     path: PATHS.PAYMENT_MANAGEMENT,
     element: <ProtectedRoute><PaymentManagementPage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.PAYMENT_HISTORY,
+    element: <ProtectedRoute><PaymentHistoryPage /></ProtectedRoute>
+  },
+  {
+    path: PATHS.PAYMENT_RESULT,
+    element: <PaymentResultPage />
   },
   {
     path: '/admin',

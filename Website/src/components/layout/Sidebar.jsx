@@ -17,6 +17,7 @@ import {
   Wallet,
   CreditCard,
   ShieldCheck,
+  FileText,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
@@ -56,6 +57,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'social', label: 'Cộng đồng', shortLabel: 'Cộng đồng', icon: Flame, path: '/social' },
     { id: 'courts-management', label: 'Quản lý sân', shortLabel: 'Sân bãi', icon: Settings, path: '/courts-management' },
     { id: 'payment-management', label: 'Quản lý thanh toán', shortLabel: 'Thanh toán', icon: Wallet, path: '/payment-management' },
+    { id: 'payment-history', label: 'Lịch sử thanh toán', shortLabel: 'Lịch sử', icon: FileText, path: '/payment-history' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ] : [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
@@ -65,6 +67,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'bookings', label: 'Đặt sân', shortLabel: 'Đặt sân', icon: CalendarCheck, path: '/bookings' },
     { id: 'sessions', label: 'Lịch chơi', shortLabel: 'Lịch chơi', icon: CalendarClock, path: '/schedules' },
     { id: 'subscriptions', label: 'Mua Gói', shortLabel: 'Mua gói', icon: CreditCard, path: '/subscriptions' },
+    { id: 'payment-history', label: 'Lịch sử giao dịch', shortLabel: 'Lịch sử', icon: FileText, path: '/payment-history' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ];
 
@@ -136,20 +139,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
             )}
           </div>
 
-          {/* "+ New Session/Team" Button */}
-          {!isFacilityOwner && !isAdmin && (
-            <div className="px-2.5 group-hover:px-4 py-4 transition-all duration-300 ease-in-out">
-              <button
-                onClick={() => onCreateGroup && onCreateGroup()}
-                className="w-full flex items-center justify-center gap-0 group-hover:gap-2 px-0 group-hover:px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-700 dark:bg-primary dark:hover:bg-primary-dark text-white dark:text-[#052e14] transition-all duration-300 shadow-md shadow-emerald-500/10 dark:shadow-primary/10 hover:-translate-y-0.5 font-label cursor-pointer overflow-hidden"
-              >
-                <Plus className="h-4.5 w-4.5 shrink-0" />
-                <span className="w-0 opacity-0 group-hover:w-28 group-hover:opacity-100 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap">
-                  Tạo Nhóm Mới
-                </span>
-              </button>
-            </div>
-          )}
+
 
           {/* Navigation Menu */}
           <nav className="px-2 group-hover:px-3 space-y-1 mt-1 transition-all duration-300 ease-in-out">
