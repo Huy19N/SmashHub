@@ -1,12 +1,19 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // ĐỔI URL NÀY KHI DEPLOY APK THỰC TẾ
-  // Sử dụng biến môi trường API_BASE_URL. Nếu không truyền sẽ mặc định dùng localhost của máy ảo Android.
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: kDebugMode ? 'http://10.0.2.2:8080' : 'https://tad-min.io.vn',
-  );
+  static String get _defaultLocalHost {
+    if (kIsWeb) return 'http://127.0.0.1:8080';
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8080';
+    }
+    return 'http://127.0.0.1:8080';
+  }
+
+  static String get baseUrl {
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    if (envUrl.isNotEmpty) return envUrl;
+    return kDebugMode ? _defaultLocalHost : 'https://tad-min.io.vn';
+  }
 
   /// Khóa bảo mật dùng để giao tiếp với Backend, đảm bảo chỉ App này mới được truy cập
   static const String appClientKey = String.fromEnvironment(
