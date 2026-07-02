@@ -306,11 +306,18 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
     );
   }
 
-  Widget _buildPostCard(PostModel post, bool isDark) {
-    final isExpanded = _expandedPostIds.contains(post.postId);
-    final hasImages = post.mediaFileIds.isNotEmpty;
+    Widget _buildPostCard(PostModel post, bool isDark) {
+      final isExpanded = _expandedPostIds.contains(post.postId);
+      
+      List<String> fileIds = [];
+      if (post.mediaFileIds.isNotEmpty) {
+        fileIds.addAll(post.mediaFileIds);
+      } else if (post.mediaFileId != null && post.mediaFileId!.isNotEmpty) {
+        fileIds.add(post.mediaFileId!);
+      }
+      final hasImages = fileIds.isNotEmpty;
 
-    return AppCard(
+      return AppCard(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       borderRadius: 16,
@@ -409,7 +416,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
           const SizedBox(height: 14),
 
           // Images Section: PageView Carousel with dots for multiple images
-          if (hasImages) _buildPostImages(post.mediaFileIds, isDark),
+          if (hasImages) _buildPostImages(fileIds, isDark),
 
           const SizedBox(height: 12),
           const Divider(height: 1),
