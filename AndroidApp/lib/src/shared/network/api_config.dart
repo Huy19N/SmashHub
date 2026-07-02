@@ -5,7 +5,7 @@ class ApiConfig {
   // Sử dụng biến môi trường API_BASE_URL. Nếu không truyền sẽ mặc định dùng localhost của máy ảo Android.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://tad-min.io.vn',
+    defaultValue: kDebugMode ? 'http://10.0.2.2:8080' : 'https://tad-min.io.vn',
   );
 
   /// Khóa bảo mật dùng để giao tiếp với Backend, đảm bảo chỉ App này mới được truy cập
