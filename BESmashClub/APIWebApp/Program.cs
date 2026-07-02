@@ -13,6 +13,11 @@ using Services.Settings;
 using Repositories.Mongo;
 using Repositories.Redis;
 using StackExchange.Redis;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+
+BsonSerializer.RegisterSerializer(new GuidSerializer(MongoDB.Bson.GuidRepresentation.Standard));
 
 var builder = WebApplication.CreateBuilder(args);
 
