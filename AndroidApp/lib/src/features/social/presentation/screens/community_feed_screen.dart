@@ -454,24 +454,23 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
               ),
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    final cp = CommunityPost(
-                      id: post.postId,
-                      userAvatarUrl: post.authorAvatarId != null ? ApiConfig.getFileUrl(post.authorAvatarId!) : '',
-                      userName: post.authorName,
-                      timeAgo: _formatTimeAgo(post.createdAt),
-                      content: post.content,
-                      featuredImageUrl: post.mediaFileIds.isNotEmpty ? ApiConfig.getFileUrl(post.mediaFileIds.first) : null,
-                      likeCount: post.likeCount,
-                      commentCount: post.commentCount,
-                      shareCount: 0,
-                      isLiked: post.isLikedByCurrentUser,
-                      tag: _getTopicLabel(post.postType),
-                    );
-                    Navigator.push(
+                  onTap: () async {
+                    final result = await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: cp)),
+                      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: post)),
                     );
+                    if (result != null && result is Map) {
+                      final index = _posts.indexWhere((p) => p.postId == post.postId);
+                      if (index != -1) {
+                        setState(() {
+                          _posts[index] = _posts[index].copyWith(
+                            isLikedByCurrentUser: result['isLiked'] ?? _posts[index].isLikedByCurrentUser,
+                            likeCount: result['likeCount'] ?? _posts[index].likeCount,
+                            commentCount: result['commentCount'] ?? _posts[index].commentCount,
+                          );
+                        });
+                      }
+                    }
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(

@@ -761,8 +761,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openComments(PostModel post) async {
-    // TODO: Pass actual post ID and integrate with PostCommentsScreen if needed
-    // Assuming PostCommentsScreen is updated to accept PostModel or you replace it with Social Feature's comment screen
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: post)),
+    );
+    if (result != null && result is Map) {
+      final index = _posts.indexWhere((p) => p.postId == post.postId);
+      if (index != -1) {
+        setState(() {
+          _posts[index] = _posts[index].copyWith(
+            isLikedByCurrentUser: result['isLiked'] ?? _posts[index].isLikedByCurrentUser,
+            likeCount: result['likeCount'] ?? _posts[index].likeCount,
+            commentCount: result['commentCount'] ?? _posts[index].commentCount,
+          );
+        });
+      }
+    }
   }
 
   String _formatTimeAgo(DateTime? date) {
@@ -776,10 +790,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Từng Item bài viết trong bản tin cộng đồng (Community Feed Item)
   Widget _buildCommunityPostItem(PostModel post, bool isDark) {
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      borderRadius: 18.0,
+    return GestureDetector(
+      onTap: () => _openComments(post),
+      child: AppCard(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        borderRadius: 18.0,
       backgroundColor: isDark ? null : Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,11 +865,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
 
-          if (post.mediaFileId != null && post.mediaFileId!.isNotEmpty) ...[
+          if (post.mediaFileIds.isNotEmpty || (post.mediaFileId != null && post.mediaFileId!.isNotEmpty)) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: AppMediaImage(
-                fileId: post.mediaFileId!,
+                fileId: post.mediaFileIds.isNotEmpty ? post.mediaFileIds.first : post.mediaFileId!,
                 width: double.infinity,
                 height: 200,
                 fit: BoxFit.cover,
@@ -889,6 +905,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
