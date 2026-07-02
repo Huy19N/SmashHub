@@ -105,7 +105,7 @@ namespace Services.Hubs
                     
                     var callMessage = new Entites.Mongo.TeamMessage
                     {
-                        Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
+                        Id = Guid.NewGuid().ToString(),
                         TeamId = teamId.ToString(),
                         SenderId = userId.ToString(),
                         Content = $"ROOM_ID:{roomId}",

@@ -8,7 +8,7 @@ namespace Entites.Mongo
     public class TeamMessage
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
+        [BsonRepresentation(BsonType.String)]
         public string Id { get; set; }
 
         public string TeamId { get; set; }
