@@ -72,9 +72,7 @@ public class FilesController : ControllerBase
         if (localFile == null)
             return NotFound(ApiResponse.ErrorResponse("Không tìm thấy tệp tin."));
 
-        var baseUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" 
-            ? $"{Request.Scheme}://{Request.Host}" 
-            : "";
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
         return Ok(ApiResponse<object>.SuccessResponse(new {
             Url = $"{baseUrl}/api/files/{fileId}/stream",
