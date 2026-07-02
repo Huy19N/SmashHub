@@ -11,6 +11,9 @@ import '../../data/data_sources/social_remote_data_source.dart';
 import '../../data/repositories/social_repository_impl.dart';
 import '../../data/models/post_model.dart';
 import 'create_post_screen.dart';
+import 'package:flutter/services.dart';
+import '../../../home/data/models/home_models.dart';
+import '../../../home/presentation/screens/post_comments_screen.dart';
 
 class CommunityFeedScreen extends StatefulWidget {
   const CommunityFeedScreen({super.key});
@@ -322,7 +325,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
                 radius: 20,
                 backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
                 backgroundImage: post.authorAvatarId != null && post.authorAvatarId!.isNotEmpty
-                    ? NetworkImage(ApiClient().dio.options.baseUrl + ApiConfig.getFileUrl(post.authorAvatarId!))
+                    ? NetworkImage(ApiConfig.getFileUrl(post.authorAvatarId!))
                     : null,
                 child: post.authorAvatarId == null || post.authorAvatarId!.isEmpty
                     ? Text(
@@ -350,9 +353,15 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
               ),
               // Topic badge
               _buildTopicBadge(post.postType),
+              IconButton(
+                icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
+                onPressed: () {
+                  _showPostMenu(context, post);
+                },
+              ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 4),
 
           // Content body
           LayoutBuilder(
@@ -439,7 +448,23 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
               Expanded(
                 child: InkWell(
                   onTap: () {
-                    // TODO: Open Comments Page
+                    final cp = CommunityPost(
+                      id: post.postId,
+                      userAvatarUrl: post.authorAvatarId != null ? ApiConfig.getFileUrl(post.authorAvatarId!) : '',
+                      userName: post.authorName,
+                      timeAgo: _formatTimeAgo(post.createdAt),
+                      content: post.content,
+                      featuredImageUrl: post.mediaFileIds.isNotEmpty ? ApiConfig.getFileUrl(post.mediaFileIds.first) : null,
+                      likeCount: post.likeCount,
+                      commentCount: post.commentCount,
+                      shareCount: 0,
+                      isLiked: post.isLikedByCurrentUser,
+                      tag: _getTopicLabel(post.postType),
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => PostCommentsScreen(post: cp)),
+                    );
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
@@ -558,15 +583,70 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
     }
   }
 
-  Color _getTopicColor(int type) {
-    switch (type) {
+  Color _getTopicColor(int topicId) {
+    switch (topicId) {
       case 1:
-        return Colors.blue;
+        return Colors.orange;
       case 2:
-        return Colors.amber;
-      default:
         return Colors.green;
+      case 3:
+        return AppTheme.primaryColor;
+      default:
+        return Colors.grey;
     }
+  }
+
+  void _showPostMenu(BuildContext context, PostModel post) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.share_rounded),
+                title: const Text('Chia sẻ bài viết'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _sharePost(post);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.report_rounded, color: Colors.red),
+                title: const Text('Báo cáo vi phạm', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _reportPost(post);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _reportPost(PostModel post) async {
+    try {
+      await ApiClient().post('/api/social/posts/${post.postId}/report', data: {'reason': 'Nội dung không phù hợp từ App'});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã gửi báo cáo thành công.')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã có lỗi xảy ra.')));
+      }
+    }
+  }
+
+  void _sharePost(PostModel post) {
+    final url = 'https://tad-min.io.vn/social/post/${post.postId}';
+    Clipboard.setData(ClipboardData(text: url));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã sao chép liên kết chia sẻ!')));
   }
 
   String _getTopicLabel(int type) {
