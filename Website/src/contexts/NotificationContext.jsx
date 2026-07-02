@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { presenceService } from '../utils/presenceService';
+import { notificationHubService } from '../utils/notificationHubService';
 
 const NotificationContext = createContext();
 
@@ -96,10 +97,29 @@ export const NotificationProvider = ({ children }) => {
     presenceService.on('ReceiveTeamMessage', handleReceiveMessage);
     presenceService.on('ScheduleCreated', handleScheduleCreated);
 
+    const handleReceiveSystemNotification = (notifDto) => {
+      setNotifications(prev => [{
+        id: notifDto.notificationId || (Date.now().toString() + Math.random().toString(36).substring(7)),
+        type: notifDto.notificationType || 'system',
+        title: notifDto.title,
+        message: notifDto.content,
+        data: { relatedId: notifDto.relatedEntityId },
+        isRead: notifDto.isRead,
+        timestamp: new Date(notifDto.createdAt || Date.now())
+      }, ...prev]);
+      if (!notifDto.isRead) {
+        setUnreadCount(prev => prev + 1);
+      }
+    };
+
+    notificationHubService.on('ReceiveNotification', handleReceiveSystemNotification);
+    notificationHubService.startConnection();
+
     return () => {
       presenceService.off('MemberJoined', handleMemberJoined);
       presenceService.off('ReceiveTeamMessage', handleReceiveMessage);
       presenceService.off('ScheduleCreated', handleScheduleCreated);
+      notificationHubService.off('ReceiveNotification', handleReceiveSystemNotification);
     };
   }, [addNotification]);
 
