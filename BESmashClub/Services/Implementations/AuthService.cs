@@ -138,10 +138,7 @@ public class AuthService : IAuthService
 
     public async Task<TokenResponse> VerifyRegistrationAsync(VerifyEmailRequest request, string ipAddress, string userAgent)
     {
-        // 1. Xác thực mã OTP qua EmailService
-        await _emailService.VerifyEmailAsync(request.Code, request.Email);
-
-        // 2. Lấy thông tin user
+        // 1. Lấy thông tin user
         var user = await _unitOfWork.Users.GetByEmailAsync(request.Email);
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy người dùng.");
@@ -149,11 +146,10 @@ public class AuthService : IAuthService
         if (user.IsActive == true)
             throw new InvalidOperationException("Tài khoản đã được xác thực trước đó.");
 
-        // 3. Kích hoạt tài khoản
-        user.IsActive = true;
-        await _unitOfWork.Users.UpdateAsync(user);
+        // 2. Xác thực mã OTP qua EmailService (hàm này tự set IsActive = true)
+        await _emailService.VerifyEmailAsync(request.Code, request.Email);
 
-        // 4. Sinh Token        // Issue new token
+        // 3. Sinh Token
         return await GenerateTokenResponseAsync(user, "Unknown", "Google Login");
     }
 
