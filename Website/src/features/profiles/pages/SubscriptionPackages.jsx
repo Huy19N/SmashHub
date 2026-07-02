@@ -38,7 +38,7 @@ export default function SubscriptionPackages() {
 
     setIsProcessing(true);
     try {
-      const response = await api.post('/payments/subscription', { planId, returnUrl: window.location.origin + '/profile?payment=success' });
+      const response = await api.post('/payments/subscription', { planId, returnUrl: window.location.origin + '/payment-result' });
       if (response.data.data?.checkoutUrl) {
         window.location.href = response.data.data.checkoutUrl;
       } else {

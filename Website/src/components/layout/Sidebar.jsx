@@ -17,6 +17,7 @@ import {
   Wallet,
   CreditCard,
   ShieldCheck,
+  FileText,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
@@ -56,6 +57,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'social', label: 'Cộng đồng', shortLabel: 'Cộng đồng', icon: Flame, path: '/social' },
     { id: 'courts-management', label: 'Quản lý sân', shortLabel: 'Sân bãi', icon: Settings, path: '/courts-management' },
     { id: 'payment-management', label: 'Quản lý thanh toán', shortLabel: 'Thanh toán', icon: Wallet, path: '/payment-management' },
+    { id: 'payment-history', label: 'Lịch sử thanh toán', shortLabel: 'Lịch sử', icon: FileText, path: '/payment-history' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ] : [
     { id: 'dashboard', label: 'Bảng thống kê', shortLabel: 'Thống kê', icon: LayoutDashboard, path: '/dashboard' },
@@ -65,6 +67,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'bookings', label: 'Đặt sân', shortLabel: 'Đặt sân', icon: CalendarCheck, path: '/bookings' },
     { id: 'sessions', label: 'Lịch chơi', shortLabel: 'Lịch chơi', icon: CalendarClock, path: '/schedules' },
     { id: 'subscriptions', label: 'Mua Gói', shortLabel: 'Mua gói', icon: CreditCard, path: '/subscriptions' },
+    { id: 'payment-history', label: 'Lịch sử giao dịch', shortLabel: 'Lịch sử', icon: FileText, path: '/payment-history' },
     { id: 'profile', label: 'Cá nhân', shortLabel: 'Cá nhân', icon: UserCircle, path: '/profile' },
   ];
 
