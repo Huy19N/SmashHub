@@ -54,11 +54,16 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=mssql;Database=SmashHub;User Id=sa;Password=${MSSQL_PASSWORD};TrustServerCertificate=True;
-      - ConnectionStrings__MongoDb=mongodb://mongodb:27017
-      - MongoDbSettings__DatabaseName=SmashClubMongo
-      - ConnectionStrings__RedisConnection=redis:6379
+      - MongoSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoSettings__DatabaseName=SmashClubMongoDb
+      - RedisConnection=redis:6379
+      - MinIOSettings__Endpoint=tad-min.io.vn:9000
+      - MinIOSettings__AccessKey=admin
+      - MinIOSettings__SecretKey=${MINIO_ROOT_PASSWORD}
+      - MinIOSettings__BucketName=smashhub2026
+      - MinIOSettings__UseSSL=false
       - JwtSettings__Secret=${JWT_SECRET}
       - EmailSettings__AppPassword=${EMAIL_APP_PASSWORD}
       - PayOSSettings__ClientId=${PAYOS_CLIENT_ID}
