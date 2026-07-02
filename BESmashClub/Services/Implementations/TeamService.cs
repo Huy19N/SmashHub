@@ -343,7 +343,7 @@ public class TeamService : ITeamService
 
         var message = new Entites.Mongo.TeamMessage
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
             SenderId = currentUserId.ToString(),
             TeamId = teamId.ToString(),
             Content = request.Content,

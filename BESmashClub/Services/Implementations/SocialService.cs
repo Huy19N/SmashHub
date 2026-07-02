@@ -73,7 +73,7 @@ public class SocialService : ISocialService
     {
         var post = new Post
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
             UserId = userId.ToString(),
             Content = request.Content,
             PostType = request.PostType,
@@ -104,7 +104,7 @@ public class SocialService : ISocialService
         {
             await _postLikeRepository.CreateAsync(new PostLike 
             { 
-                Id = Guid.NewGuid().ToString(),
+                Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
                 PostId = postId.ToString(), 
                 UserId = userId.ToString(), 
                 CreatedAt = DateTime.Now 
@@ -150,7 +150,7 @@ public class SocialService : ISocialService
 
         var comment = new PostComment
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
             PostId = postId.ToString(),
             UserId = userId.ToString(),
             Content = content,
@@ -254,7 +254,7 @@ public class SocialService : ISocialService
 
         var report = new PostReport
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
             PostId = postId.ToString(),
             ReporterId = userId.ToString(),
             Reason = reason,
