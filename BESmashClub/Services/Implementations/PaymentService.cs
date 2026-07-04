@@ -253,13 +253,54 @@ public class PaymentService : IPaymentService
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
 
-        if (!IsPayOSConfigured())
+        var activePayOSClient = _payOSClient;
+        var isConfigured = IsPayOSConfigured();
+
+        var firstBookingId = bookingIds.First();
+        var firstBooking = await _unitOfWork.Booking.GetDetailAsync(firstBookingId);
+        var facilityId = firstBooking?.Court?.FacilityId;
+
+        if (facilityId != null)
+        {
+            var context = _unitOfWork.Payments.GetContext();
+            var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                .FirstOrDefaultAsync(c => c.FacilityId == facilityId && c.IsActive && c.PaymentModel == 3);
+
+            if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+            {
+                try
+                {
+                    var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                    if (keys != null)
+                    {
+                        var clientId = keys.GetValueOrDefault("ClientId");
+                        var apiKey = keys.GetValueOrDefault("ApiKey");
+                        var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                        {
+                            activePayOSClient = new PayOSClient(new PayOSOptions
+                            {
+                                ClientId = clientId,
+                                ApiKey = apiKey,
+                                ChecksumKey = checksumKey
+                            });
+                            payment.FacilityConfigId = facilityConfig.ConfigId;
+                            isConfigured = true;
+                        }
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        }
+
+        if (!isConfigured)
         {
             payment.Note = $"https://pay.payos.vn/mock-payment/{payment.PaymentId}";
         }
         else
         {
-            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(payosRequest);
+            var paymentLink = await activePayOSClient.PaymentRequests.CreateAsync(payosRequest);
             payment.Note = paymentLink.CheckoutUrl;
         }
 

@@ -69,5 +69,8 @@ services:
       - PayOSSettings__ClientId=${PAYOS_CLIENT_ID}
       - PayOSSettings__ApiKey=${PAYOS_API_KEY}
       - PayOSSettings__ChecksumKey=${PAYOS_CHECKSUM_KEY}
+      - PayOSSettings__ReturnUrl=${PAYOS_RETURN_URL}
+      - PayOSSettings__CancelUrl=${PAYOS_CANCEL_URL}
+      - PayOSSettings__WebhookUrl=${PAYOS_WEBHOOK_URL}
     restart: unless-stopped
 
