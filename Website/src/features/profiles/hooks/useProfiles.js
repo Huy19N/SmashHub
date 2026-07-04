@@ -8,7 +8,9 @@ import {
     getAllUserSportProfilesAPI,
     createUserSportProfilesAPI,
     updateUserSportProfilesAPI,
-    deleteUserSportProfilesAPI
+    deleteUserSportProfilesAPI,
+    getBlockedUsersAPI,
+    unblockUserAPI
 } from '../api/profiles.api.js';
 
 
@@ -205,4 +207,47 @@ export const useUploadUserAvatar = () => {
         }
     };
     return { uploadUserAvatar, isLoading, error };
+}
+
+// ─── useGetBlockedUsers ───────────────────────────────────────────
+export const useGetBlockedUsers = () => {
+    const [blockedUsers, setBlockedUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const fetchBlockedUsers = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await getBlockedUsersAPI();
+            setBlockedUsers(response?.data ?? response ?? []);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+    useEffect(() => {
+        fetchBlockedUsers();
+    }, [fetchBlockedUsers]);
+    return { blockedUsers, isLoading, error, refetch: fetchBlockedUsers };
+}
+
+// ─── useUnblockUser ───────────────────────────────────────────
+export const useUnblockUser = () => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const unblockUser = async (userId) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await unblockUserAPI(userId);
+            return response?.data ?? response;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    return { unblockUser, isLoading, error };
 }

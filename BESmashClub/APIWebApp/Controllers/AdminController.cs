@@ -8,6 +8,7 @@ using Services.Interfaces;
 using Entites.DTOs.SystemSettings;
 using Entites.DTOs.Users;
 using Entites.DTOs.Social;
+using System.Security.Claims;
 
 namespace APIWebApp.Controllers;
 
@@ -322,7 +323,56 @@ public class AdminController : ControllerBase
         }
     }
     
+    [HttpGet("reports/pending")]
+    public async Task<IActionResult> GetPendingReports([FromQuery] PaginationParams pagination)
+    {
+        try
+        {
+            var result = await _socialService.GetPendingReportsAsync(pagination);
+            return Ok(ApiResponse<object>.SuccessResponse(result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("reports/{reportId}/resolve")]
+    public async Task<IActionResult> ResolveReport(string reportId, [FromBody] ResolveReportRequest request)
+    {
+        try
+        {
+            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _socialService.ResolveReportAsync(reportId, currentUserId, request.Action);
+            return Ok(ApiResponse.SuccessResponse("Đã xử lý báo cáo."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpPost("reports/{reportId}/dismiss")]
+    public async Task<IActionResult> DismissReport(string reportId)
+    {
+        try
+        {
+            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _socialService.DismissReportAsync(reportId, currentUserId);
+            return Ok(ApiResponse.SuccessResponse("Đã bỏ qua báo cáo."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+    
     #endregion
+}
+
+public class ResolveReportRequest
+{
+    public string Action { get; set; } // "delete_post", "delete_comment", "ban_user"
 }
 
 public class ChangeRoleRequest

@@ -11,8 +11,10 @@ public interface IUserService
     Task<UserProfileResponse> UpdateAvatarAsync(Guid userId, Guid fileId);
     
     // User Moderation
+    // User Moderation
     Task BlockUserAsync(Guid blockerId, Guid blockedId);
     Task UnblockUserAsync(Guid blockerId, Guid blockedId);
+    Task<List<UserPublicResponse>> GetBlockedUsersAsync(Guid userId);
     
     // Admin features
     Task BanUserAsync(Guid userId, DateTime until, string reason);

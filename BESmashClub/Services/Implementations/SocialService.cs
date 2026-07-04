@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace Services.Implementations;
 
@@ -43,6 +44,17 @@ public class SocialService : ISocialService
             Builders<Post>.Filter.Eq(p => p.IsDeleted, false),
             Builders<Post>.Filter.Eq(p => p.Status, 2)
         );
+
+        var blockedIds = await _unitOfWork.Context.UserBlocks
+            .Where(b => b.BlockerId == userId || b.BlockedId == userId)
+            .Select(b => b.BlockerId == userId ? b.BlockedId : b.BlockerId)
+            .ToListAsync();
+
+        var blockedIdsStrings = blockedIds.Select(id => id.ToString()).ToList();
+        if (blockedIdsStrings.Any())
+        {
+            filter = Builders<Post>.Filter.And(filter, Builders<Post>.Filter.Nin(p => p.UserId, blockedIdsStrings));
+        }
 
         var allPosts = await _postRepository.FindAsync(filter);
         var paged = allPosts.OrderByDescending(p => p.CreatedAt)
@@ -80,7 +92,7 @@ public class SocialService : ISocialService
             TeamId = request.TeamId,
             FacilityId = request.FacilityId,
             CreatedAt = DateTime.Now,
-            Status = 2, // Auto approve for now
+            Status = 1, // 1: Pending, 2: Approved, 3: Rejected
             IsDeleted = false,
             MediaFileIds = request.MediaFileIds ?? new List<Guid>()
         };
@@ -256,8 +268,30 @@ public class SocialService : ISocialService
         {
             Id = Guid.NewGuid().ToString(),
             PostId = postId.ToString(),
+            TargetId = postId.ToString(),
+            TargetType = 1, // 1: Post
             ReporterId = userId.ToString(),
             Reason = reason,
+            Status = 1,
+            CreatedAt = DateTime.Now
+        };
+        await _postReportRepository.CreateAsync(report);
+    }
+
+    public async Task ReportCommentAsync(Guid userId, Guid commentId, string reason)
+    {
+        var comment = await _postCommentRepository.GetByIdAsync(commentId.ToString());
+        if (comment == null || comment.IsDeleted) throw new KeyNotFoundException("Bình luận không tồn tại.");
+
+        var report = new PostReport
+        {
+            Id = Guid.NewGuid().ToString(),
+            PostId = comment.PostId,
+            TargetId = commentId.ToString(),
+            TargetType = 2, // 2: Comment
+            ReporterId = userId.ToString(),
+            Reason = reason,
+            Status = 1,
             CreatedAt = DateTime.Now
         };
         await _postReportRepository.CreateAsync(report);
@@ -300,6 +334,61 @@ public class SocialService : ISocialService
         await _postRepository.UpdateAsync(post.Id, post);
     }
 
+    public async Task<object> GetPendingReportsAsync(PaginationParams pagination)
+    {
+        var filter = Builders<PostReport>.Filter.Eq(r => r.Status, 1); // Pending
+        var reports = await _postReportRepository.FindAsync(filter);
+        var paged = reports.OrderByDescending(r => r.CreatedAt)
+                           .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+                           .Take(pagination.PageSize)
+                           .ToList();
+
+        return new
+        {
+            Items = paged,
+            TotalCount = reports.Count(),
+            PageNumber = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
+    }
+
+    public async Task ResolveReportAsync(string reportId, Guid adminId, string action)
+    {
+        var report = await _postReportRepository.GetByIdAsync(reportId);
+        if (report == null) throw new KeyNotFoundException("Báo cáo không tồn tại.");
+
+        report.Status = 2; // Resolved
+        await _postReportRepository.UpdateAsync(reportId, report);
+
+        if (action == "delete_post" || action == "delete_comment")
+        {
+            if (report.TargetType == 1) 
+            {
+                var post = await _postRepository.GetByIdAsync(report.TargetId);
+                if (post != null) {
+                    post.IsDeleted = true;
+                    await _postRepository.UpdateAsync(post.Id, post);
+                }
+            } 
+            else if (report.TargetType == 2)
+            {
+                var comment = await _postCommentRepository.GetByIdAsync(report.TargetId);
+                if (comment != null) {
+                    comment.IsDeleted = true;
+                    await _postCommentRepository.UpdateAsync(comment.Id, comment);
+                }
+            }
+        }
+    }
+
+    public async Task DismissReportAsync(string reportId, Guid adminId)
+    {
+        var report = await _postReportRepository.GetByIdAsync(reportId);
+        if (report == null) throw new KeyNotFoundException("Báo cáo không tồn tại.");
+
+        report.Status = 3; // Dismissed
+        await _postReportRepository.UpdateAsync(reportId, report);
+    }
     
     public async Task<PagedResult<PostDto>> GetPostsAsync(PaginationParams pagination, Guid? currentUserId = null)
     {
@@ -307,6 +396,20 @@ public class SocialService : ISocialService
             Builders<Post>.Filter.Eq(p => p.IsDeleted, false),
             Builders<Post>.Filter.Eq(p => p.Status, 2)
         );
+
+        if (currentUserId.HasValue)
+        {
+            var blockedIds = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId)
+                .ToListAsync();
+
+            var blockedIdsStrings = blockedIds.Select(id => id.ToString()).ToList();
+            if (blockedIdsStrings.Any())
+            {
+                filter = Builders<Post>.Filter.And(filter, Builders<Post>.Filter.Nin(p => p.UserId, blockedIdsStrings));
+            }
+        }
 
         var allPosts = await _postRepository.FindAsync(filter);
         var paged = allPosts.OrderByDescending(p => p.CreatedAt)
@@ -334,6 +437,20 @@ public class SocialService : ISocialService
             Builders<Post>.Filter.Eq(p => p.Status, 2)
         );
 
+        if (currentUserId.HasValue)
+        {
+            var blockedIds = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId)
+                .ToListAsync();
+
+            var blockedIdsStrings = blockedIds.Select(id => id.ToString()).ToList();
+            if (blockedIdsStrings.Any())
+            {
+                filter = Builders<Post>.Filter.And(filter, Builders<Post>.Filter.Nin(p => p.UserId, blockedIdsStrings));
+            }
+        }
+
         var allPosts = await _postRepository.FindAsync(filter);
         var paged = allPosts.OrderByDescending(p => p.CreatedAt)
                             .Skip((pagination.PageNumber - 1) * pagination.PageSize)
@@ -359,6 +476,20 @@ public class SocialService : ISocialService
             Builders<Post>.Filter.Eq(p => p.IsDeleted, false),
             Builders<Post>.Filter.Eq(p => p.Status, 2)
         );
+
+        if (currentUserId.HasValue)
+        {
+            var blockedIds = await _unitOfWork.Context.UserBlocks
+                .Where(b => b.BlockerId == currentUserId.Value || b.BlockedId == currentUserId.Value)
+                .Select(b => b.BlockerId == currentUserId.Value ? b.BlockedId : b.BlockerId)
+                .ToListAsync();
+
+            var blockedIdsStrings = blockedIds.Select(id => id.ToString()).ToList();
+            if (blockedIdsStrings.Any())
+            {
+                filter = Builders<Post>.Filter.And(filter, Builders<Post>.Filter.Nin(p => p.UserId, blockedIdsStrings));
+            }
+        }
 
         var allPosts = await _postRepository.FindAsync(filter);
         var paged = allPosts.OrderByDescending(p => p.CreatedAt)

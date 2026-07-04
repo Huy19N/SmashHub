@@ -6,8 +6,9 @@ import CommentSection from './CommentSection';
 import MediaImage from '../../../components/ui/MediaImage';
 import PostMediaGrid from './PostMediaGrid';
 import PostLightbox from './PostLightbox';
+import ReportModal from './ReportModal';
 import useAuth from '../../Auth/hooks/useAuth';
-import { deletePostAPI, reportPostAPI, blockUserAPI } from '../api/social.api';
+import { deletePostAPI, blockUserAPI } from '../api/social.api';
 
 const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const [isLiking, setIsLiking] = useState(false);
   const [lightboxData, setLightboxData] = useState({ isOpen: false, initialIndex: 0 });
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const isOwner = user?.userId === post.authorId;
   const isAdmin = user?.roleId === 1;
@@ -31,15 +33,8 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
     }
   };
 
-  const handleReportPost = async () => {
-    const reason = window.prompt("Nhập lý do báo cáo:");
-    if (!reason) return;
-    try {
-      await reportPostAPI(post.postId, reason);
-      toast.success("Đã gửi báo cáo vi phạm");
-    } catch (error) {
-      toast.error("Không thể báo cáo");
-    }
+  const handleReportPost = () => {
+    setShowReportModal(true);
   };
 
   const handleBlockUser = async () => {
@@ -287,6 +282,14 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
           onToggleLike={onToggleLike}
         />
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetId={post.postId}
+        targetType="post"
+      />
     </div>
   );
 };

@@ -63,6 +63,16 @@ export const reportPostAPI = async (postId, reason) => {
   return response.data;
 };
 
+export const reportCommentAPI = async (commentId, reason) => {
+  const response = await axios.post(`${SOCIAL_URL}/comments/${commentId}/report`, { reason });
+  return response.data;
+};
+
+export const getReportReasonsAPI = async () => {
+  const response = await axios.get(`${SOCIAL_URL}/report-reasons`);
+  return response.data;
+};
+
 export const blockUserAPI = async (userId) => {
   const response = await axios.post(`/users/${userId}/block`);
   return response.data;

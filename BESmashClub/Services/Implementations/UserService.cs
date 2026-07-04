@@ -155,6 +155,23 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<List<UserPublicResponse>> GetBlockedUsersAsync(Guid userId)
+    {
+        var blockedUsers = await _unitOfWork.Context.UserBlocks
+            .Where(b => b.BlockerId == userId)
+            .Include(b => b.Blocked)
+            .Select(b => new UserPublicResponse
+            {
+                UserId = b.Blocked.UserId,
+                FullName = b.Blocked.FullName,
+                CreatedAt = b.Blocked.CreatedAt,
+                AvatarFileId = b.Blocked.AvatarFileId
+            })
+            .ToListAsync();
+
+        return blockedUsers;
+    }
+
     public async Task BanUserAsync(Guid userId, DateTime until, string reason)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId);

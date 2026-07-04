@@ -62,3 +62,17 @@ export const deleteUserSportProfilesAPI = async (sportId) => {
     return response.data;
 }
 
+// ─── Blocked Users ────────────────────────────────────────────────
+
+// GET blocked users
+export const getBlockedUsersAPI = async () => {
+    const response = await api.get(`/users/me/blocked`);
+    return response.data;
+}
+
+// DELETE block (unblock user)
+export const unblockUserAPI = async (userId) => {
+    const response = await api.delete(`/users/${userId}/block`);
+    return response.data;
+}
+

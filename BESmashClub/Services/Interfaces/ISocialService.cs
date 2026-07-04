@@ -19,10 +19,13 @@ public interface ISocialService
     Task SoftDeletePostAsync(Guid userId, Guid postId, bool isAdmin);
     Task SoftDeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin);
     Task ReportPostAsync(Guid userId, Guid postId, string reason);
+    Task ReportCommentAsync(Guid userId, Guid commentId, string reason);
     
     // Admin specific
     Task<PagedResult<PostDto>> GetPendingPostsAsync(PaginationParams pagination);
     Task ApprovePostAsync(Guid postId);
     Task RejectPostAsync(Guid postId);
-    // Note: To keep it simple, reports can be fetched with a separate model or returned as dynamic/DTO
+    Task<object> GetPendingReportsAsync(PaginationParams pagination);
+    Task ResolveReportAsync(string reportId, Guid adminId, string action);
+    Task DismissReportAsync(string reportId, Guid adminId);
 }

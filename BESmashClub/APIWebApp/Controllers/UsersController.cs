@@ -172,4 +172,19 @@ public class UsersController : ControllerBase
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    [HttpGet("me/blocked")]
+    [Authorize]
+    public async Task<IActionResult> GetBlockedUsers()
+    {
+        try
+        {
+            var result = await _userService.GetBlockedUsersAsync(GetCurrentUserId());
+            return Ok(ApiResponse<List<UserPublicResponse>>.SuccessResponse(result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }

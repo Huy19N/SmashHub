@@ -23,6 +23,7 @@ import { getAllSportsAPI, getSportLevelAPI } from '../../bookings/api/bookings.a
 import MediaImage from '../../../components/ui/MediaImage';
 import toast from 'react-hot-toast';
 import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
+import BlockedUsersCard from '../components/BlockedUsersCard';
 
 export default function ProfilePage() {
   const { theme } = useTheme();
@@ -737,6 +738,9 @@ export default function ProfilePage() {
                     );
                   })()}
                 </div>
+                
+                {/* Blocked Users Section */}
+                <BlockedUsersCard />
               </div>
 
               {/* RIGHT Column: Sports, Levels and Ranks (3/5 size) */}

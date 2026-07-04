@@ -169,4 +169,55 @@ public class SocialController : ControllerBase
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    [HttpPost("comments/{commentId:guid}/report")]
+    public async Task<IActionResult> ReportComment(Guid commentId, [FromBody] ReportPostRequest request)
+    {
+        try
+        {
+            await _socialService.ReportCommentAsync(GetCurrentUserId(), commentId, request.Reason);
+            return Ok(ApiResponse.SuccessResponse("Đã gửi báo cáo vi phạm bình luận."));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    [HttpGet("report-reasons")]
+    [AllowAnonymous]
+    public IActionResult GetReportReasons()
+    {
+        var reasons = new List<string>
+        {
+            "Coordinating Harm and Promoting Crime",
+            "Dangerous Organizations and Individuals",
+            "Fraud, Scams, and Deceptive Practices",
+            "Restricted Goods and Services",
+            "Violence and Incitement",
+            "Adult Sexual Exploitation",
+            "Bullying and Harassment",
+            "Child Sexual Exploitation, Abuse, and Nudity",
+            "Human Exploitation",
+            "Suicide, Self-Injury, and Eating Disorders",
+            "Adult Nudity and Sexual Activity",
+            "Adult Sexual Solicitation and Sexually Explicit Language",
+            "Hateful Conduct",
+            "Privacy Violations",
+            "Violent and Graphic Content",
+            "Account Integrity",
+            "Authentic Identity Representation",
+            "Cybersecurity",
+            "Inauthentic Behavior",
+            "Memorialization",
+            "Misinformation",
+            "Spam",
+            "Third-Party Intellectual Property Infringement",
+            "Using Meta Intellectual Property and Licenses",
+            "Additional Protection of Minors",
+            "Locally Illegal Content, Products, or Services",
+            "User Requests"
+        };
+        return Ok(ApiResponse<List<string>>.SuccessResponse(reasons));
+    }
 }

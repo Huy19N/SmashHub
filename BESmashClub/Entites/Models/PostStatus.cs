@@ -5,11 +5,9 @@ using System.Collections.Generic;
 
 namespace Entites.Models;
 
-public partial class PaymentStatus
+public partial class PostStatus
 {
     public int StatusId { get; set; }
 
     public string StatusName { get; set; }
-
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

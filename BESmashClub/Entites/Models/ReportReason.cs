@@ -5,13 +5,11 @@ using System.Collections.Generic;
 
 namespace Entites.Models;
 
-public partial class SystemSetting
+public partial class ReportReason
 {
-    public string SettingKey { get; set; }
+    public int ReasonId { get; set; }
 
-    public string SettingValue { get; set; }
+    public string ReasonName { get; set; }
 
     public string Description { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
 }

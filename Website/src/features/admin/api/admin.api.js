@@ -103,3 +103,18 @@ export const unbanUserAPI = async (userId) => {
   const response = await axios.post(`/admin/users/${userId}/unban`);
   return response.data;
 };
+
+export const getPendingReportsAPI = async (params) => {
+  const response = await axios.get('/admin/reports/pending', { params });
+  return response.data;
+};
+
+export const resolveReportAPI = async (reportId, action) => {
+  const response = await axios.post(`/admin/reports/${reportId}/resolve`, { action });
+  return response.data;
+};
+
+export const dismissReportAPI = async (reportId) => {
+  const response = await axios.post(`/admin/reports/${reportId}/dismiss`);
+  return response.data;
+};

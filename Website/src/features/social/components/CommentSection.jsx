@@ -5,12 +5,15 @@ import { useGetUserId } from '../../Auth/hooks/useAuth';
 import MediaImage from '../../../components/ui/MediaImage';
 import { deleteCommentAPI } from '../api/social.api';
 import toast from 'react-hot-toast';
+import ReportModal from './ReportModal';
+import { Flag } from 'lucide-react';
 
 const CommentSection = ({ postId }) => {
   const { user: apiUser } = useGetUserId();
   const { comments, isLoading, hasMore, fetchComments, addComment } = useComments(postId);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reportModalData, setReportModalData] = useState({ isOpen: false, commentId: null });
 
   useEffect(() => {
     fetchComments(1, 5, true);
@@ -88,10 +91,22 @@ const CommentSection = ({ postId }) => {
                     <button
                       onClick={() => handleDeleteComment(comment.commentId)}
                       className="absolute -right-2 -top-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 text-gray-400"
+                      title="Xóa bình luận"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
+                    </button>
+                  )}
+
+                  {/* Report button */}
+                  {currentUserId !== comment.userId && !isAdmin && (
+                    <button
+                      onClick={() => setReportModalData({ isOpen: true, commentId: comment.commentId })}
+                      className="absolute -right-2 top-4 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity hover:text-yellow-500 text-gray-400"
+                      title="Báo cáo vi phạm"
+                    >
+                      <Flag className="h-3 w-3" />
                     </button>
                   )}
                 </div>
@@ -148,6 +163,14 @@ const CommentSection = ({ postId }) => {
           </button>
         </div>
       </form>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModalData.isOpen}
+        onClose={() => setReportModalData({ isOpen: false, commentId: null })}
+        targetId={reportModalData.commentId}
+        targetType="comment"
+      />
     </div>
   );
 };

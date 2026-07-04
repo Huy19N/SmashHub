@@ -1,8 +1,5 @@
 USE master;
 GO
- 
-DROP DATABASE IF EXISTS SmashClub;
-GO
 
 DROP DATABASE IF EXISTS SmashHub;
 GO
@@ -562,6 +559,9 @@ CREATE TABLE Payouts (
 GO
 
 
+-- ==========================================
+-- 12. SOCIAL, POST & REPORT MODULE
+-- ==========================================
 CREATE TABLE UserBlocks (
     BlockerId UNIQUEIDENTIFIER NOT NULL,
     BlockedId UNIQUEIDENTIFIER NOT NULL,
@@ -570,6 +570,27 @@ CREATE TABLE UserBlocks (
     CONSTRAINT FK_UserBlocks_Blocker FOREIGN KEY (BlockerId) REFERENCES Users(UserId) ON DELETE CASCADE,
     CONSTRAINT FK_UserBlocks_Blocked FOREIGN KEY (BlockedId) REFERENCES Users(UserId) ON DELETE NO ACTION
 );
+
+CREATE TABLE PostStatuses (
+    StatusId INT NOT NULL,
+    StatusName NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_PostStatuses PRIMARY KEY (StatusId)
+);
+
+CREATE TABLE ReportReasons (
+    ReasonId INT IDENTITY(1,1),
+    ReasonName NVARCHAR(255) NOT NULL,
+    Description NVARCHAR(MAX),
+    CONSTRAINT PK_ReportReasons PRIMARY KEY (ReasonId)
+);
+
+CREATE TABLE ReportStatuses (
+    StatusId INT NOT NULL,
+    StatusName NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_ReportStatuses PRIMARY KEY (StatusId)
+);
+
+
 
 -- ==========================================
 -- INDEXES 
@@ -605,6 +626,38 @@ INSERT INTO PaymentStatuses (StatusId, StatusName) VALUES (1, N'Pending'), (2, N
 INSERT INTO PayoutStatuses (StatusId, StatusName) VALUES (1, N'Pending'), (2, N'Completed'), (3, N'Failed');
 INSERT INTO MatchChallengeStatuses (StatusId, StatusName) VALUES (1, N'Open'), (2, N'Matched'), (3, N'Cancelled'), (4, N'Completed');
 INSERT INTO MatchAcceptanceStatuses (StatusId, StatusName) VALUES (1, N'Pending'), (2, N'Accepted'), (3, N'Rejected');
+
+INSERT INTO PostStatuses (StatusId, StatusName) VALUES (1, N'Pending'), (2, N'Approved'), (3, N'Rejected');
+INSERT INTO ReportStatuses (StatusId, StatusName) VALUES (1, N'Pending'), (2, N'Resolved'), (3, N'Dismissed');
+
+INSERT INTO ReportReasons (ReasonName) VALUES 
+(N'Coordinating Harm and Promoting Crime'),
+(N'Dangerous Organizations and Individuals'),
+(N'Fraud, Scams, and Deceptive Practices'),
+(N'Restricted Goods and Services'),
+(N'Violence and Incitement'),
+(N'Adult Sexual Exploitation'),
+(N'Bullying and Harassment'),
+(N'Child Sexual Exploitation, Abuse, and Nudity'),
+(N'Human Exploitation'),
+(N'Suicide, Self-Injury, and Eating Disorders'),
+(N'Adult Nudity and Sexual Activity'),
+(N'Adult Sexual Solicitation and Sexually Explicit Language'),
+(N'Hateful Conduct'),
+(N'Privacy Violations'),
+(N'Violent and Graphic Content'),
+(N'Account Integrity'),
+(N'Authentic Identity Representation'),
+(N'Cybersecurity'),
+(N'Inauthentic Behavior'),
+(N'Memorialization'),
+(N'Misinformation'),
+(N'Spam'),
+(N'Third-Party Intellectual Property Infringement'),
+(N'Using Meta Intellectual Property and Licenses'),
+(N'Additional Protection of Minors'),
+(N'Locally Illegal Content, Products, or Services'),
+(N'User Requests');
  
 INSERT INTO Sports (SportName, Description) VALUES (N'Cầu Lông', N'Sân thảm tiêu chuẩn'), (N'Bóng Bàn', N'Bàn ITTF'), (N'Pickleball', N'Sân ngoài trời');
 INSERT INTO SportLevels (SportId, LevelName, RankValue) VALUES (1, N'Cơ bản', 1), (1, N'Nâng cao', 2), (1, N'Tuyển thủ', 3);

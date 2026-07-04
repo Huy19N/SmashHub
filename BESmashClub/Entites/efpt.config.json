@@ -3,7 +3,7 @@
    "ContextClassName": "SmashClubContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
-   "IncludeConnectionString": true,
+   "IncludeConnectionString": false,
    "IrregularWords": null,
    "MinimumProductVersion": "2.6.1465",
    "ModelNamespace": null,
@@ -112,6 +112,18 @@
       },
       {
          "Name": "[dbo].[PayoutStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostStatuses]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ReportReasons]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ReportStatuses]",
          "ObjectType": 0
       },
       {
