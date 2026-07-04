@@ -72,6 +72,7 @@ public class NotificationService : INotificationService
     {
         var notification = new Notification
         {
+            Id = Guid.NewGuid().ToString(),
             UserId = userId.ToString(),
             Title = title,
             Content = content,

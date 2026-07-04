@@ -124,10 +124,10 @@ public class SocialService : ISocialService
             post.LikeCount++;
             await _postRepository.UpdateAsync(post.Id, post);
 
-            if (post.UserId != userId.ToString())
+            if (!string.IsNullOrEmpty(post.UserId) && post.UserId != userId.ToString() && Guid.TryParse(post.UserId, out var postOwnerId))
             {
                 await _notificationService.CreateNotificationAsync(
-                    Guid.Parse(post.UserId),
+                    postOwnerId,
                     "Lượt thích mới",
                     "Ai đó đã thích bài viết của bạn.",
                     "PostLike",

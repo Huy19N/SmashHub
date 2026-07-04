@@ -87,6 +87,10 @@ public class SocialController : ControllerBase
         {
             return NotFound(ApiResponse.ErrorResponse(ex.Message));
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse($"Đã xảy ra lỗi: {ex.Message}"));
+        }
     }
 
     [HttpDelete("posts/{postId:guid}/like")]
