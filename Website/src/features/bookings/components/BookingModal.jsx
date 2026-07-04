@@ -140,8 +140,8 @@ export default function BookingModal({ isOpen, onClose, facility }) {
   const [timeSlots, setTimeSlots] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { createBooking, createBatchBooking } = useBookings();
   const { courts, fetchCourts, courtStatuses, fetchCourtStatus, loading: loadingCourts } = useCourt();
-  const { createBooking, loading: bookingActionLoading } = useBookings();
   const { fetchOperatingHours } = useFacility();
 
   const formatDateForApi = (date) => {
@@ -371,13 +371,27 @@ export default function BookingModal({ isOpen, onClose, facility }) {
     
     setIsSubmitting(true);
     try {
-      for (const g of groups) {
+      const requests = groups.map(g => {
         const startTime = `${selectedDateStr}T${timeSlots[g.startIdx]}:00`;
         const endTime = `${selectedDateStr}T${timeSlots[g.endIdx + 1]}:00`;
-        await createBooking({ courtId: g.courtId, startTime, endTime });
+        return { courtId: g.courtId, startTime, endTime };
+      });
+
+      let paymentUrl = null;
+      if (requests.length === 1) {
+        const result = await createBooking(requests[0]);
+        paymentUrl = result.paymentUrl;
+      } else {
+        const result = await createBatchBooking(requests);
+        paymentUrl = result.paymentUrl;
       }
-      toast.success(`Đặt sân thành công! (${groups.length} lượt)`);
-      onClose();
+
+      toast.success(`Đặt sân thành công! Đang chuyển hướng thanh toán...`);
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        onClose();
+      }
     } catch (err) {
       toast.error('Có lỗi xảy ra: ' + (err?.message || 'Unknown'));
     } finally {
@@ -616,3 +630,4 @@ export default function BookingModal({ isOpen, onClose, facility }) {
     </div>
   );
 }
+

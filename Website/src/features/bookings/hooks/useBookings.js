@@ -3,6 +3,7 @@ import {
     getAllBookingAPI,
     getBookingByIdAPI,
     createBookingAPI,
+    createBatchBookingAPI,
     updateBookingAPI,
     deleteBookingAPI,
     getCourtByfacilityIdAPI,
@@ -68,6 +69,22 @@ export const useBookings = () => {
         } catch (err) {
             const msg = err.response?.data?.message || err.message;
             setError(msg);
+            throw err;\n        } finally {
+            setLoading(false);
+        }
+    }, [fetchBookings]);
+
+    // Create batch booking
+    const createBatchBooking = useCallback(async (bookingDataList) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await createBatchBookingAPI(bookingDataList);
+            fetchBookings(); // Refresh bookings list
+            return response.data;
+        } catch (err) {
+            const msg = err.response?.data?.message || err.message;
+            setError(msg);
             throw err;
         } finally {
             setLoading(false);
@@ -115,6 +132,7 @@ export const useBookings = () => {
         fetchBookings,
         fetchBookingById,
         createBooking,
+        createBatchBooking,
         updateBooking,
         deleteBooking,
     };
