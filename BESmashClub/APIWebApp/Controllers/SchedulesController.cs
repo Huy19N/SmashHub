@@ -37,6 +37,18 @@ public class SchedulesController : ControllerBase
         {
             return Forbid();
         }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse.ErrorResponse("Đã xảy ra lỗi hệ thống: " + ex.Message));
+        }
     }
 
     /// <summary>
