@@ -29,9 +29,8 @@ export const useSocial = () => {
 
   const createPost = async (postData) => {
     try {
-      const response = await socialApi.createPostAPI(postData);
-      setPosts(prev => [response.data, ...prev]);
-      toast.success('Đăng bài thành công');
+      await socialApi.createPostAPI(postData);
+      toast.success('Đăng bài thành công. Bài viết của bạn đang chờ Admin duyệt.');
       return true;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi đăng bài');
