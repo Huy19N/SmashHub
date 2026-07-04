@@ -140,7 +140,7 @@ export default function BookingModal({ isOpen, onClose, facility }) {
   const [timeSlots, setTimeSlots] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { createBooking, createBatchBooking } = useBookings();
+  const { createBooking, createBatchBooking, loading: bookingActionLoading } = useBookings();
   const { courts, fetchCourts, courtStatuses, fetchCourtStatus, loading: loadingCourts } = useCourt();
   const { fetchOperatingHours } = useFacility();
 
