@@ -20,6 +20,14 @@ class AppTheme {
   static const Color lightOnBackgroundColor = Color(0xFF09090B);
   static const Color lightOnSurfaceColor = Color(0xFF18181B);
 
+  // Text Theme for readability and contrast
+  static const TextTheme _textTheme = TextTheme(
+    bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, letterSpacing: 0.15),
+    bodyMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.normal, letterSpacing: 0.25),
+    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: 0),
+    titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.15),
+  );
+
   // Dark Theme
   static ThemeData get darkTheme {
     return ThemeData(
@@ -34,6 +42,10 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: darkBackgroundColor,
+      textTheme: _textTheme.apply(
+        bodyColor: darkOnBackgroundColor,
+        displayColor: darkOnBackgroundColor,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBackgroundColor,
         foregroundColor: darkOnBackgroundColor,
@@ -50,6 +62,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -62,23 +75,37 @@ class AppTheme {
           ),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurfaceColor,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white10, width: 1),
+          borderSide: const BorderSide(color: Colors.white24, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: const TextStyle(color: Colors.white30),
+        labelStyle: const TextStyle(color: Colors.white, fontSize: 16),
+        hintStyle: const TextStyle(color: Colors.white54, fontSize: 16),
       ),
     );
   }
@@ -97,6 +124,10 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: lightBackgroundColor,
+      textTheme: _textTheme.apply(
+        bodyColor: lightOnBackgroundColor,
+        displayColor: lightOnBackgroundColor,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: lightBackgroundColor,
         foregroundColor: lightOnBackgroundColor,
@@ -113,6 +144,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -125,23 +157,37 @@ class AppTheme {
           ),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48), // Ensure minimum tap target
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightSurfaceColor,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black12, width: 1),
+          borderSide: const BorderSide(color: Colors.black26, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        labelStyle: const TextStyle(color: Colors.black87),
-        hintStyle: const TextStyle(color: Colors.black38),
+        labelStyle: const TextStyle(color: Colors.black, fontSize: 16),
+        hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
       ),
     );
   }

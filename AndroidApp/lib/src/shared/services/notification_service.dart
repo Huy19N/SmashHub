@@ -22,11 +22,11 @@ class NotificationService {
     // Android: Cấu hình icon notification (sử dụng icon mặc định của app)
     const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
 
-    // iOS/macOS: Cấu hình quyền
+    // iOS/macOS: Cấu hình quyền (sẽ xin quyền sau)
     const darwinSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
 
     const initSettings = InitializationSettings(
@@ -40,6 +40,13 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
+    _initialized = true;
+    debugPrint('[NotificationService] Initialized successfully');
+  }
+
+  /// Yêu cầu quyền hiển thị thông báo.
+  /// Gọi hàm này sau khi giao diện đã được render (ví dụ: trong initState của root widget).
+  Future<void> requestPermissions() async {
     // Yêu cầu quyền notification trên Android 13+
     if (Platform.isAndroid) {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
@@ -57,9 +64,6 @@ class NotificationService {
         sound: true,
       );
     }
-
-    _initialized = true;
-    debugPrint('[NotificationService] Initialized successfully');
   }
 
   /// Xử lý khi người dùng tap vào notification.

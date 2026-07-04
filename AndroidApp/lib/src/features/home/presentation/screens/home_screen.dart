@@ -558,7 +558,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          ApiConfig.activeTabNotifier.value = 1;
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.black,
@@ -620,7 +622,9 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Danh sách câu lạc bộ',
           color: Colors.teal,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            ApiConfig.activeTabNotifier.value = 2;
+          },
         ),
         _buildActionCard(
           icon: Icons.local_fire_department_rounded,
@@ -643,7 +647,9 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Đặt sân chơi trực tuyến',
           color: Colors.indigoAccent,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            ApiConfig.activeTabNotifier.value = 1;
+          },
         ),
         _buildActionCard(
           icon: Icons.schedule_rounded,
@@ -651,7 +657,9 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: 'Kiểm tra lịch trình',
           color: Colors.pinkAccent,
           isDark: isDark,
-          onTap: () {},
+          onTap: () {
+            ApiConfig.activeTabNotifier.value = 2;
+          },
         ),
         _buildActionCard(
           icon: Icons.public_rounded,

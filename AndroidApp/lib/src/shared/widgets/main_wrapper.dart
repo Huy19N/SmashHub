@@ -10,6 +10,8 @@ import '../../features/booking/presentation/screens/owner_court_management_scree
 import '../services/signalr_service.dart';
 import '../../features/booking/presentation/screens/create_facility_screen.dart';
 import '../../features/auth/presentation/controllers/profile_controller.dart';
+import '../../features/social/presentation/screens/create_post_screen.dart';
+import '../services/notification_service.dart';
 import '../../features/matchmaking/presentation/screens/matchmaking_dashboard_screen.dart';
 import '../../features/auth/data/repositories/profile_repository_impl.dart';
 import '../../features/auth/data/data_sources/profile_remote_data_source.dart';
@@ -68,6 +70,9 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
 
     // Kết nối SignalR để nhận thông báo real-time khi vào app
     SignalRService.instance.connect();
+
+    // Yêu cầu quyền thông báo (hiển thị hộp thoại trên Android 13+)
+    NotificationService.instance.requestPermissions();
   }
 
   @override
@@ -388,9 +393,10 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
                   subtitle: 'Chia sẻ hoạt động lên cộng đồng',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng bài viết đang phát triển!'),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CreatePostScreen(),
                       ),
                     );
                   },
