@@ -162,7 +162,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)booking.TotalCost.Value,
-            Description = TruncateDescription($"SmashClub San {booking.Court?.CourtName}"),
+            Description = $"BK {bookingId.ToString().Substring(0, 8).ToUpper()}",
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
