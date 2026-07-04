@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/network/api_client.dart';
+import '../../data/data_sources/booking_remote_data_source.dart';
+import '../../data/repositories/booking_repository_impl.dart';
+import '../../domain/repositories/booking_repository.dart';
 import 'booking_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -21,11 +25,17 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   late final WebViewController _webViewController;
+  late final BookingRepository _bookingRepository;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    
+    final apiClient = ApiClient();
+    final dataSource = BookingRemoteDataSource(apiClient);
+    _bookingRepository = BookingRepositoryImpl(dataSource);
+
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -125,8 +135,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  void _handlePaymentCancelled() {
+  Future<void> _handlePaymentCancelled() async {
     if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _bookingRepository.cancelBooking(widget.bookingId);
+    } catch (e) {
+      debugPrint('Error cancelling booking: $e');
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
 
     showDialog(
       context: context,
@@ -177,9 +203,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: const Text('Không'),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(context); // Đóng dialog
-                      Navigator.of(context).pop(false); // Thoát CheckoutScreen và trả về false
+                      
+                      setState(() {
+                        _isLoading = true;
+                      });
+
+                      try {
+                        await _bookingRepository.cancelBooking(widget.bookingId);
+                      } catch (e) {
+                        debugPrint('Error cancelling booking: $e');
+                      }
+
+                      if (mounted) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        Navigator.of(context).pop(false); // Thoát CheckoutScreen và trả về false
+                      }
                     },
                     child: const Text('Thoát', style: TextStyle(color: Colors.red)),
                   ),

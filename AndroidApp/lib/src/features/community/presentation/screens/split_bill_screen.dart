@@ -26,8 +26,11 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   final TextEditingController _fixedCostController = TextEditingController();
 
   bool _isLoading = true;
-  String _splitMode = 'auto'; // 'auto', 'fixed'
+  String _splitMode = 'auto'; // 'auto', 'fixed', 'custom'
   List<dynamic> _participants = [];
+
+  final Map<String, TextEditingController> _customCourtCostControllers = {};
+  final Map<String, TextEditingController> _customExtraFeeControllers = {};
 
   @override
   void initState() {
@@ -43,8 +46,18 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     try {
       final response = await _apiClient.get('/api/schedules/${widget.scheduleId}/participants');
       if (response.data['success'] == true) {
+        final data = response.data['data'] as List<dynamic>? ?? [];
         setState(() {
-          _participants = response.data['data'] as List<dynamic>? ?? [];
+          _participants = data;
+
+          _customCourtCostControllers.clear();
+          _customExtraFeeControllers.clear();
+
+          for (var p in data) {
+            final userId = p['userId'] as String;
+            _customCourtCostControllers[userId] = TextEditingController(text: '0');
+            _customExtraFeeControllers[userId] = TextEditingController(text: '0');
+          }
         });
       }
     } catch (e) {
@@ -69,11 +82,40 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       final extraFee = double.tryParse(_extraFeeController.text) ?? 0.0;
       final fixedCost = _splitMode == 'fixed' ? double.tryParse(_fixedCostController.text) : null;
 
+      Map<String, double>? customAmounts;
+      double totalCustomExtra = 0.0;
+
+      if (_splitMode == 'custom') {
+        customAmounts = {};
+        int participantCount = _participants.where((p) => p['isAttended'] == true).length;
+        if (participantCount == 0) participantCount = 1; // avoid divide by 0
+        
+        for (var p in _participants) {
+          if (p['isAttended'] == true) {
+            final userId = p['userId'] as String;
+            final userExtraFee = double.tryParse(_customExtraFeeControllers[userId]?.text ?? '0') ?? 0.0;
+            totalCustomExtra += userExtraFee;
+          }
+        }
+        
+        final averageExtra = totalCustomExtra / participantCount;
+        
+        for (var p in _participants) {
+          if (p['isAttended'] == true) {
+             final userId = p['userId'] as String;
+             final userCourtCost = double.tryParse(_customCourtCostControllers[userId]?.text ?? '0') ?? 0.0;
+             final userExtraFee = double.tryParse(_customExtraFeeControllers[userId]?.text ?? '0') ?? 0.0;
+             
+             customAmounts[userId] = userCourtCost + userExtraFee - averageExtra;
+          }
+        }
+      }
+
       final requestBody = {
-        'extraFee': extraFee,
+        'extraFee': _splitMode == 'custom' ? totalCustomExtra : extraFee,
         'extraFeeNote': _extraFeeNoteController.text.trim(),
         'fixedAmountPerPerson': fixedCost,
-        'customAmounts': null, // support auto/fixed modes primarily
+        'customAmounts': customAmounts,
       };
 
       final response = await _apiClient.post(
@@ -146,6 +188,20 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   }
 
   @override
+  void dispose() {
+    _extraFeeController.dispose();
+    _extraFeeNoteController.dispose();
+    _fixedCostController.dispose();
+    for (var controller in _customCourtCostControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _customExtraFeeControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -189,13 +245,15 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           const SizedBox(height: 12),
-                          _buildTextField(
-                            controller: _extraFeeController,
-                            label: 'Phụ phí phát sinh (Cầu, bóng, nước...) (VND)',
-                            icon: Icons.payments_rounded,
-                            keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: 12),
+                          if (_splitMode != 'custom') ...[
+                            _buildTextField(
+                              controller: _extraFeeController,
+                              label: 'Phụ phí phát sinh (Cầu, bóng, nước...) (VND)',
+                              icon: Icons.payments_rounded,
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           _buildTextField(
                             controller: _extraFeeNoteController,
                             label: 'Chi tiết phụ phí',
@@ -207,35 +265,53 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           const SizedBox(height: 8),
-                          Row(
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
-                              Radio<String>(
-                                value: 'auto',
-                                groupValue: _splitMode,
-                                activeColor: AppTheme.primaryColor,
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      _splitMode = value;
-                                    });
-                                  }
-                                },
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Radio<String>(
+                                    value: 'auto',
+                                    groupValue: _splitMode,
+                                    activeColor: AppTheme.primaryColor,
+                                    onChanged: (value) {
+                                      if (value != null) setState(() => _splitMode = value);
+                                    },
+                                  ),
+                                  const Text('Chia đều (Auto)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
                               ),
-                              const Text('Chia đều (Auto)', style: TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(width: 24),
-                              Radio<String>(
-                                value: 'fixed',
-                                groupValue: _splitMode,
-                                activeColor: AppTheme.primaryColor,
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      _splitMode = value;
-                                    });
-                                  }
-                                },
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Radio<String>(
+                                    value: 'fixed',
+                                    groupValue: _splitMode,
+                                    activeColor: AppTheme.primaryColor,
+                                    onChanged: (value) {
+                                      if (value != null) setState(() => _splitMode = value);
+                                    },
+                                  ),
+                                  const Text('Mức cố định', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
                               ),
-                              const Text('Mức cố định', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Radio<String>(
+                                    value: 'custom',
+                                    groupValue: _splitMode,
+                                    activeColor: AppTheme.primaryColor,
+                                    onChanged: (value) {
+                                      if (value != null) setState(() => _splitMode = value);
+                                    },
+                                  ),
+                                  const Text('Tùy chỉnh', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
                             ],
                           ),
                           if (_splitMode == 'fixed') ...[
@@ -334,33 +410,67 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(
-                                      '${costToPay.toStringAsFixed(0)} VND',
-                                      style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.primaryColor),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          isPaid ? 'Đã đóng' : 'Chưa đóng',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: isPaid ? Colors.green : Colors.red,
+                                    if (_splitMode == 'custom' && isAttended) ...[
+                                      SizedBox(
+                                        width: 120,
+                                        child: TextField(
+                                          controller: _customCourtCostControllers[p['userId']],
+                                          keyboardType: TextInputType.number,
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                          decoration: InputDecoration(
+                                            labelText: 'Tiền sân',
+                                            labelStyle: const TextStyle(fontSize: 11),
+                                            isDense: true,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                           ),
                                         ),
-                                        Checkbox(
-                                          activeColor: Colors.green,
-                                          value: isPaid,
-                                          onChanged: (val) {
-                                            if (val != null) {
-                                              _togglePaymentPaid(p, val);
-                                            }
-                                          },
+                                      ),
+                                      const SizedBox(height: 8),
+                                      SizedBox(
+                                        width: 120,
+                                        child: TextField(
+                                          controller: _customExtraFeeControllers[p['userId']],
+                                          keyboardType: TextInputType.number,
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                          decoration: InputDecoration(
+                                            labelText: 'Phụ phí',
+                                            labelStyle: const TextStyle(fontSize: 11),
+                                            isDense: true,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                          ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ] else ...[
+                                      Text(
+                                        '${costToPay.toStringAsFixed(0)} VND',
+                                        style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.primaryColor),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            isPaid ? 'Đã đóng' : 'Chưa đóng',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: isPaid ? Colors.green : Colors.red,
+                                            ),
+                                          ),
+                                          Checkbox(
+                                            activeColor: Colors.green,
+                                            value: isPaid,
+                                            onChanged: (val) {
+                                              if (val != null) {
+                                                _togglePaymentPaid(p, val);
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],
