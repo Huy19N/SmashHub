@@ -69,7 +69,8 @@ export const useBookings = () => {
         } catch (err) {
             const msg = err.response?.data?.message || err.message;
             setError(msg);
-            throw err;\n        } finally {
+            throw err;
+        } finally {
             setLoading(false);
         }
     }, [fetchBookings]);
