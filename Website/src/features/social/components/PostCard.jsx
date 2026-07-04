@@ -19,7 +19,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  const isOwner = user?.userId === post.authorId;
+  const isOwner = user?.userId === post.authorUserId;
   const isAdmin = user?.roleId === 1;
 
   const handleDeletePost = async () => {
@@ -40,7 +40,7 @@ const PostCard = ({ post, onToggleLike, isSinglePostView = false }) => {
   const handleBlockUser = async () => {
     if (!window.confirm("Bạn có chắc chắn muốn chặn người dùng này?")) return;
     try {
-      await blockUserAPI(post.authorId);
+      await blockUserAPI(post.authorUserId);
       toast.success("Đã chặn người dùng");
       window.location.reload();
     } catch (error) {

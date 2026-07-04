@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, ShieldCheck, CheckCircle, XCircle, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPendingPostsAPI, approvePostAPI, rejectPostAPI } from '../api/admin.api';
+import MediaImage from '../../../components/ui/MediaImage';
 
 const PostManagement = () => {
   const [posts, setPosts] = useState([]);
@@ -96,10 +97,23 @@ const PostManagement = () => {
                         <p className="text-sm text-gray-700 line-clamp-2">{post.content}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="text-sm text-gray-500 font-medium">
-                        {post.mediaFileIds?.length || 0}
-                      </span>
+                    <td className="py-3 px-4">
+                      {post.mediaFileIds?.length > 0 ? (
+                        <div className="flex items-center justify-center gap-1 flex-wrap w-32 mx-auto">
+                          {post.mediaFileIds.slice(0, 3).map((id, index) => (
+                            <div key={index} className="w-8 h-8 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                              <MediaImage fileId={id} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                          {post.mediaFileIds.length > 3 && (
+                            <div className="w-8 h-8 rounded-md bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium">
+                              +{post.mediaFileIds.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400 text-center block">Không có</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-500">
                       {new Date(post.createdAt).toLocaleDateString('vi-VN', {
