@@ -68,7 +68,10 @@ public class PaymentService : IPaymentService
         var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
             $"SUB_{userId}_{request.PlanId}", "Subscription");
         if (existingPayment != null && existingPayment.StatusId == 1) // Pending
-            throw new InvalidOperationException("Bạn đã có giao dịch đang chờ thanh toán cho gói này.");
+        {
+            existingPayment.StatusId = 3; // Cancelled
+            await _unitOfWork.Payments.UpdateAsync(existingPayment);
+        }
 
         // 4. Generate unique order code (timestamp-based to ensure uniqueness)
         var orderCode = GenerateOrderCode();
@@ -137,7 +140,10 @@ public class PaymentService : IPaymentService
         var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
             bookingId.ToString(), "Booking");
         if (existingPayment != null && existingPayment.StatusId == 1)
-            throw new InvalidOperationException("Booking này đã có giao dịch đang chờ thanh toán.");
+        {
+            existingPayment.StatusId = 3; // Cancelled
+            await _unitOfWork.Payments.UpdateAsync(existingPayment);
+        }
 
         // 3. Generate order code
         var orderCode = GenerateOrderCode();
@@ -333,7 +339,10 @@ public class PaymentService : IPaymentService
         var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
             acceptanceId.ToString(), "Booking");
         if (existingPayment != null && existingPayment.StatusId == 1)
-            throw new InvalidOperationException("Bạn đã có giao dịch đang chờ thanh toán cho lượt ghép đấu này.");
+        {
+            existingPayment.StatusId = 3; // Cancelled
+            await _unitOfWork.Payments.UpdateAsync(existingPayment);
+        }
 
         var orderCode = GenerateOrderCode();
 
