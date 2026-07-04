@@ -312,6 +312,7 @@ public class BookingService : IBookingService
             StatusId = b.StatusId,
             StatusName = b.Status?.StatusName,
             CancellationReason = b.CancellationReason,
+            HasSchedule = b.Schedules != null && b.Schedules.Any(),
             CreatedAt = b.CreatedAt
         };
     }

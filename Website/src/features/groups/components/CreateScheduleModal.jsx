@@ -35,8 +35,8 @@ export default function CreateScheduleModal({ isOpen, onClose, teamId, onSuccess
     }
   }, [isOpen, fetchBookings]);
 
-  // Filter bookings to only show confirmed (statusId = 2) or future bookings
-  const validBookings = bookings?.filter(b => b.statusId === 2 || b.statusId === 1) || [];
+  // Filter bookings to only show confirmed (statusId = 2) or future bookings, and NOT already scheduled
+  const validBookings = bookings?.filter(b => (b.statusId === 2 || b.statusId === 1) && !b.hasSchedule) || [];
 
   const handleBookingChange = async (bookingId) => {
     setFormData(prev => ({ ...prev, bookingId, costPerPerson: '' }));

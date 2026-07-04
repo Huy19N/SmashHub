@@ -17,5 +17,6 @@ public class BookingResponse
     public decimal PlatformFee { get; set; }
     public string? CancellationReason { get; set; }
     public string? PaymentUrl { get; set; }
+    public bool HasSchedule { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

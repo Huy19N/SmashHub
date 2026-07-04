@@ -136,6 +136,13 @@ public class TeamService : ITeamService
         if (team == null)
             throw new KeyNotFoundException("Không tìm thấy team.");
 
+        // Hard delete all schedules associated with this team
+        var schedules = await _unitOfWork.Schedules.GetByTeamIdAsync(teamId);
+        foreach (var schedule in schedules)
+        {
+            await _unitOfWork.Schedules.RemoveAsync(schedule);
+        }
+
         // Soft delete
         team.IsActive = false;
         await _unitOfWork.Teams.UpdateAsync(team);

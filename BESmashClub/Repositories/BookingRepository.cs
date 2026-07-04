@@ -14,6 +14,7 @@ namespace Repositories
             return await _context.Bookings
                 .Include(b => b.Court).ThenInclude(c => c.Facility).ThenInclude(f => f.Owner)
                 .Include(b => b.Court).ThenInclude(c => c.Sport)
+                .Include(b => b.Schedules)
                 .Include(b => b.BookedByUser)
                 .Include(b => b.Status)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
@@ -26,6 +27,7 @@ namespace Repositories
                 .Where(b => b.BookedByUserId == userId)
                 .Include(b => b.Court).ThenInclude(c => c.Facility)
                 .Include(b => b.Court).ThenInclude(c => c.Sport)
+                .Include(b => b.Schedules)
                 .Include(b => b.Status)
                 .OrderByDescending(b => b.CreatedAt);
 
