@@ -15,7 +15,7 @@ const ReportManagement = () => {
     setIsLoading(true);
     try {
       const response = await getPendingReportsAPI({ pageIndex: 1, pageSize: 50 });
-      if (response.isSuccess) {
+      if (response.success) {
         setReports(response.data?.items || []);
       }
     } catch (error) {
@@ -28,7 +28,7 @@ const ReportManagement = () => {
   const handleResolve = async (reportId, action) => {
     try {
       const response = await resolveReportAPI(reportId, action);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success('Đã xử lý báo cáo');
         setReports(reports.filter(r => r.id !== reportId));
       }
@@ -40,7 +40,7 @@ const ReportManagement = () => {
   const handleDismiss = async (reportId) => {
     try {
       const response = await dismissReportAPI(reportId);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success('Đã bỏ qua báo cáo');
         setReports(reports.filter(r => r.id !== reportId));
       }

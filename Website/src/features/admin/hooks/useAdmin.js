@@ -90,7 +90,7 @@ export const useAdminUsers = () => {
   const banUser = async (userId, until, reason) => {
     try {
       const response = await adminApi.banUserAPI(userId, until, reason);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success(response.message || 'Cấm tài khoản thành công.');
         setUsers(prev => prev.map(u => 
           u.userId === userId ? { ...u, banUntil: until } : u
@@ -110,7 +110,7 @@ export const useAdminUsers = () => {
   const unbanUser = async (userId) => {
     try {
       const response = await adminApi.unbanUserAPI(userId);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success(response.message || 'Mở khóa tài khoản thành công.');
         setUsers(prev => prev.map(u => 
           u.userId === userId ? { ...u, banUntil: null } : u

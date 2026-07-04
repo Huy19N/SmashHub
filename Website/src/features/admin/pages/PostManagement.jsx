@@ -15,7 +15,7 @@ const PostManagement = () => {
     setIsLoading(true);
     try {
       const response = await getPendingPostsAPI({ pageIndex: 1, pageSize: 50 });
-      if (response.isSuccess) {
+      if (response.success) {
         setPosts(response.data.items || []);
       }
     } catch (error) {
@@ -28,7 +28,7 @@ const PostManagement = () => {
   const handleApprove = async (postId) => {
     try {
       const response = await approvePostAPI(postId);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success('Đã duyệt bài đăng');
         setPosts(posts.filter(p => p.postId !== postId));
       }
@@ -41,7 +41,7 @@ const PostManagement = () => {
     if (!window.confirm('Bạn có chắc muốn từ chối bài đăng này?')) return;
     try {
       const response = await rejectPostAPI(postId);
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success('Đã từ chối bài đăng');
         setPosts(posts.filter(p => p.postId !== postId));
       }

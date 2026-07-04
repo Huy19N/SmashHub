@@ -20,7 +20,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType }) => {
     setIsLoading(true);
     try {
       const response = await getReportReasonsAPI();
-      if (response.isSuccess) {
+      if (response.success) {
         setReasons(response.data || []);
       }
     } catch (error) {
@@ -45,7 +45,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType }) => {
         response = await reportCommentAPI(targetId, selectedReason);
       }
 
-      if (response.isSuccess) {
+      if (response.success) {
         toast.success('Đã gửi báo cáo vi phạm. Cảm ơn bạn!');
         onClose();
       }
