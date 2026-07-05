@@ -525,7 +525,7 @@ export default function HomePage() {
               © {new Date().getFullYear()} SmashHub. Mọi quyền được bảo lưu.
             </div>
             <div className="flex gap-6 text-xs sm:text-sm text-slate-500 dark:text-gray-400">
-              <a href="#privacy" className="hover:text-emerald-500 dark:hover:text-primary transition-colors">Chính sách bảo mật</a>
+              <Link to={PATHS.PRIVACY} className="hover:text-emerald-500 dark:hover:text-primary transition-colors">Chính sách bảo mật</Link>
               <a href="#terms" className="hover:text-emerald-500 dark:hover:text-primary transition-colors">Điều khoản sử dụng</a>
               <a href="#support" className="hover:text-emerald-500 dark:hover:text-primary transition-colors">Hỗ trợ</a>
             </div>

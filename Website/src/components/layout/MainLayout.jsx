@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import { PATHS } from '../../routes/paths';
 
@@ -36,7 +36,7 @@ export default function MainLayout() {
             © {new Date().getFullYear()} SmashHub. All rights reserved. Built for 60fps performance and modular SEO scalability.
           </div>
           <div className="flex gap-6 text-xs sm:text-sm text-gray-400">
-            <a href="#privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+            <Link to={PATHS.PRIVACY} className="hover:text-primary transition-colors">Privacy Policy</Link>
             <a href="#terms" className="hover:text-primary transition-colors">Terms of Service</a>
             <a href="#support" className="hover:text-primary transition-colors">Support</a>
           </div>
