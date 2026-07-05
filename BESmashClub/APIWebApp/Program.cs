@@ -227,7 +227,7 @@ app.Use(async (context, next) =>
 {
     // Bỏ qua Swagger và SignalR Hub connections (SignalR xử lý Auth riêng)
     var path = context.Request.Path;
-    if (path.StartsWithSegments("/swagger") || path.StartsWithSegments("/hub") || path.StartsWithSegments("/api/files"))
+    if (path.StartsWithSegments("/swagger") || path.StartsWithSegments("/hub") || path.StartsWithSegments("/api/files") || path.StartsWithSegments("/api/payments/webhook"))
     {
         await next();
         return;
