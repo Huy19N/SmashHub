@@ -8,6 +8,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAdminDashboard } from '../hooks/useAdmin';
+import AdminCharts from '../components/AdminCharts';
 
 export default function AdminDashboard() {
   const { stats, isLoading, fetchStats } = useAdminDashboard();
@@ -108,73 +109,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20 flex flex-col justify-between">
-          <div className="mb-4">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1">
-              Doanh thu 6 tháng gần nhất
-            </h3>
-            <p className="text-xs text-gray-500">Doanh thu từ các gói hội viên và phí đặt sân trực tuyến.</p>
-          </div>
-          <div className="w-full">
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full overflow-visible">
-              <line x1="30" y1="20" x2={chartWidth - 30} y2="20" stroke="rgba(255,255,255,0.05)" strokeWidth="1" className="dark:stroke-white/5 stroke-gray-100" />
-              <line x1="30" y1="80" x2={chartWidth - 30} y2="80" stroke="rgba(255,255,255,0.05)" strokeWidth="1" className="dark:stroke-white/5 stroke-gray-100" />
-              <line x1="30" y1={chartHeight - 20} x2={chartWidth - 30} y2={chartHeight - 20} stroke="rgba(255,255,255,0.1)" strokeWidth="1" className="dark:stroke-white/10 stroke-gray-200" />
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              {areaPath && <path d={areaPath} fill="url(#chartGradient)" />}
-              {linePath && <path d={linePath} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-              {points.map((p, idx) => (
-                <g key={idx} className="group cursor-pointer">
-                  <circle cx={p.x} cy={p.y} r="4" fill="#10B981" stroke="white" strokeWidth="1.5" className="hover:r-6 transition-all duration-150" />
-                  <text x={p.x} y={p.y - 8} textAnchor="middle" className="text-[9px] font-bold fill-gray-500 dark:fill-gray-400 hidden group-hover:block pointer-events-none">
-                    {formatCurrency(p.revenue)}
-                  </text>
-                  <text x={p.x} y={chartHeight - 5} textAnchor="middle" className="text-[10px] font-bold fill-gray-400 font-label">
-                    {p.label}
-                  </text>
-                </g>
-              ))}
-            </svg>
-          </div>
-        </div>
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20 flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1">
-              Phân phối đặt sân
-            </h3>
-            <p className="text-xs text-gray-500">Tổng quan lượng đặt sân theo tháng.</p>
-          </div>
-          <div className="space-y-4 my-4">
-            {(stats.monthlyRevenue || []).map((item, idx) => {
-              const maxCount = Math.max(...(stats.monthlyRevenue || []).map(m => m.bookingCount), 1);
-              const percentage = (item.bookingCount / maxCount) * 100;
-              return (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-gray-600 dark:text-gray-400">{item.label}</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{item.bookingCount} lượt</span>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider font-label text-center pt-2 border-t border-gray-100 dark:border-white/5">
-            Dữ liệu thống kê thời gian thực
-          </div>
-        </div>
-      </div>
+      <AdminCharts />
       <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
         <div className="mb-6">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1">

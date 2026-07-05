@@ -10,6 +10,7 @@ import StatCard from '../components/StatCard';
 import LeaderStats from '../components/LeaderStats';
 import MemberStats from '../components/MemberStats';
 import FacilityOwnerStats from '../components/FacilityOwnerStats';
+import OwnerDashboard from '../components/OwnerDashboard';
 
 export default function DashboardPage() {
   const { theme } = useTheme();
@@ -57,7 +58,10 @@ export default function DashboardPage() {
           <div className="space-y-8 pb-16">
             {/* If user is Facility Owner, render Owner specific stats exclusively */}
             {data.isFacilityOwner ? (
-              <FacilityOwnerStats stats={data.facilityOwnerStats} />
+              <>
+                <FacilityOwnerStats stats={data.facilityOwnerStats} />
+                <OwnerDashboard />
+              </>
             ) : (
               // Else render normal player stats
               <>
