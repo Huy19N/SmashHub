@@ -28,5 +28,6 @@ export const PATHS = {
   ADMIN_FACILITIES: '/admin/facilities',
   ADMIN_PAYOUTS: '/admin/payouts',
   ADMIN_PROFILE: '/admin/profile',
+  PRIVACY: '/privacy-policy',
   NOT_FOUND: '*',
 };

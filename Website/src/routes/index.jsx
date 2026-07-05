@@ -7,6 +7,7 @@ import MainLayout from '../components/layout/MainLayout';
 // High-performance dynamic code-splitting for feature modules
 const HomePage = lazy(() => import('../features/home/pages/HomePage'));
 const AboutPage = lazy(() => import('../features/about/pages/AboutPage'));
+const PrivacyPolicyPage = lazy(() => import('../features/legal/pages/PrivacyPolicyPage'));
 
 // Auth Features
 const AuthLayout = lazy(() => import('../features/Auth/components/AuthLayout'));
@@ -62,6 +63,10 @@ export const router = createBrowserRouter([
       {
         path: PATHS.ABOUT,
         element: <AboutPage />
+      },
+      {
+        path: PATHS.PRIVACY,
+        element: <PrivacyPolicyPage />
       },
       {
         path: PATHS.MEMBERS,
