@@ -17,7 +17,6 @@ export default function ContactSection() {
           {/* Left side: Form */}
           <div className="w-full md:w-[60%] p-10 md:p-14 bg-slate-50/90 dark:bg-[#111722]/95 backdrop-blur-md transition-colors duration-500">
             <div className="mb-10">
-              <h4 className="text-emerald-600 dark:text-primary font-black text-xs tracking-widest uppercase mb-3 font-label">Liên hệ với chúng tôi</h4>
               <h2 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Hãy liên hệ với chúng tôi</h2>
               <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed max-w-md">
                 Bạn có thắc mắc về giải đấu sắp tới hoặc tư cách thành viên? Hãy gửi cho chúng tôi và nhóm của chúng tôi sẽ liên hệ lại với bạn sớm nhất.
@@ -66,7 +65,7 @@ export default function ContactSection() {
                 type="button"
                 className="bg-emerald-500 hover:bg-emerald-600 dark:bg-primary dark:hover:bg-primary-dark text-[#052e14] dark:text-white font-bold py-3.5 px-8 rounded-full transition-all duration-300 flex items-center gap-2 mt-2 text-sm shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:shadow-[0_4px_25px_rgba(16,185,129,0.3)] cursor-pointer hover:-translate-y-0.5 font-label"
               >
-                Gửi tin nhắn <Send className="h-4 w-4" />
+                Đặt Sân Ngay <Send className="h-4 w-4" />
               </button>
             </form>
           </div>

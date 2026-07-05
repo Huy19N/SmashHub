@@ -4,13 +4,7 @@ import { Moon, Sun } from 'lucide-react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    // Check local storage
-    const storedTheme = localStorage.getItem('smashhub_theme');
-    if (storedTheme) return storedTheme;
-    // Check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     const root = window.document.documentElement;

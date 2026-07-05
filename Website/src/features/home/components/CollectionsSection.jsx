@@ -48,16 +48,11 @@ export default function CollectionsSection() {
 
   return (
     <section id="collections-section" className="relative w-full bg-slate-50 dark:bg-[#0b0f19] py-32 z-20 transition-colors duration-500 overflow-hidden">
-      {/* Background Decorative Blob */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] bg-emerald-400/5 dark:bg-emerald-500/5 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-16 text-center md:text-left">
-          <span className="inline-block py-1 px-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4 border border-emerald-200 dark:border-emerald-800/50 font-label">
-            Bộ Sưu Tập
-          </span>
           <h2 className="text-4xl sm:text-5xl font-extrabold font-display leading-tight text-slate-900 dark:text-white mt-2">
-            Khám Phá <span className="text-gradient-primary italic">Đam Mê</span>
+            Khám Phá Đam Mê
           </h2>
           <p className="text-slate-600 dark:text-gray-400 mt-4 max-w-2xl text-base font-sans">
             Trải nghiệm không gian thể thao đa dạng với hệ thống sân bãi đạt chuẩn. Từ mặt sàn thi đấu đến ánh sáng, mọi thứ đều được thiết kế hoàn hảo.

@@ -44,13 +44,10 @@ const plans = [
 export default function PremiumSection() {
   return (
     <section id="premium-section" className="relative w-full bg-white dark:bg-[#0b0f19] py-32 z-20 font-sans overflow-hidden transition-colors duration-500">
-      {/* Dynamic Background Orbs */}
-      <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-slow pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-emerald-200/20 dark:bg-emerald-300/10 rounded-full mix-blend-screen filter blur-[120px] animate-pulse-slow pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-20">
-          <span className="inline-block py-1 px-3.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4 border border-emerald-200 dark:border-emerald-800/50">Nâng tầm trải nghiệm</span>
+
           <h2 className="text-4xl sm:text-6xl font-black text-gray-900 dark:text-white mb-6 font-display drop-shadow-sm tracking-tight">Gói Hội Viên</h2>
           <p className="text-slate-600 dark:text-gray-300 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-sans">
             Chọn gói hội viên phù hợp với đam mê và tần suất thi đấu của bạn. Mở khóa các đặc quyền cao cấp và gia nhập cộng đồng của chúng tôi.

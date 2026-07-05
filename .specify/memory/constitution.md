@@ -1,21 +1,13 @@
 <!--
 SYNC IMPACT REPORT
-Version: 0.0.0 -> 1.0.0
+Version: 1.0.0 -> 1.1.0
 Modified Principles:
-  - Added: I. No Hardcoding
-  - Added: II. Clean Code & Architecture Compliance
-  - Added: III. Backend Immutability
-  - Added: IV. No Code Hallucination
-  - Added: V. Strict Tooling Adherence
-Added Sections: 
-  - Architecture Constraints
+  - Added: VI. UI/Design Standard
+Added Sections: N/A
 Removed Sections: N/A
 Templates Requiring Updates:
-  - .specify/templates/plan-template.md (⚠ pending)
-  - .specify/templates/spec-template.md (⚠ pending)
-  - .specify/templates/tasks-template.md (⚠ pending)
-Follow-up TODOs: 
-  - Update plan, spec, and tasks templates to explicitly reference the Backend Immutability rule.
+  - No templates require structural changes for this update.
+Follow-up TODOs: N/A
 -->
 
 # SmashClub Constitution
@@ -39,6 +31,10 @@ Mọi xử lý logic, imports, và gọi hàm phải dựa trên các file thự
 ### V. Strict Tooling Adherence
 Agent phải phân tích kỹ mục đích trước khi gọi bất cứ công cụ (tool) nào. Bắt buộc ưu tiên sử dụng tool chuyên biệt (như `view_file`, `grep_search`, `write_to_file`) trước khi cân nhắc dùng lệnh shell chung chung. Luôn dùng đúng tool cho các phiên thực thi phù hợp.
 
+### VI. UI/Design Standard
+Mọi thay đổi giao diện trên Website (React + Vite) bắt buộc phải tuân theo rule trong `.agents/skills/design-taste-frontend/SKILL.md`, tránh các pattern generic/AI-slop (như gradient tím mặc định, layout 3-card đều nhau, v.v). 
+- **Ngoại lệ bắt buộc (Protected Asset):** Hiệu ứng scroll-triggered video ở trang chủ (Hero section) là tài sản được bảo vệ, KHÔNG được audit, thay đổi, đơn giản hóa, hoặc gỡ bỏ khi chạy Redesign protocol hoặc bất kỳ thao tác design nào — trừ khi người dùng yêu cầu trực tiếp và rõ ràng bằng tên. Trước khi sửa bất cứ file nào ở khu vực Hero/trang chủ, agent phải xác định chính xác component chứa hiệu ứng này và giữ nguyên logic scroll/video, chỉ được điều chỉnh phần styling xung quanh nếu được yêu cầu.
+
 ## Architecture Constraints
 
 Dự án SmashClub chia làm 3 phân hệ chính:
@@ -54,4 +50,4 @@ Tài liệu Constitution này là luật tối thượng đối với mọi Agen
 - **Quy trình Sửa đổi (Amendments):** Phải được thực hiện thông qua skill `speckit-constitution`.
 - **Cập nhật Phiên bản (Versioning):** Tăng MAJOR nếu phá vỡ rule cũ, tăng MINOR nếu thêm rule mới, tăng PATCH nếu chỉ sửa lỗi chính tả.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-04 | **Last Amended**: 2026-07-04
+**Version**: 1.1.0 | **Ratified**: 2026-07-04 | **Last Amended**: 2026-07-05

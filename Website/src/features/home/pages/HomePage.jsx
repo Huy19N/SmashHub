@@ -307,15 +307,7 @@ export default function HomePage() {
                 ref={heroContentRef}
                 style={{ opacity: 1, pointerEvents: 'auto', transition: 'opacity 0.1s ease-out' }}
               >
-                {/* Scroll Down Indicator */}
-                <div
-                  ref={scrollIndicatorRef}
-                  className="flex flex-col items-center gap-2 text-slate-500 dark:text-gray-400 animate-pulse font-label pb-10"
-                  style={{ opacity: 1, transition: 'opacity 0.15s ease-out' }}
-                >
-                  <span className="text-xs font-semibold tracking-widest uppercase text-slate-900 dark:text-white drop-shadow-md">Cuộn để khám phá</span>
-                  <ArrowDown className="h-5 w-5 animate-bounce text-emerald-600 dark:text-primary" />
-                </div>
+                {/* Scroll Down Indicator - Removed for cleaner UI */}
               </div>
             </div>
           </section>
@@ -542,25 +534,7 @@ export default function HomePage() {
 
       </div>
 
-      {/* ---------------- FLOATING THEME SWITCHER (BOTTOM-LEFT) ---------------- */}
-      <div className="fixed bottom-6 left-6 z-[99] select-none">
-        <button
-          onClick={toggleTheme}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full glass-panel border border-emerald-500/30 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
-          aria-label="Chuyển đổi giao diện"
-        >
-          {/* Subtle Outer Glow */}
-          <div className="absolute inset-0 rounded-full bg-emerald-500/15 dark:bg-primary/20 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 pointer-events-none" />
-
-          <div className="relative h-6 w-6 overflow-hidden flex items-center justify-center">
-            {theme === 'dark' ? (
-              <Sun className="h-6 w-6 text-amber-400 transform rotate-0 scale-100 transition-all duration-500 group-hover:rotate-45" />
-            ) : (
-              <Moon className="h-6 w-6 text-emerald-600 dark:text-emerald-400 transform rotate-0 scale-100 transition-all duration-500 group-hover:-rotate-12" />
-            )}
-          </div>
-        </button>
-      </div>
+      {/* Theme Switcher removed - defaults to Dark/System preference for immersive feel */}
     </>
   );
 }
