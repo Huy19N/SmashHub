@@ -78,49 +78,32 @@ public class PaymentsController : ControllerBase
         return Ok(ApiResponse<PagedResult<PaymentResponse>>.SuccessResponse(result));
     }
 
+
+
     /// <summary>
-    /// Webhook callback từ PayOS cho thanh toán Subscription.
+    /// Webhook callback chung từ PayOS.
     /// PayOS gọi endpoint này khi user hoàn tất thanh toán.
     /// </summary>
-    [HttpPost("webhook/subscription")]
+    [HttpPost("webhook")]
     [AllowAnonymous]
-    public async Task<IActionResult> HandleSubscriptionWebhook()
+    public async Task<IActionResult> HandleGeneralWebhook()
     {
         try
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
+            // Gọi cả hai service. Trong PaymentService, mỗi method sẽ tự động kiểm tra xem 
+            // webhook đó thuộc loại nào (Subscription hay Booking) thông qua DB. 
+            // Nếu không đúng loại nó sẽ tự động ignore.
             await _paymentService.HandleSubscriptionWebhookAsync(body);
-            return Ok(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            // Log error but still return OK to prevent PayOS from retrying
-            Console.WriteLine($"Subscription webhook error: {ex.Message}");
-            return Ok(new { success = false, message = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Webhook callback từ PayOS cho thanh toán Booking (đặt sân).
-    /// PayOS gọi endpoint này khi user hoàn tất thanh toán.
-    /// </summary>
-    [HttpPost("webhook/booking")]
-    [AllowAnonymous]
-    public async Task<IActionResult> HandleBookingWebhook()
-    {
-        try
-        {
-            using var reader = new StreamReader(Request.Body);
-            var body = await reader.ReadToEndAsync();
-
             await _paymentService.HandleBookingWebhookAsync(body);
+
             return Ok(new { success = true });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Booking webhook error: {ex.Message}");
+            Console.WriteLine($"Webhook error: {ex.Message}");
             return Ok(new { success = false, message = ex.Message });
         }
     }

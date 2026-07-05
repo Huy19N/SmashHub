@@ -440,7 +440,17 @@ public class PaymentService : IPaymentService
         if (payment.StatusId != 1) // Already processed
             return;
 
-        // 3. Check if payment was successful
+        // 3. Verify Signature
+        try
+        {
+            _payOSClient.verifyPaymentWebhookData(webhook);
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Chữ ký Webhook không hợp lệ: {ex.Message}");
+        }
+
+        // 4. Check if payment was successful
         if (webhook.Success)
         {
             // Update payment status
@@ -501,6 +511,49 @@ public class PaymentService : IPaymentService
 
         if (payment.StatusId != 1)
             return;
+
+        // 3. Xác định PayOSClient tương ứng (Admin hoặc Chủ cơ sở) và Verify Signature
+        var activePayOSClient = _payOSClient;
+        if (payment.FacilityConfigId.HasValue)
+        {
+            var context = _unitOfWork.Payments.GetContext();
+            var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                .FirstOrDefaultAsync(c => c.ConfigId == payment.FacilityConfigId.Value);
+
+            if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+            {
+                try
+                {
+                    var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                    if (keys != null)
+                    {
+                        var clientId = keys.GetValueOrDefault("ClientId");
+                        var apiKey = keys.GetValueOrDefault("ApiKey");
+                        var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                        {
+                            activePayOSClient = new PayOSClient(new PayOSOptions
+                            {
+                                ClientId = clientId,
+                                ApiKey = apiKey,
+                                ChecksumKey = checksumKey
+                            });
+                        }
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        }
+
+        try
+        {
+            activePayOSClient.verifyPaymentWebhookData(webhook);
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Chữ ký Webhook không hợp lệ: {ex.Message}");
+        }
 
         var refIds = payment.ReferenceId.Contains(",")
             ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
