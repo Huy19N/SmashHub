@@ -457,6 +457,8 @@ public class PaymentService : IPaymentService
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
             payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             // 4. Parse reference to get plan info: SUB_{userId}_{planId}
@@ -493,6 +495,8 @@ public class PaymentService : IPaymentService
         {
             // Payment cancelled
             payment.StatusId = 3; // Cancelled
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
         }
     }
@@ -565,6 +569,8 @@ public class PaymentService : IPaymentService
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
             payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             // 4. Kiểm tra xem ReferenceId là Booking hay MatchAcceptance
@@ -666,6 +672,8 @@ public class PaymentService : IPaymentService
         {
             // Payment cancelled
             payment.StatusId = 3; // Cancelled
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             foreach (var refId in refIds)
@@ -717,6 +725,8 @@ public class PaymentService : IPaymentService
 
         // Update payment status
         payment.StatusId = 3; // Cancelled
+        payment.Status = null;
+        payment.User = null;
         await _unitOfWork.Payments.UpdateAsync(payment);
 
         if (payment.PaymentType == "Booking")
