@@ -706,6 +706,60 @@ public class PaymentService : IPaymentService
 
     #region Query
 
+    public async Task<bool> CancelPaymentAsync(long orderCode, Guid userId)
+    {
+        var payment = await _unitOfWork.Payments.GetByOrderCodeAsync(orderCode);
+        if (payment == null || payment.UserId != userId)
+            return false;
+
+        if (payment.StatusId != 1) // Not pending
+            return false;
+
+        // Update payment status
+        payment.StatusId = 3; // Cancelled
+        await _unitOfWork.Payments.UpdateAsync(payment);
+
+        if (payment.PaymentType == "Booking")
+        {
+            var refIds = payment.ReferenceId.Contains(",")
+                ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
+                : new List<Guid> { Guid.Parse(payment.ReferenceId) };
+
+            foreach (var refId in refIds)
+            {
+                var booking = await _unitOfWork.Booking.GetByIdAsync(refId);
+                if (booking != null)
+                {
+                    if (booking.StatusId == 1)
+                    {
+                        booking.StatusId = 3; // Cancelled
+                        await _unitOfWork.Booking.UpdateAsync(booking);
+                    }
+                }
+                else
+                {
+                    var context = _unitOfWork.Payments.GetContext();
+                    var acceptance = await context.Set<MatchAcceptance>().FirstOrDefaultAsync(ma => ma.AcceptanceId == refId);
+                    if (acceptance != null)
+                    {
+                        acceptance.StatusId = 3; // Rejected/Cancelled
+                        context.Entry(acceptance).State = EntityState.Modified;
+
+                        var challenge = await _unitOfWork.MatchChallenges.GetByIdAsync(acceptance.ChallengeId);
+                        if (challenge != null)
+                        {
+                            challenge.StatusId = 1; // Re-open challenge
+                            await _unitOfWork.MatchChallenges.UpdateAsync(challenge);
+                        }
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
     public async Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId)
     {
         var payment = await _unitOfWork.Payments.GetDetailAsync(paymentId);

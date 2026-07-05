@@ -17,6 +17,9 @@ public interface IPaymentService
     Task HandleSubscriptionWebhookAsync(string webhookBody);
     Task HandleBookingWebhookAsync(string webhookBody);
 
+    // Cancel manually from frontend
+    Task<bool> CancelPaymentAsync(long orderCode, Guid userId);
+
     // Query
     Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId);
     Task<PagedResult<PaymentResponse>> GetPaymentsByUserAsync(Guid userId, PaginationParams pagination);

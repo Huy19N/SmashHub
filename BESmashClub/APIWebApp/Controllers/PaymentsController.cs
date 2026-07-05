@@ -67,6 +67,22 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Hủy một giao dịch thanh toán (gọi từ frontend khi user bấm Hủy).
+    /// </summary>
+    [HttpPost("{orderCode:long}/cancel")]
+    [Authorize]
+    public async Task<IActionResult> CancelPayment(long orderCode)
+    {
+        var userId = GetCurrentUserId();
+        var success = await _paymentService.CancelPaymentAsync(orderCode, userId);
+        
+        if (success)
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Đã hủy thanh toán thành công."));
+        
+        return BadRequest(ApiResponse.ErrorResponse("Không thể hủy giao dịch này. Có thể giao dịch không tồn tại, đã hoàn tất, hoặc bạn không có quyền."));
+    }
+
+    /// <summary>
     /// Lấy lịch sử thanh toán của user hiện tại (có phân trang).
     /// </summary>
     [HttpGet("my")]
