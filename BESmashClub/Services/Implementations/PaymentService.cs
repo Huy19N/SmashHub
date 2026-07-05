@@ -440,13 +440,25 @@ public class PaymentService : IPaymentService
         if (payment.StatusId != 1) // Already processed
             return;
 
-        // 3. Check if payment was successful
+        // 3. Verify Signature
+        try
+        {
+            await _payOSClient.Webhooks.VerifyAsync(webhook);
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Chữ ký Webhook không hợp lệ: {ex.Message}");
+        }
+
+        // 4. Check if payment was successful
         if (webhook.Success)
         {
             // Update payment status
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
             payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             // 4. Parse reference to get plan info: SUB_{userId}_{planId}
@@ -483,6 +495,8 @@ public class PaymentService : IPaymentService
         {
             // Payment cancelled
             payment.StatusId = 3; // Cancelled
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
         }
     }
@@ -502,6 +516,49 @@ public class PaymentService : IPaymentService
         if (payment.StatusId != 1)
             return;
 
+        // 3. Xác định PayOSClient tương ứng (Admin hoặc Chủ cơ sở) và Verify Signature
+        var activePayOSClient = _payOSClient;
+        if (payment.FacilityConfigId.HasValue)
+        {
+            var context = _unitOfWork.Payments.GetContext();
+            var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                .FirstOrDefaultAsync(c => c.ConfigId == payment.FacilityConfigId.Value);
+
+            if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+            {
+                try
+                {
+                    var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                    if (keys != null)
+                    {
+                        var clientId = keys.GetValueOrDefault("ClientId");
+                        var apiKey = keys.GetValueOrDefault("ApiKey");
+                        var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                        {
+                            activePayOSClient = new PayOSClient(new PayOSOptions
+                            {
+                                ClientId = clientId,
+                                ApiKey = apiKey,
+                                ChecksumKey = checksumKey
+                            });
+                        }
+                    }
+                }
+                catch { /* Ignore */ }
+            }
+        }
+
+        try
+        {
+            await activePayOSClient.Webhooks.VerifyAsync(webhook);
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Chữ ký Webhook không hợp lệ: {ex.Message}");
+        }
+
         var refIds = payment.ReferenceId.Contains(",")
             ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
             : new List<Guid> { Guid.Parse(payment.ReferenceId) };
@@ -512,6 +569,8 @@ public class PaymentService : IPaymentService
             payment.StatusId = 2; // Paid
             payment.PaidAt = DateTime.Now;
             payment.GatewayTransactionId = webhook.Data.PaymentLinkId;
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             // 4. Kiểm tra xem ReferenceId là Booking hay MatchAcceptance
@@ -613,6 +672,8 @@ public class PaymentService : IPaymentService
         {
             // Payment cancelled
             payment.StatusId = 3; // Cancelled
+            payment.Status = null;
+            payment.User = null;
             await _unitOfWork.Payments.UpdateAsync(payment);
 
             foreach (var refId in refIds)
@@ -652,6 +713,62 @@ public class PaymentService : IPaymentService
     #endregion
 
     #region Query
+
+    public async Task<bool> CancelPaymentAsync(long orderCode, Guid userId)
+    {
+        var payment = await _unitOfWork.Payments.GetByOrderCodeAsync(orderCode);
+        if (payment == null || payment.UserId != userId)
+            return false;
+
+        if (payment.StatusId != 1) // Not pending
+            return false;
+
+        // Update payment status
+        payment.StatusId = 3; // Cancelled
+        payment.Status = null;
+        payment.User = null;
+        await _unitOfWork.Payments.UpdateAsync(payment);
+
+        if (payment.PaymentType == "Booking")
+        {
+            var refIds = payment.ReferenceId.Contains(",")
+                ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
+                : new List<Guid> { Guid.Parse(payment.ReferenceId) };
+
+            foreach (var refId in refIds)
+            {
+                var booking = await _unitOfWork.Booking.GetByIdAsync(refId);
+                if (booking != null)
+                {
+                    if (booking.StatusId == 1)
+                    {
+                        booking.StatusId = 3; // Cancelled
+                        await _unitOfWork.Booking.UpdateAsync(booking);
+                    }
+                }
+                else
+                {
+                    var context = _unitOfWork.Payments.GetContext();
+                    var acceptance = await context.Set<MatchAcceptance>().FirstOrDefaultAsync(ma => ma.AcceptanceId == refId);
+                    if (acceptance != null)
+                    {
+                        acceptance.StatusId = 3; // Rejected/Cancelled
+                        context.Entry(acceptance).State = EntityState.Modified;
+
+                        var challenge = await _unitOfWork.MatchChallenges.GetByIdAsync(acceptance.ChallengeId);
+                        if (challenge != null)
+                        {
+                            challenge.StatusId = 1; // Re-open challenge
+                            await _unitOfWork.MatchChallenges.UpdateAsync(challenge);
+                        }
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
 
     public async Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId)
     {

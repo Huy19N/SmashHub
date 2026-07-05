@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Clock, ArrowRight } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Button from '../../../components/ui/Button';
+import api from '../../../config/axios';
 
 export default function PaymentResultPage() {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,17 @@ export default function PaymentResultPage() {
   const isSuccess = status === 'PAID' && !cancel;
   const isCancelled = cancel || status === 'CANCELLED';
   
+  const [hasCancelled, setHasCancelled] = useState(false);
+
+  useEffect(() => {
+    // Call API to cancel the payment backend state if it is cancelled
+    if (isCancelled && orderCode && !hasCancelled) {
+      api.post(`/payments/${orderCode}/cancel`)
+        .then(() => setHasCancelled(true))
+        .catch(e => console.error('Failed to cancel payment:', e));
+    }
+  }, [isCancelled, orderCode, hasCancelled]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {

@@ -67,6 +67,22 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Hủy một giao dịch thanh toán (gọi từ frontend khi user bấm Hủy).
+    /// </summary>
+    [HttpPost("{orderCode:long}/cancel")]
+    [Authorize]
+    public async Task<IActionResult> CancelPayment(long orderCode)
+    {
+        var userId = GetCurrentUserId();
+        var success = await _paymentService.CancelPaymentAsync(orderCode, userId);
+        
+        if (success)
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Đã hủy thanh toán thành công."));
+        
+        return BadRequest(ApiResponse.ErrorResponse("Không thể hủy giao dịch này. Có thể giao dịch không tồn tại, đã hoàn tất, hoặc bạn không có quyền."));
+    }
+
+    /// <summary>
     /// Lấy lịch sử thanh toán của user hiện tại (có phân trang).
     /// </summary>
     [HttpGet("my")]
@@ -78,49 +94,32 @@ public class PaymentsController : ControllerBase
         return Ok(ApiResponse<PagedResult<PaymentResponse>>.SuccessResponse(result));
     }
 
+
+
     /// <summary>
-    /// Webhook callback từ PayOS cho thanh toán Subscription.
+    /// Webhook callback chung từ PayOS.
     /// PayOS gọi endpoint này khi user hoàn tất thanh toán.
     /// </summary>
-    [HttpPost("webhook/subscription")]
+    [HttpPost("webhook")]
     [AllowAnonymous]
-    public async Task<IActionResult> HandleSubscriptionWebhook()
+    public async Task<IActionResult> HandleGeneralWebhook()
     {
         try
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
+            // Gọi cả hai service. Trong PaymentService, mỗi method sẽ tự động kiểm tra xem 
+            // webhook đó thuộc loại nào (Subscription hay Booking) thông qua DB. 
+            // Nếu không đúng loại nó sẽ tự động ignore.
             await _paymentService.HandleSubscriptionWebhookAsync(body);
-            return Ok(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            // Log error but still return OK to prevent PayOS from retrying
-            Console.WriteLine($"Subscription webhook error: {ex.Message}");
-            return Ok(new { success = false, message = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Webhook callback từ PayOS cho thanh toán Booking (đặt sân).
-    /// PayOS gọi endpoint này khi user hoàn tất thanh toán.
-    /// </summary>
-    [HttpPost("webhook/booking")]
-    [AllowAnonymous]
-    public async Task<IActionResult> HandleBookingWebhook()
-    {
-        try
-        {
-            using var reader = new StreamReader(Request.Body);
-            var body = await reader.ReadToEndAsync();
-
             await _paymentService.HandleBookingWebhookAsync(body);
+
             return Ok(new { success = true });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Booking webhook error: {ex.Message}");
+            Console.WriteLine($"Webhook error: {ex.Message}");
             return Ok(new { success = false, message = ex.Message });
         }
     }
