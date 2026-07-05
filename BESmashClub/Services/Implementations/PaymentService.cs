@@ -443,7 +443,7 @@ public class PaymentService : IPaymentService
         // 3. Verify Signature
         try
         {
-            _payOSClient.verifyPaymentWebhookData(webhook);
+            await _payOSClient.Webhooks.VerifyAsync(webhook);
         }
         catch (Exception ex)
         {
@@ -548,7 +548,7 @@ public class PaymentService : IPaymentService
 
         try
         {
-            activePayOSClient.verifyPaymentWebhookData(webhook);
+            await activePayOSClient.Webhooks.VerifyAsync(webhook);
         }
         catch (Exception ex)
         {
