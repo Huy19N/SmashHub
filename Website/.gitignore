@@ -28,4 +28,7 @@ dist-ssr
 .env.*
 !.env.example
 
+# AI & Specs
 specs/*
+.specify/*
+.agents/*
