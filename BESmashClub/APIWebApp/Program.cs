@@ -1,4 +1,6 @@
 using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Minio;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -159,6 +161,30 @@ builder.Services.AddSwaggerGen(c =>
 // ---- SignalR -----
 builder.Services.AddSignalR();
 
+// ---- Rate Limiting ----
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 50,
+                QueueLimit = 2,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+        }
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken: token);
+    };
+});
+
 // ---- CORS ----
 builder.Services.AddCors(options =>
 {
@@ -219,6 +245,8 @@ if (!app.Environment.IsDevelopment())
 // app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseRateLimiter();
 
 app.UseCors("StrictPolicy");
 
