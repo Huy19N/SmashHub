@@ -456,9 +456,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _controller.isLoading && _controller.userProfile == null
           ? const Center(child: CircularProgressIndicator())
           : (_controller.userProfile?.isActive == false)
-              ? _buildActivationRequiredState()
-              : SafeArea(
-                  child: SingleChildScrollView(
+          ? _buildActivationRequiredState()
+          : SafeArea(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20.0,
                   vertical: 16.0,
@@ -485,21 +485,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 alignment: Alignment.center,
                                 child:
                                     _controller.userProfile?.avatarFileId !=
-                                                null &&
-                                            _controller
-                                                .userProfile!
-                                                .avatarFileId!
-                                                .isNotEmpty
-                                        ? ClipOval(
-                                            child: AppMediaImage(
-                                              fileId: _controller
-                                                  .userProfile!.avatarFileId!,
-                                              width: 80,
-                                              height: 80,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          )
-                                        : Text(
+                                            null &&
+                                        _controller
+                                            .userProfile!
+                                            .avatarFileId!
+                                            .isNotEmpty
+                                    ? ClipOval(
+                                        child: AppMediaImage(
+                                          fileId: _controller
+                                              .userProfile!
+                                              .avatarFileId!,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Text(
                                         _controller
                                                     .userProfile
                                                     ?.fullName
@@ -631,33 +632,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: isDark ? null : Colors.white,
                           child: Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Colors.amber, size: 36),
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 36,
+                              ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      (_controller.userProfile?.subscriptionTier != null && _controller.userProfile?.subscriptionTier != 'Free')
+                                      (_controller
+                                                      .userProfile
+                                                      ?.subscriptionTier !=
+                                                  null &&
+                                              _controller
+                                                      .userProfile
+                                                      ?.subscriptionTier !=
+                                                  'Free')
                                           ? 'Gói Tài Khoản: ${_controller.userProfile!.subscriptionTier!.toUpperCase()}'
                                           : 'Gói Tài Khoản',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                     Text(
-                                      (_controller.userProfile?.subscriptionTier != null && _controller.userProfile?.subscriptionTier != 'Free')
+                                      (_controller
+                                                      .userProfile
+                                                      ?.subscriptionTier !=
+                                                  null &&
+                                              _controller
+                                                      .userProfile
+                                                      ?.subscriptionTier !=
+                                                  'Free')
                                           ? 'Bạn đang sử dụng các ưu đãi đặc quyền'
                                           : 'Nâng cấp gói Standard/Premium để nhận nhiều ưu đãi hơn',
-                                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 11,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                                icon: const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 16,
+                                ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const SubscriptionScreen(),
+                                    ),
                                   ).then((_) => _controller.fetchProfileData());
                                 },
                               ),
@@ -828,36 +859,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.fitness_center_rounded,
-                                            size: 18,
-                                            color: AppTheme.primaryColor,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Trình độ thể thao',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.fitness_center_rounded,
+                                              size: 18,
+                                              color: AppTheme.primaryColor,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      const Text(
-                                        'Độ tương thích khi ghép cặp, đặt sân giao lưu',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey,
+                                            const SizedBox(width: 8),
+                                            const Expanded(
+                                              child: Text(
+                                                'Trình độ thể thao',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 2),
+                                        const Text(
+                                          'Độ tương thích khi ghép cặp, đặt sân giao lưu',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   if (undeclaredSports.isNotEmpty &&
                                       profiles.isNotEmpty)
@@ -1153,12 +1188,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SignalRService.instance.disconnect();
                           // Quay lại màn hình Login và xóa toàn bộ route trước đó
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
                             (route) => false,
                           );
                         },
                         text: 'Đăng xuất khỏi hệ thống',
-                        icon: const Icon(Icons.logout_rounded, size: 20, color: Colors.white),
+                        icon: const Icon(
+                          Icons.logout_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                         // Nút Đăng xuất thì dùng primary màu đỏ (tùy chỉnh màu thông qua AppTheme hoặc Container nếu cần, nhưng dùng button chuẩn trước)
                       ),
                     ),
@@ -1167,17 +1208,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       child: AppButton(
                         onPressed: () async {
-                          final Uri url = Uri.parse('https://smashclub.vn/privacy-policy');
-                          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                          final Uri url = Uri.parse(
+                            'https://smashclub.vn/privacy-policy',
+                          );
+                          if (!await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          )) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Không thể mở liên kết chính sách bảo mật.')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Không thể mở liên kết chính sách bảo mật.',
+                                  ),
+                                ),
                               );
                             }
                           }
                         },
                         text: 'Chính sách bảo mật',
-                        icon: const Icon(Icons.privacy_tip_rounded, size: 20, color: AppTheme.primaryColor),
+                        icon: const Icon(
+                          Icons.privacy_tip_rounded,
+                          size: 20,
+                          color: AppTheme.primaryColor,
+                        ),
                         type: AppButtonType.secondary,
                       ),
                     ),
@@ -1228,20 +1282,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () async {
                   final email = _controller.userProfile?.email;
                   if (email == null) return;
-                  
+
                   // Gửi yêu cầu mã OTP mới nếu cần
                   await _controller.sendConfirmationEmail(email);
 
                   // Chuyển sang màn hình VerifyEmailScreen
                   final result = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
-                      builder: (_) => VerifyEmailScreen(
-                        email: email,
-                        fromProfile: true,
-                      ),
+                      builder: (_) =>
+                          VerifyEmailScreen(email: email, fromProfile: true),
                     ),
                   );
-                  
+
                   if (result == true) {
                     // Cập nhật UI ngay lập tức (không chờ server)
                     _controller.markAsActive();
@@ -1250,7 +1302,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }
                 },
                 text: 'Kích hoạt ngay',
-                icon: const Icon(Icons.mark_email_read_rounded, color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.mark_email_read_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
             const SizedBox(height: 16),

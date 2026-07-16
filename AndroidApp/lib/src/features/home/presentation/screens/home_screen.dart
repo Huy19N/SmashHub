@@ -601,7 +601,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 14,
       crossAxisSpacing: 14,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.25,
       children: [
         _buildActionCard(
           icon: Icons.dashboard_rounded,

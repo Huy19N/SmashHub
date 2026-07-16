@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
 import '../../../../shared/network/api_config.dart';
+import '../../../../shared/services/signalr_service.dart';
 import '../../data/data_sources/community_remote_data_source.dart';
 import '../../data/repositories/community_repository_impl.dart';
 import '../controllers/messages_controller.dart';
@@ -16,6 +18,7 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   late final MessagesController _controller;
+  StreamSubscription? _messageSubscription;
 
   @override
   void initState() {
@@ -28,6 +31,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _controller.addListener(_onControllerUpdate);
     _controller.fetchTeams();
     ApiConfig.activeTabNotifier.addListener(_onActiveTabChanged);
+    
+    _messageSubscription = SignalRService.instance.messageStream.listen((_) {
+      if (mounted) {
+        _controller.fetchTeams();
+      }
+    });
   }
 
   void _onActiveTabChanged() {
@@ -42,6 +51,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   void dispose() {
+    _messageSubscription?.cancel();
     ApiConfig.activeTabNotifier.removeListener(_onActiveTabChanged);
     _controller.removeListener(_onControllerUpdate);
     _controller.dispose();

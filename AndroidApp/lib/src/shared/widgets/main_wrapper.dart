@@ -73,6 +73,16 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
 
     // Yêu cầu quyền thông báo (hiển thị hộp thoại trên Android 13+)
     NotificationService.instance.requestPermissions();
+
+    ApiConfig.activeTabNotifier.addListener(_onActiveTabNotifierChanged);
+  }
+
+  void _onActiveTabNotifierChanged() {
+    if (mounted && _currentIndex != ApiConfig.activeTabNotifier.value) {
+      setState(() {
+        _currentIndex = ApiConfig.activeTabNotifier.value;
+      });
+    }
   }
 
   @override
@@ -111,6 +121,7 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    ApiConfig.activeTabNotifier.removeListener(_onActiveTabNotifierChanged);
     ProfileController.profileUpdateNotifier.removeListener(
       _onGlobalProfileUpdate,
     );

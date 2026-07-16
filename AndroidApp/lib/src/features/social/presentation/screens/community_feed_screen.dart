@@ -11,7 +11,7 @@ import '../../data/data_sources/social_remote_data_source.dart';
 import '../../data/repositories/social_repository_impl.dart';
 import '../../data/models/post_model.dart';
 import 'create_post_screen.dart';
-import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../home/presentation/screens/post_comments_screen.dart';
 
 class CommunityFeedScreen extends StatefulWidget {
@@ -650,8 +650,8 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
 
   void _sharePost(PostModel post) {
     final url = 'https://tad-min.io.vn/social/post/${post.postId}';
-    Clipboard.setData(ClipboardData(text: url));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã sao chép liên kết chia sẻ!')));
+    // ignore: deprecated_member_use
+    Share.share(url, subject: 'Chia sẻ bài viết từ SmashHub');
   }
 
   String _getTopicLabel(int type) {
