@@ -41,8 +41,12 @@ string redisConnStr = builder.Configuration.GetConnectionString("RedisConnection
                       ?? builder.Configuration["RedisConnection"] 
                       ?? builder.Configuration["Redis:ConnectionString"] 
                       ?? "localhost:6379";
+
+var redisOptions = ConfigurationOptions.Parse(redisConnStr);
+redisOptions.AbortOnConnectFail = false;
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
-    ConnectionMultiplexer.Connect(redisConnStr));
+    ConnectionMultiplexer.Connect(redisOptions));
 builder.Services.AddScoped<IRedisTokenRepository, RedisTokenRepository>();
 builder.Services.AddScoped<IRedisEmailConfirmRepository, RedisEmailConfirmRepository>();
 
