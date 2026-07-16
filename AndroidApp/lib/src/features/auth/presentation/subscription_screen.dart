@@ -4,6 +4,7 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/network/api_client.dart';
 import '../../../shared/widgets/payment_webview_screen.dart';
+import 'payment_history_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -146,6 +147,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           'GÓI TÀI KHOẢN',
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PaymentHistoryScreen()),
+              );
+            },
+            icon: const Icon(Icons.history_rounded),
+            tooltip: 'Lịch sử giao dịch',
+          ),
+        ],
       ),
       body: _isLoading && _plans.isEmpty
           ? const Center(child: CircularProgressIndicator())

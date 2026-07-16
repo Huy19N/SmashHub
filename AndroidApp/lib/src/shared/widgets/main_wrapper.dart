@@ -332,14 +332,17 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
     final isOwner = _isOwner();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 40,
@@ -446,6 +449,8 @@ class _MainWrapperState extends State<MainWrapper> with WidgetsBindingObserver {
               const SizedBox(height: 32),
             ],
           ),
+        ),
+        ),
         );
       },
     );
