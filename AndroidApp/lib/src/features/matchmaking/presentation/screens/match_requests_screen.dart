@@ -85,7 +85,7 @@ class _MatchRequestsScreenState extends State<MatchRequestsScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(res.message ?? 'Xử lý yêu cầu thất bại.'),
+              content: Text(res.message),
               backgroundColor: Colors.red,
             ),
           );
@@ -198,10 +198,10 @@ class _MatchRequestsScreenState extends State<MatchRequestsScreen> {
                                             AppBadge(
                                               label: acceptance.statusName,
                                               backgroundColor: acceptance.statusId == 2
-                                                  ? AppTheme.primaryColor.withOpacity(0.15)
+                                                  ? AppTheme.primaryColor.withValues(alpha: 0.15)
                                                   : acceptance.statusId == 3
-                                                      ? Colors.red.withOpacity(0.15)
-                                                      : Colors.orange.withOpacity(0.15),
+                                                      ? Colors.red.withValues(alpha: 0.15)
+                                                      : Colors.orange.withValues(alpha: 0.15),
                                               textColor: acceptance.statusId == 2
                                                   ? AppTheme.primaryColor
                                                   : acceptance.statusId == 3

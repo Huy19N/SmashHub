@@ -56,6 +56,32 @@ class _FacilityLocationPickerScreenState
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
+        // Prominent Disclosure before requesting permission
+        if (mounted) {
+          final shouldRequest = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text("Cấp quyền vị trí"),
+              content: const Text(
+                "SmashHub cần quyền truy cập vị trí của bạn để tìm kiếm và đề xuất các sân cầu lông, cũng như các đối thủ ở gần bạn trên bản đồ.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text("Từ chối"),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text("Đồng ý"),
+                ),
+              ],
+            ),
+          );
+          if (shouldRequest != true) {
+            setState(() => _isLocating = false);
+            return;
+          }
+        }
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           setState(() => _isLocating = false);

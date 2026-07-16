@@ -11,6 +11,8 @@ class TeamChatController extends ChangeNotifier {
     required this.teamId,
   }) : _repository = repository;
 
+  CommunityRepository get repository => _repository;
+
   bool _isLoading = false;
   bool _isSending = false;
   String? _errorMessage;

@@ -85,4 +85,36 @@ class AuthController {
       GlobalLoading.dismiss();
     }
   }
+  /// Gửi yêu cầu lấy lại mật khẩu qua email.
+  Future<ApiResponse<void>> forgotPassword(
+    BuildContext context, {
+    required String email,
+  }) async {
+    GlobalLoading.show(context, message: 'Đang gửi yêu cầu...');
+    try {
+      return await authRepository.forgotPassword(email);
+    } finally {
+      GlobalLoading.dismiss();
+    }
+  }
+
+  /// Đặt lại mật khẩu mới.
+  Future<ApiResponse<void>> resetPassword(
+    BuildContext context, {
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    GlobalLoading.show(context, message: 'Đang khôi phục...');
+    try {
+      final request = ResetPasswordRequest(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
+      return await authRepository.resetPassword(request);
+    } finally {
+      GlobalLoading.dismiss();
+    }
+  }
 }

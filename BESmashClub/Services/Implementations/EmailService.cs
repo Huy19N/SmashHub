@@ -29,7 +29,9 @@ public class EmailService : IEmailService
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
 
-        var code = Path.GetRandomFileName().Replace(".", "").Substring(0, 5);
+        var random = new Random();
+        var code = random.Next(10000, 99999).ToString();
+        
         var confirm = new EmailConfirm
         {
             ConfirmationCode = code,
@@ -77,7 +79,8 @@ public class EmailService : IEmailService
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy tài khoản với email này.");
 
-        var code = Path.GetRandomFileName().Replace(".", "").Substring(0, 5);
+        var random = new Random();
+        var code = random.Next(10000, 99999).ToString();
 
         var confirm = new EmailConfirm
         {

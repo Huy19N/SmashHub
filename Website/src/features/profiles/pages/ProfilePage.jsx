@@ -688,22 +688,22 @@ export default function ProfilePage() {
                       "Không thể gửi file phương tiện trong Chat"
                     ];
 
-                    if (tier === 'Basic') {
+                    if (tier === 'Standard') {
                       bgClass = "bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20";
                       textClass = "text-blue-600 dark:text-blue-400";
                       titleColor = "text-blue-800 dark:text-blue-300";
-                      tierName = "Hội viên Basic";
+                      tierName = "Hội viên Standard";
                       description = "Phù hợp cho người chơi phong trào năng động.";
                       limits = [
                         "Tạo/Tham gia tối đa 10 nhóm",
                         "Tối đa 30 thành viên mỗi nhóm",
                         "Gửi tối đa 5 file phương tiện/ngày trong Chat"
                       ];
-                    } else if (tier === 'Pro') {
+                    } else if (tier === 'Premium') {
                       bgClass = "bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-yellow-500/5 border-amber-500/30 dark:border-amber-500/20";
                       textClass = "text-amber-600 dark:text-amber-400";
                       titleColor = "text-amber-800 dark:text-amber-300 font-extrabold";
-                      tierName = "Hội viên PRO ✨";
+                      tierName = "Hội viên PREMIUM ✨";
                       description = "Trải nghiệm không giới hạn mọi tính năng cao cấp.";
                       limits = [
                         "Tạo/Tham gia không giới hạn nhóm",

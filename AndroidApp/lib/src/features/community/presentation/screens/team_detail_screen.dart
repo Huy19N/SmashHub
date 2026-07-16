@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -795,7 +796,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white54.withOpacity(0.05) : Colors.grey[100],
+                        color: isDark ? Colors.white54.withValues(alpha: 0.05) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
                       ),
@@ -829,7 +830,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                         ),
                         Switch(
                           value: isCostSplit,
-                          activeColor: AppTheme.primaryColor,
+                          activeThumbColor: AppTheme.primaryColor,
                           onChanged: (val) {
                             setDialogState(() {
                               isCostSplit = val;
@@ -850,7 +851,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                       decoration: InputDecoration(
                         hintText: 'Nhập trình độ mong muốn, ghi chú...',
                         hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                        fillColor: isDark ? Colors.white54.withOpacity(0.05) : Colors.grey[100],
+                        fillColor: isDark ? Colors.white54.withValues(alpha: 0.05) : Colors.grey[100],
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black12),
@@ -891,7 +892,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(res.message ?? 'Đăng tin bắt kèo thất bại.'),
+                              content: Text(res.message),
                               backgroundColor: Colors.red,
                             ),
                           );

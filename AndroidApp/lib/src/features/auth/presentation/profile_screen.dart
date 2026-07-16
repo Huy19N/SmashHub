@@ -1,7 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -11,8 +11,8 @@ import '../../../shared/widgets/app_dropdown.dart';
 import '../../../shared/network/api_config.dart';
 
 import '../../../shared/network/api_client.dart';
-import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/app_media_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/data_sources/profile_remote_data_source.dart';
 import '../data/repositories/profile_repository_impl.dart';
 import '../presentation/controllers/profile_controller.dart';
@@ -637,12 +637,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Gói Tài Khoản',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    Text(
+                                      (_controller.userProfile?.subscriptionTier != null && _controller.userProfile?.subscriptionTier != 'Free')
+                                          ? 'Gói Tài Khoản: ${_controller.userProfile!.subscriptionTier!.toUpperCase()}'
+                                          : 'Gói Tài Khoản',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                     ),
                                     Text(
-                                      'Nâng cấp gói Standard/Premium để nhận nhiều ưu đãi hơn',
+                                      (_controller.userProfile?.subscriptionTier != null && _controller.userProfile?.subscriptionTier != 'Free')
+                                          ? 'Bạn đang sử dụng các ưu đãi đặc quyền'
+                                          : 'Nâng cấp gói Standard/Premium để nhận nhiều ưu đãi hơn',
                                       style: TextStyle(color: Colors.grey[500], fontSize: 11),
                                     ),
                                   ],
@@ -1158,6 +1162,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Nút Đăng xuất thì dùng primary màu đỏ (tùy chỉnh màu thông qua AppTheme hoặc Container nếu cần, nhưng dùng button chuẩn trước)
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        onPressed: () async {
+                          final Uri url = Uri.parse('https://smashclub.vn/privacy-policy');
+                          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Không thể mở liên kết chính sách bảo mật.')),
+                              );
+                            }
+                          }
+                        },
+                        text: 'Chính sách bảo mật',
+                        icon: const Icon(Icons.privacy_tip_rounded, size: 20, color: AppTheme.primaryColor),
+                        type: AppButtonType.secondary,
+                      ),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -1210,7 +1233,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await _controller.sendConfirmationEmail(email);
 
                   // Chuyển sang màn hình VerifyEmailScreen
-                  if (!mounted) return;
                   final result = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
                       builder: (_) => VerifyEmailScreen(

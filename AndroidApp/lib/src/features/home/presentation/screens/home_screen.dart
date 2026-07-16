@@ -177,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: AppTheme.primaryColor,
                                   width: 2,
                                 ),
-                                color: AppTheme.primaryColor.withOpacity(0.2),
+                                color: AppTheme.primaryColor.withValues(alpha: 0.2),
                               ),
                               alignment: Alignment.center,
                               child:

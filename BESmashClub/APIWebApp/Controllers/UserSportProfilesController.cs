@@ -41,8 +41,7 @@ public class UserSportProfilesController : ControllerBase
         try
         {
             var result = await _service.CreateAsync(GetCurrentUserId(), request);
-            return CreatedAtAction(nameof(GetMyProfiles), null, 
-                ApiResponse<UserSportProfileResponse>.SuccessResponse(result, "Khai báo trình độ thành công."));
+            return Ok(ApiResponse<UserSportProfileResponse>.SuccessResponse(result, "Khai báo trình độ thành công."));
         }
         catch (InvalidOperationException ex)
         {

@@ -23,7 +23,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
 
   List<dynamic> _comments = [];
   bool _isLoading = true;
-  String? _errorMessage;
   bool _isLiked = false;
   int _likeCount = 0;
 
@@ -45,7 +44,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
   Future<void> _fetchComments() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
     try {
       final res = await _apiClient.get('/api/social/posts/${widget.post.postId}/comments');
@@ -57,7 +55,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
           });
         } else {
           setState(() {
-            _errorMessage = res.data['message'] ?? 'Lỗi tải danh sách bình luận.';
             _isLoading = false;
           });
         }
@@ -65,7 +62,6 @@ class _PostCommentsScreenState extends State<PostCommentsScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Lỗi kết nối máy chủ.';
           _isLoading = false;
         });
       }

@@ -22,7 +22,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   String _mostBookedCourt = 'Chưa có';
   
   List<dynamic> _dailyStats = [];
-  List<dynamic> _monthlyStats = [];
 
   @override
   void initState() {
@@ -52,7 +51,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             _peakHour = ownerStats['peakHour'] as String? ?? 'Chưa có';
             _mostBookedCourt = ownerStats['mostBookedCourt'] as String? ?? 'Chưa có';
             _dailyStats = ownerStats['dailyStats'] as List<dynamic>? ?? [];
-            _monthlyStats = ownerStats['monthlyStats'] as List<dynamic>? ?? [];
           });
         }
       } else {
@@ -83,9 +81,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     if (_isLoading) {
       return const Scaffold(
         body: Center(

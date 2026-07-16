@@ -61,6 +61,33 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     await _localRenderer.initialize();
 
     try {
+      // Prominent Disclosure before requesting permission
+      if (mounted) {
+        final shouldRequest = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Cấp quyền Camera & Micro"),
+            content: const Text(
+              "SmashHub cần quyền truy cập Camera và Micro của bạn để thực hiện cuộc gọi video nhóm với các thành viên khác.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text("Từ chối"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text("Đồng ý"),
+              ),
+            ],
+          ),
+        );
+        if (shouldRequest != true) {
+          if (mounted) Navigator.pop(context);
+          return;
+        }
+      }
+
       // 1. Get local media with lower resolution to prevent lag
       _localStream = await navigator.mediaDevices.getUserMedia({
         'video': {

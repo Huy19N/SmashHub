@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -112,7 +113,7 @@ class _OwnerCourtManagementScreenState extends State<OwnerCourtManagementScreen>
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<dynamic>(
-                    value: selectedSport,
+                    initialValue: selectedSport,
                     decoration: const InputDecoration(
                       labelText: 'Bộ Môn Thể Thao',
                       border: OutlineInputBorder(),
@@ -305,7 +306,7 @@ class _OwnerCourtManagementScreenState extends State<OwnerCourtManagementScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: DropdownButtonFormField<dynamic>(
-                        value: _selectedFacility,
+                        initialValue: _selectedFacility,
                         decoration: InputDecoration(
                           labelText: 'Chọn cơ sở kinh doanh',
                           filled: true,
@@ -479,7 +480,7 @@ class _CourtPricingManagementScreenState extends State<CourtPricingManagementScr
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<int>(
-                      value: selectedDay,
+                      initialValue: selectedDay,
                       decoration: const InputDecoration(labelText: 'Thứ trong tuần', border: OutlineInputBorder()),
                       items: weekdays.map((day) {
                         return DropdownMenuItem<int>(
@@ -561,7 +562,7 @@ class _CourtPricingManagementScreenState extends State<CourtPricingManagementScr
                     }
 
                     try {
-                      final formatTime = (TimeOfDay t) =>
+                      String formatTime(TimeOfDay t) =>
                           '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
 
                       final requestBody = {

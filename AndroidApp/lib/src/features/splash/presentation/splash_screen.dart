@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
 import '../../auth/presentation/login_screen.dart';
+import '../../../shared/network/api_client.dart';
+import '../../../shared/widgets/main_wrapper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -122,10 +124,18 @@ class _SplashScreenState extends State<SplashScreen>
         final hasAgreed = prefs.getBool('agreedToTerms') ?? false;
 
         if (mounted) {
+          Widget nextScreen;
+          if (!hasAgreed) {
+            nextScreen = const OnboardingScreen();
+          } else if (ApiClient.accessToken != null && ApiClient.accessToken!.isNotEmpty) {
+            nextScreen = const MainWrapper();
+          } else {
+            nextScreen = const LoginScreen();
+          }
+
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  hasAgreed ? const LoginScreen() : const OnboardingScreen(),
+              pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                     return FadeTransition(opacity: animation, child: child);

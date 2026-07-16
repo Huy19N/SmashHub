@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -203,8 +204,6 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -273,10 +272,13 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // ignore: deprecated_member_use
                                   Radio<String>(
                                     value: 'auto',
+                                    // ignore: deprecated_member_use
                                     groupValue: _splitMode,
                                     activeColor: AppTheme.primaryColor,
+                                    // ignore: deprecated_member_use
                                     onChanged: (value) {
                                       if (value != null) setState(() => _splitMode = value);
                                     },
@@ -287,10 +289,13 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // ignore: deprecated_member_use
                                   Radio<String>(
                                     value: 'fixed',
+                                    // ignore: deprecated_member_use
                                     groupValue: _splitMode,
                                     activeColor: AppTheme.primaryColor,
+                                    // ignore: deprecated_member_use
                                     onChanged: (value) {
                                       if (value != null) setState(() => _splitMode = value);
                                     },
@@ -301,10 +306,13 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // ignore: deprecated_member_use
                                   Radio<String>(
                                     value: 'custom',
+                                    // ignore: deprecated_member_use
                                     groupValue: _splitMode,
                                     activeColor: AppTheme.primaryColor,
+                                    // ignore: deprecated_member_use
                                     onChanged: (value) {
                                       if (value != null) setState(() => _splitMode = value);
                                     },

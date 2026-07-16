@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,7 +6,6 @@ import 'package:dio/dio.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/theme/app_dialogs.dart';
 import '../../../../shared/network/api_client.dart';
-import '../../../../shared/widgets/app_card.dart';
 import 'package:latlong2/latlong.dart';
 import 'facility_location_picker_screen.dart';
 
@@ -53,6 +53,7 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
 
   File? _selectedImage;
   bool _isLoading = false;
+  // ignore: unused_field
   String? _uploadedFileId;
 
   Future<void> _pickImage() async {

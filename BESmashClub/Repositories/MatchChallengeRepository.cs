@@ -66,8 +66,8 @@ public class MatchChallengeRepository : GenericRepository<MatchChallenge>
 
         return tierName switch
         {
-            "Pro" => 2,
-            "Basic" => 1,
+            "Premium" => 2,
+            "Standard" => 1,
             _ => 0
         };
     }

@@ -511,8 +511,8 @@ public class TeamService : ITeamService
 
         return tierName switch
         {
-            "Pro" => (int.MaxValue, 100),
-            "Basic" => (10, 30),
+            "Premium" => (int.MaxValue, 100),
+            "Standard" => (10, 30),
             _ => (5, 15) // Free
         };
     }

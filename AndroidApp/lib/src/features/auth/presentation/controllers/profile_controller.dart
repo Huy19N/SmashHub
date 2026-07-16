@@ -34,6 +34,7 @@ class ProfileController extends ChangeNotifier {
         createdAt: _userProfile!.createdAt,
         isActive: true,
         avatarFileId: _userProfile!.avatarFileId,
+        subscriptionTier: _userProfile!.subscriptionTier,
       );
       notifyListeners();
     }
@@ -190,6 +191,7 @@ class ProfileController extends ChangeNotifier {
             createdAt: _userProfile!.createdAt,
             isActive: _userProfile!.isActive,
             avatarFileId: response.data,
+            subscriptionTier: _userProfile!.subscriptionTier,
           );
         }
         await fetchProfileData(); // Ensure we have the latest data
@@ -250,6 +252,7 @@ class ProfileController extends ChangeNotifier {
             createdAt: _userProfile!.createdAt,
             isActive: true, // Cập nhật isActive thành true!
             avatarFileId: _userProfile!.avatarFileId,
+            subscriptionTier: _userProfile!.subscriptionTier,
           );
         }
         return true;

@@ -438,7 +438,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                     decoration: InputDecoration(
                       hintText: 'Ý kiến nhận xét của bạn...',
                       hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                      fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black12),

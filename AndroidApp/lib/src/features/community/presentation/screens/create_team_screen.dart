@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -70,7 +71,6 @@ class _CreateTeamScreenState extends State<CreateTeamScreen> {
 
       final response = await _repository.createTeam(request);
 
-      if (!mounted) return;
 
       if (response.success && response.data != null) {
         // Thành công → Hiển thị thông báo và quay về danh sách nhóm

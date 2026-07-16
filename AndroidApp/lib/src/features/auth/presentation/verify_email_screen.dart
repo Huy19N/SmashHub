@@ -106,7 +106,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.message ?? 'Mã xác thực không hợp lệ'),
+              content: Text(response.message),
               backgroundColor: Colors.red,
             ),
           );
@@ -152,7 +152,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.message ?? 'Có lỗi xảy ra khi gửi lại mã.'),
+            content: Text(response.message),
             backgroundColor: Colors.red,
           ),
         );
@@ -226,7 +226,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               // Ô nhập mã OTP đơn giản
               TextField(
                 controller: _codeController,
-                keyboardType: TextInputType.text,
+                keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 maxLength: 5,
                 style: const TextStyle(
@@ -237,7 +237,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 decoration: InputDecoration(
                   hintText: 'XXXXX',
                   hintStyle: TextStyle(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
                     letterSpacing: 8.0,
                   ),
                   filled: true,

@@ -1,7 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
-import '../../../../shared/widgets/app_card.dart';
 
 class OwnerCalendarScreen extends StatefulWidget {
   const OwnerCalendarScreen({super.key});
@@ -111,12 +111,12 @@ class _OwnerCalendarScreenState extends State<OwnerCalendarScreen> {
       });
 
       try {
-        final parseTime = (String timeStr) {
+        DateTime parseTime(String timeStr) {
           final parts = timeStr.split(':');
           final hour = int.parse(parts[0]);
           final minute = int.parse(parts[1]);
           return DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, hour, minute);
-        };
+        }
 
         final startDateTime = parseTime(slot['startTime']);
         final endDateTime = parseTime(slot['endTime']);
@@ -278,7 +278,7 @@ class _OwnerCalendarScreenState extends State<OwnerCalendarScreen> {
                       child: Column(
                         children: [
                           DropdownButtonFormField<dynamic>(
-                            value: _selectedFacility,
+                            initialValue: _selectedFacility,
                             decoration: InputDecoration(
                               labelText: 'Cơ sở kinh doanh',
                               filled: true,

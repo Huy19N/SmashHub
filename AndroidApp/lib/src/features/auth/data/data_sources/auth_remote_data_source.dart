@@ -40,10 +40,16 @@ class AuthRemoteDataSource {
         '/api/auth/verify-registration',
         data: request.toJson(),
       );
-      return ApiResponse<TokenResponse>.fromJson(
+      final apiResponse = ApiResponse<TokenResponse>.fromJson(
         response.data,
         (json) => TokenResponse.fromJson(json as Map<String, dynamic>),
       );
+
+      // Nếu xác thực thành công, thiết lập access token toàn cục cho ApiClient
+      if (apiResponse.success && apiResponse.data != null) {
+        ApiClient.setTokens(apiResponse.data!.accessToken, apiResponse.data!.refreshToken);
+      }
+      return apiResponse;
     } on DioException catch (e) {
       return ApiResponse.error(e.message ?? 'Lỗi xác nhận mã kích hoạt');
     }
@@ -93,7 +99,7 @@ class AuthRemoteDataSource {
 
       // Nếu đăng nhập thành công, thiết lập access token toàn cục cho ApiClient
       if (apiResponse.success && apiResponse.data != null) {
-        ApiClient.setAccessToken(apiResponse.data!.accessToken);
+        ApiClient.setTokens(apiResponse.data!.accessToken, apiResponse.data!.refreshToken);
       }
       return apiResponse;
     } on DioException catch (e) {

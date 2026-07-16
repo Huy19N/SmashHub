@@ -6,7 +6,6 @@ import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../../data/models/booking_models.dart';
 import 'checkout_screen.dart';
-import 'booking_screen.dart';
 
 class TimeInterval implements Comparable<TimeInterval> {
   final String startTime;

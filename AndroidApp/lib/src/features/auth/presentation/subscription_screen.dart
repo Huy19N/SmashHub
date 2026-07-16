@@ -206,7 +206,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: cardAccentColor.withOpacity(0.15),
+                                    color: cardAccentColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(

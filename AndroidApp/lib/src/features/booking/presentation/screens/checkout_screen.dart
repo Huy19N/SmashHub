@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -97,7 +98,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _handlePaymentSuccess() {
-    if (!mounted) return;
     
     showDialog(
       context: context,
@@ -136,7 +136,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _handlePaymentCancelled() async {
-    if (!mounted) return;
 
     setState(() {
       _isLoading = true;
@@ -148,7 +147,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       debugPrint('Error cancelling booking: $e');
     }
 
-    if (!mounted) return;
 
     setState(() {
       _isLoading = false;

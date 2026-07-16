@@ -149,6 +149,14 @@ class ApiClient {
     }
   }
 
+  /// Thiết lập cả Access Token và Refresh Token cho session hiện tại.
+  static void setTokens(String accessToken, String refreshToken) {
+    _accessToken = accessToken;
+    _prefs?.setString('accessToken', accessToken);
+    _refreshTokenCookie = 'refreshToken=$refreshToken';
+    _prefs?.setString('refreshTokenCookie', _refreshTokenCookie!);
+  }
+
   /// Lấy Access Token hiện tại.
   static String? get accessToken => _accessToken;
 

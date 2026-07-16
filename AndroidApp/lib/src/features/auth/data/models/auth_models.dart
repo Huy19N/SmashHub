@@ -210,6 +210,7 @@ class UserProfileResponse {
   final DateTime? createdAt;
   final bool? isActive;
   final String? avatarFileId;
+  final String? subscriptionTier;
 
   UserProfileResponse({
     required this.userId,
@@ -220,6 +221,7 @@ class UserProfileResponse {
     this.createdAt,
     this.isActive,
     this.avatarFileId,
+    this.subscriptionTier,
   });
 
   factory UserProfileResponse.fromJson(Map<String, dynamic> json) {
@@ -232,6 +234,7 @@ class UserProfileResponse {
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : null,
       isActive: json['isActive'] as bool?,
       avatarFileId: json['avatarFileId'] as String?,
+      subscriptionTier: json['subscriptionTier'] as String?,
     );
   }
 }

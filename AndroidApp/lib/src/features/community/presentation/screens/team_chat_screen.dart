@@ -12,6 +12,7 @@ import '../../../auth/data/data_sources/profile_remote_data_source.dart';
 import '../../../auth/data/repositories/profile_repository_impl.dart';
 import 'dart:async';
 import 'video_call_screen.dart';
+import 'team_detail_screen.dart';
 import '../../../../shared/widgets/app_media_image.dart';
 import '../../../../shared/services/signalr_service.dart';
 
@@ -82,6 +83,56 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
         _controller.fetchMessages(isRefresh: true);
       }
     });
+  }
+
+  void _showInviteDialog() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final response = await _controller.repository.createInvite(widget.teamId);
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss loading
+
+    if (response.success && response.data != null) {
+      final inviteToken = response.data!['inviteToken'];
+      // final expiresAt = response.data!['expiresAt'];
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Mời tham gia nhóm'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Chia sẻ mã này cho bạn bè để họ tham gia nhóm:'),
+              const SizedBox(height: 16),
+              SelectableText(
+                inviteToken,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  color: AppTheme.primaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Đóng'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message)),
+      );
+    }
   }
 
   void _onProfileControllerUpdate() {
@@ -260,6 +311,16 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
               },
             ),
           ),
+          // Nút thêm thành viên
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: IconButton(
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              tooltip: 'Thêm thành viên',
+              onPressed: _showInviteDialog,
+            ),
+          ),
           // Nút thông tin nhóm
           SizedBox(
             width: 48,
@@ -267,7 +328,17 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
             child: IconButton(
               icon: const Icon(Icons.info_outline),
               tooltip: 'Thông tin nhóm',
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TeamDetailScreen(
+                      teamId: widget.teamId,
+                      teamName: widget.teamName,
+                      memberCount: widget.memberCount,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(width: 4),

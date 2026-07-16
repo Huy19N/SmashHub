@@ -77,4 +77,9 @@ class CommunityRepositoryImpl implements CommunityRepository {
   Future<ApiResponse<void>> removeTeamMember(String teamId, String userId) {
     return _remoteDataSource.removeTeamMember(teamId, userId);
   }
+
+  @override
+  Future<ApiResponse<Map<String, dynamic>>> createInvite(String teamId, {int expiryHours = 24}) {
+    return _remoteDataSource.createInvite(teamId, expiryHours: expiryHours);
+  }
 }

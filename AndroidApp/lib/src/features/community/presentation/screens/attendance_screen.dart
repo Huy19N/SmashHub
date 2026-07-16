@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -153,7 +154,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     ),
                                   ),
                                   Switch(
-                                    activeColor: AppTheme.primaryColor,
+                                    activeThumbColor: AppTheme.primaryColor,
                                     value: isAttended,
                                     onChanged: (val) => _toggleAttendance(p, val),
                                   ),

@@ -168,4 +168,23 @@ class CommunityRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi xoá thành viên khỏi câu lạc bộ');
     }
   }
+
+  /// Tạo link/mã mời tham gia nhóm.
+  Future<ApiResponse<Map<String, dynamic>>> createInvite(String teamId, {int expiryHours = 24}) async {
+    try {
+      final response = await _apiClient.post(
+        '/api/teams/$teamId/invites',
+        data: {
+          'maxUses': 0, // 0 = unlimited
+          'expiryHours': expiryHours,
+        },
+      );
+      return ApiResponse.fromJson(
+        response.data,
+        (json) => json as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi tạo link mời');
+    }
+  }
 }

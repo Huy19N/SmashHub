@@ -228,7 +228,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
                       )
                     else
                       DropdownButtonFormField<dynamic>(
-                        value: _selectedBooking,
+                        initialValue: _selectedBooking,
                         decoration: InputDecoration(
                           labelText: 'Chọn lịch đặt sân để liên kết *',
                           filled: true,

@@ -6,6 +6,7 @@ import 'controllers/auth_controller.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../data/data_sources/auth_remote_data_source.dart';
 import '../../../shared/network/api_client.dart';
+import 'forgot_password_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -188,9 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tính năng đang phát triển'),
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const ForgotPasswordScreen(),
                               ),
                             );
                           },
@@ -205,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           child: const Text(
-                            'Forgot Password?',
+                            'Quên mật khẩu?',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),

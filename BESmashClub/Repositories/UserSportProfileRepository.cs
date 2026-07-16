@@ -12,6 +12,7 @@ public class UserSportProfileRepository : GenericRepository<UserSportProfile>
     public async Task<List<UserSportProfile>> GetByUserIdAsync(Guid userId)
     {
         return await _context.UserSportProfiles
+            .AsNoTracking()
             .Include(p => p.SportLevel)
                 .ThenInclude(sl => sl.Sport)
             .Where(p => p.UserId == userId)
@@ -27,6 +28,7 @@ public class UserSportProfileRepository : GenericRepository<UserSportProfile>
     public async Task<UserSportProfile?> GetWithDetailsAsync(Guid userId, int sportId)
     {
         return await _context.UserSportProfiles
+            .AsNoTracking()
             .Include(p => p.SportLevel)
                 .ThenInclude(sl => sl.Sport)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.SportId == sportId);

@@ -12,7 +12,6 @@ import '../../data/repositories/social_repository_impl.dart';
 import '../../data/models/post_model.dart';
 import 'create_post_screen.dart';
 import 'package:flutter/services.dart';
-import '../../../home/data/models/home_models.dart';
 import '../../../home/presentation/screens/post_comments_screen.dart';
 
 class CommunityFeedScreen extends StatefulWidget {

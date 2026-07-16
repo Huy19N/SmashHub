@@ -112,7 +112,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(res.message ?? 'Đăng ký ghép đấu thất bại.'),
+              content: Text(res.message),
               backgroundColor: Colors.red,
             ),
           );
@@ -175,7 +175,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white54.withOpacity(0.05) : Colors.grey[100],
+                      color: isDark ? Colors.white54.withValues(alpha: 0.05) : Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
                     ),
@@ -308,7 +308,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                                             const SizedBox(width: 8),
                                             AppBadge(
                                               label: challenge.sportName,
-                                              backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
+                                              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
                                               textColor: AppTheme.primaryColor,
                                             ),
                                           ],
@@ -318,7 +318,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                                           width: double.infinity,
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: isDark ? Colors.white.withOpacity(0.03) : Colors.grey[100],
+                                            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[100],
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
                                               color: isDark ? Colors.white10 : Colors.black12,
@@ -425,7 +425,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: TextField(
@@ -448,7 +448,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: TextField(
@@ -471,7 +471,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
                 height: 40,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -497,7 +497,7 @@ class _MatchmakingDashboardScreenState extends State<MatchmakingDashboardScreen>
               const SizedBox(width: 8),
               IconButton(
                 style: IconButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
+                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 icon: const Icon(Icons.search, color: AppTheme.primaryColor, size: 20),

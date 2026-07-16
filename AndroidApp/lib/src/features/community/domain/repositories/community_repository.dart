@@ -44,4 +44,7 @@ abstract class CommunityRepository {
 
   /// Xoá thành viên khỏi câu lạc bộ.
   Future<ApiResponse<void>> removeTeamMember(String teamId, String userId);
+
+  /// Tạo mã mời tham gia nhóm.
+  Future<ApiResponse<Map<String, dynamic>>> createInvite(String teamId, {int expiryHours = 24});
 }

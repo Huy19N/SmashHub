@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:dio/dio.dart';
 import '../../../../shared/network/api_client.dart';
 import '../../../../shared/network/api_response.dart';
@@ -93,7 +94,8 @@ class ProfileRemoteDataSource {
             UserSportProfileResponse.fromJson(json as Map<String, dynamic>),
       );
     } on DioException catch (e) {
-      return ApiResponse.error(e.message ?? 'Lỗi khai báo trình độ thể thao');
+      final backendMessage = e.response?.data?['message'];
+      return ApiResponse.error(backendMessage ?? e.message ?? 'Lỗi khai báo trình độ thể thao');
     }
   }
 
