@@ -4,6 +4,7 @@ using Entites.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Interfaces;
+using StackExchange.Redis;
 
 namespace Services.Implementations;
 
@@ -11,11 +12,13 @@ public class BookingService : IBookingService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly IPaymentService _paymentService;
+    private readonly IConnectionMultiplexer _redis;
 
-    public BookingService(UnitOfWork unitOfWork, IPaymentService paymentService)
+    public BookingService(UnitOfWork unitOfWork, IPaymentService paymentService, IConnectionMultiplexer redis)
     {
         _unitOfWork = unitOfWork;
         _paymentService = paymentService;
+        _redis = redis;
     }
 
     public async Task<BookingResponse> CreateBookingAsync(Guid userId, CreateBookingRequest request)
@@ -32,9 +35,20 @@ public class BookingService : IBookingService
         if (request.StartTime < DateTime.Now)
             throw new InvalidOperationException("Không thể đặt sân trong quá khứ.");
 
-        // Check time slot availability
-        if (!await _unitOfWork.Booking.IsTimeSlotAvailableAsync(request.CourtId, request.StartTime, request.EndTime))
-            throw new InvalidOperationException("Khung giờ này đã có người đặt. Vui lòng chọn giờ khác.");
+        // Lock before checking availability
+        var db = _redis.GetDatabase();
+        var lockKey = $"lock:court:{request.CourtId}:date:{request.StartTime:yyyyMMdd}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockAcquired = await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(10));
+        
+        if (!lockAcquired)
+            throw new InvalidOperationException("Sân đang có người khác thao tác đặt, vui lòng thử lại sau!");
+
+        try
+        {
+            // Check time slot availability
+            if (!await _unitOfWork.Booking.IsTimeSlotAvailableAsync(request.CourtId, request.StartTime, request.EndTime))
+                throw new InvalidOperationException("Khung giờ này đã có người đặt. Vui lòng chọn giờ khác.");
 
         // Calculate total cost from CourtCosts
         var totalCost = await CalculateTotalCostAsync(request.CourtId, request.StartTime, request.EndTime);
@@ -95,6 +109,11 @@ public class BookingService : IBookingService
                 throw new InvalidOperationException("Không thể tạo liên kết thanh toán. Lỗi: " + ex.Message);
             }
         });
+        }
+        finally
+        {
+            await db.LockReleaseAsync(lockKey, lockValue);
+        }
     }
 
     public async Task<BatchBookingResponse> CreateBatchBookingAsync(Guid userId, List<CreateBookingRequest> requests)

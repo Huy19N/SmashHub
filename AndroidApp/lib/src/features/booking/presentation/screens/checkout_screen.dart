@@ -155,7 +155,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
@@ -168,8 +168,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Đóng dialog
-              Navigator.of(context).pop(false); // Trở về màn hình chọn giờ và trả về false
+              Navigator.pop(dialogContext); // Đóng dialog
+              Navigator.pop(context, false); // Trở về màn hình chọn giờ và trả về false
             },
             child: const Text('Đồng ý', style: TextStyle(color: AppTheme.primaryColor)),
           ),
@@ -192,17 +192,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             // Hiển thị hộp thoại xác nhận thoát khi đang thanh toán
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
+              builder: (dialogContext) => AlertDialog(
                 title: const Text('Hủy thanh toán?'),
                 content: const Text('Bạn có chắc chắn muốn rời khỏi trang thanh toán này?'),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     child: const Text('Không'),
                   ),
                   TextButton(
                     onPressed: () async {
-                      Navigator.pop(context); // Đóng dialog
+                      Navigator.pop(dialogContext); // Đóng dialog
                       
                       setState(() {
                         _isLoading = true;
@@ -218,7 +218,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         setState(() {
                           _isLoading = false;
                         });
-                        Navigator.of(context).pop(false); // Thoát CheckoutScreen và trả về false
+                        Navigator.pop(context, false); // Thoát CheckoutScreen và trả về false
                       }
                     },
                     child: const Text('Thoát', style: TextStyle(color: Colors.red)),

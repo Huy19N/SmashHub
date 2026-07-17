@@ -135,6 +135,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// ---- Background Services ----
+builder.Services.AddHostedService<Services.Implementations.PaymentCleanupService>();
+
 // ---- Controllers ----
 builder.Services.AddControllers();
 

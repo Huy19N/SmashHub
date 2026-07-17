@@ -182,6 +182,25 @@ class _SlotSelectionScreenState extends State<SlotSelectionScreen> {
     });
   }
 
+  bool _isPastSlot(DateTime selectedDate, String slotStartTime) {
+    final now = DateTime.now();
+    final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final today = DateTime(now.year, now.month, now.day);
+    
+    if (selectedDateOnly.isBefore(today)) {
+      return true;
+    } else if (selectedDateOnly.isAtSameMomentAs(today)) {
+      final parts = slotStartTime.split(':');
+      if (parts.length >= 2) {
+        final slotHour = int.tryParse(parts[0]) ?? 0;
+        final slotMinute = int.tryParse(parts[1]) ?? 0;
+        final slotTime = DateTime(now.year, now.month, now.day, slotHour, slotMinute);
+        return slotTime.isBefore(now);
+      }
+    }
+    return false;
+  }
+
   double get _totalCost {
     return _selectedSlots.fold(0.0, (sum, item) => sum + item.slot.cost);
   }
@@ -437,6 +456,7 @@ class _SlotSelectionScreenState extends State<SlotSelectionScreen> {
                     );
 
                     final isBooked = slot.status == 'Booked';
+                    final isPast = _isPastSlot(_selectedDate, slot.startTime);
                     final isMaintenance = slot.status == 'Maintenance' || !court.isActive;
                     final isSelected = _selectedSlots.any((s) =>
                         s.courtId == court.courtId &&
@@ -451,6 +471,10 @@ class _SlotSelectionScreenState extends State<SlotSelectionScreen> {
                       bgColor = isDark ? Colors.red.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.08);
                       textColor = Colors.red[400]!;
                       statusText = 'Đã đặt';
+                    } else if (isPast) {
+                      bgColor = isDark ? Colors.grey[850]! : Colors.grey[200]!;
+                      textColor = Colors.grey[500]!;
+                      statusText = 'Đã qua';
                     } else if (isMaintenance) {
                       bgColor = isDark ? Colors.grey[850]! : Colors.grey[200]!;
                       textColor = Colors.grey[500]!;
@@ -466,7 +490,7 @@ class _SlotSelectionScreenState extends State<SlotSelectionScreen> {
                     }
 
                     return InkWell(
-                      onTap: (isBooked || isMaintenance)
+                      onTap: (isBooked || isMaintenance || isPast)
                           ? null
                           : () => _onSlotTapped(court.courtId, court.courtName, slot),
                       child: Container(
