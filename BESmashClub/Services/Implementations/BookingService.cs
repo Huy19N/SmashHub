@@ -61,14 +61,27 @@ public class BookingService : IBookingService
         {
             await _unitOfWork.Booking.CreateAsync(booking);
 
-            // Create payment link via PayOS
-            var paymentResult = await _paymentService.CreateBookingPaymentAsync(userId, booking.BookingId);
+            if (booking.TotalCost == 0)
+            {
+                booking.StatusId = 2; // Confirmed
+                await _unitOfWork.Booking.UpdateAsync(booking);
+                await transaction.CommitAsync();
 
-            await transaction.CommitAsync();
+                var response = await GetBookingDetailAsync(booking.BookingId);
+                response.PaymentUrl = null;
+                return response;
+            }
+            else
+            {
+                // Create payment link via PayOS
+                var paymentResult = await _paymentService.CreateBookingPaymentAsync(userId, booking.BookingId);
 
-            var response = await GetBookingDetailAsync(booking.BookingId);
-            response.PaymentUrl = paymentResult.CheckoutUrl;
-            return response;
+                await transaction.CommitAsync();
+
+                var response = await GetBookingDetailAsync(booking.BookingId);
+                response.PaymentUrl = paymentResult.CheckoutUrl;
+                return response;
+            }
         }
         catch (Exception ex)
         {
@@ -140,18 +153,38 @@ public class BookingService : IBookingService
             var bookingIds = bookingsToCreate.Select(b => b.BookingId).ToList();
             var description = $"Dat nhieu san: {string.Join(", ", courtNames.Distinct())}";
 
-            // Create a single consolidated payment
-            var paymentResult = await _paymentService.CreateBatchBookingPaymentAsync(userId, bookingIds, totalCost, description);
-
-            await transaction.CommitAsync();
-
-            foreach (var b in bookingsToCreate)
+            if (totalCost == 0)
             {
-                var detail = await GetBookingDetailAsync(b.BookingId);
-                response.Bookings.Add(detail);
+                foreach (var b in bookingsToCreate)
+                {
+                    b.StatusId = 2; // Confirmed
+                    await _unitOfWork.Booking.UpdateAsync(b);
+                }
+                await transaction.CommitAsync();
+
+                foreach (var b in bookingsToCreate)
+                {
+                    var detail = await GetBookingDetailAsync(b.BookingId);
+                    response.Bookings.Add(detail);
+                }
+                response.PaymentUrl = null;
+                return response;
             }
-            response.PaymentUrl = paymentResult.CheckoutUrl;
-            return response;
+            else
+            {
+                // Create a single consolidated payment
+                var paymentResult = await _paymentService.CreateBatchBookingPaymentAsync(userId, bookingIds, totalCost, description);
+
+                await transaction.CommitAsync();
+
+                foreach (var b in bookingsToCreate)
+                {
+                    var detail = await GetBookingDetailAsync(b.BookingId);
+                    response.Bookings.Add(detail);
+                }
+                response.PaymentUrl = paymentResult.CheckoutUrl;
+                return response;
+            }
         }
         catch (Exception ex)
         {
