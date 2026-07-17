@@ -12,6 +12,7 @@ using PayOS.Models.Webhooks;
 using Repositories;
 using Services.Interfaces;
 using Services.Settings;
+using StackExchange.Redis;
 
 namespace Services.Implementations;
 
@@ -21,12 +22,14 @@ public class PaymentService : IPaymentService
     private readonly PayOSSettings _payOSSettings;
     private readonly PayOSClient _payOSClient;
     private readonly IEmailService _emailService;
+    private readonly IConnectionMultiplexer _redis;
 
-    public PaymentService(UnitOfWork unitOfWork, IOptions<PayOSSettings> payOSSettings, IEmailService emailService)
+    public PaymentService(UnitOfWork unitOfWork, IOptions<PayOSSettings> payOSSettings, IEmailService emailService, IConnectionMultiplexer redis)
     {
         _unitOfWork = unitOfWork;
         _payOSSettings = payOSSettings.Value;
         _emailService = emailService;
+        _redis = redis;
 
         // Initialize PayOS client with platform credentials
         _payOSClient = new PayOSClient(new PayOSOptions
@@ -64,9 +67,19 @@ public class PaymentService : IPaymentService
         if (activeSub != null && activeSub.Plan.TierId == plan.TierId)
             throw new InvalidOperationException($"Bạn đã có gói {activeSub.Plan.Tier.TierName} đang hoạt động.");
 
-        // 3. Check if there's already a pending payment for this plan
-        var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
-            $"SUB_{userId}_{request.PlanId}", "Subscription");
+        var db = _redis.GetDatabase();
+        var lockKey = $"lock:payment:sub:{userId}:{request.PlanId}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockAcquired = await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(10));
+
+        if (!lockAcquired)
+            throw new InvalidOperationException("Giao dịch đang được xử lý, vui lòng thử lại sau!");
+
+        try
+        {
+            // 3. Check if there's already a pending payment for this plan
+            var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
+                $"SUB_{userId}_{request.PlanId}", "Subscription");
         if (existingPayment != null && existingPayment.StatusId == 1) // Pending
         {
             existingPayment.StatusId = 3; // Cancelled
@@ -114,6 +127,11 @@ public class PaymentService : IPaymentService
         await _unitOfWork.Payments.CreateAsync(payment);
 
         return MapToResponse(payment);
+        }
+        finally
+        {
+            await db.LockReleaseAsync(lockKey, lockValue);
+        }
     }
 
     #endregion
@@ -136,9 +154,20 @@ public class PaymentService : IPaymentService
         if (booking.TotalCost == null || booking.TotalCost < 2000)
             throw new InvalidOperationException("Chi phí booking phải từ 2,000 VNĐ trở lên để thanh toán qua cổng PayOS.");
 
-        // 2. Check for existing pending payment
-        var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
-            bookingId.ToString(), "Booking");
+        // 2. Lock to prevent duplicate payment creations for the same booking
+        var db = _redis.GetDatabase();
+        var lockKey = $"lock:payment:booking:{bookingId}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockAcquired = await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(10));
+
+        if (!lockAcquired)
+            throw new InvalidOperationException("Giao dịch đang được xử lý, vui lòng thử lại sau!");
+
+        try
+        {
+            // 3. Check for existing pending payment
+            var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
+                bookingId.ToString(), "Booking");
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
@@ -223,6 +252,11 @@ public class PaymentService : IPaymentService
         await _unitOfWork.Payments.CreateAsync(payment);
 
         return MapToResponse(payment);
+        }
+        finally
+        {
+            await db.LockReleaseAsync(lockKey, lockValue);
+        }
     }
 
     public async Task<PaymentResponse> CreateBatchBookingPaymentAsync(Guid userId, List<Guid> bookingIds, decimal totalAmount, string description)
@@ -233,8 +267,26 @@ public class PaymentService : IPaymentService
         if (totalAmount < 2000)
             throw new InvalidOperationException("Chi phí booking phải từ 2,000 VNĐ trở lên để thanh toán qua cổng PayOS.");
 
-        var orderCode = GenerateOrderCode();
         var refId = string.Join(",", bookingIds);
+
+        var db = _redis.GetDatabase();
+        var lockKey = $"lock:payment:batch:{refId}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockAcquired = await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(10));
+
+        if (!lockAcquired)
+            throw new InvalidOperationException("Giao dịch đang được xử lý, vui lòng thử lại sau!");
+
+        try
+        {
+            var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(refId, "Booking");
+            if (existingPayment != null && existingPayment.StatusId == 1)
+            {
+                existingPayment.StatusId = 3;
+                await _unitOfWork.Payments.UpdateAsync(existingPayment);
+            }
+
+            var orderCode = GenerateOrderCode();
 
         var payment = new Payment
         {
@@ -312,6 +364,11 @@ public class PaymentService : IPaymentService
 
         await _unitOfWork.Payments.CreateAsync(payment);
         return MapToResponse(payment);
+        }
+        finally
+        {
+            await db.LockReleaseAsync(lockKey, lockValue);
+        }
     }
 
     public async Task<PaymentResponse> CreateSplitBookingPaymentAsync(Guid userId, Guid acceptanceId)
@@ -335,9 +392,19 @@ public class PaymentService : IPaymentService
         if (splitAmount < 2000)
             throw new InvalidOperationException("Số tiền chia đôi phải từ 2,000 VNĐ trở lên để thanh toán qua cổng PayOS.");
 
-        // Kiểm tra xem đã có giao dịch đang chờ nào chưa
-        var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
-            acceptanceId.ToString(), "Booking");
+        var db = _redis.GetDatabase();
+        var lockKey = $"lock:payment:split:{acceptanceId}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockAcquired = await db.LockTakeAsync(lockKey, lockValue, TimeSpan.FromSeconds(10));
+
+        if (!lockAcquired)
+            throw new InvalidOperationException("Giao dịch đang được xử lý, vui lòng thử lại sau!");
+
+        try
+        {
+            // Kiểm tra xem đã có giao dịch đang chờ nào chưa
+            var existingPayment = await _unitOfWork.Payments.GetByReferenceIdAsync(
+                acceptanceId.ToString(), "Booking");
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
@@ -419,6 +486,11 @@ public class PaymentService : IPaymentService
         await _unitOfWork.Payments.CreateAsync(payment);
 
         return MapToResponse(payment);
+        }
+        finally
+        {
+            await db.LockReleaseAsync(lockKey, lockValue);
+        }
     }
 
     #endregion
