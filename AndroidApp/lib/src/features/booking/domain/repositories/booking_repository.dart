@@ -27,6 +27,9 @@ abstract class BookingRepository {
   /// Hủy bỏ lịch đặt sân.
   Future<ApiResponse<void>> cancelBooking(String bookingId);
 
+  /// Đồng bộ trạng thái thanh toán từ PayOS
+  Future<bool> syncPaymentStatus(int orderCode);
+
   /// Lấy danh sách sân thuộc một cơ sở thể thao.
   Future<ApiResponse<List<CourtResponse>>> getCourtsByFacility(int facilityId);
 

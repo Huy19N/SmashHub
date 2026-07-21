@@ -792,9 +792,19 @@ public class PaymentService : IPaymentService
         if (payment == null || payment.UserId != userId)
             return false;
 
-        if (payment.StatusId != 1) // Not pending
+        if (payment.StatusId != 1) // Only pending can be cancelled
             return false;
 
+        try
+        {
+            await _payOSClient.PaymentRequests.CancelAsync((int)orderCode, "Người dùng tự hủy");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cancelling payment on PayOS: {ex.Message}");
+            // Continue to cancel locally even if PayOS fails
+        }
+        
         // Update payment status
         payment.StatusId = 3; // Cancelled
         payment.Status = null;
@@ -840,6 +850,94 @@ public class PaymentService : IPaymentService
         }
 
         return true;
+    }
+
+    public async Task<bool> SyncPaymentStatusAsync(long orderCode, Guid userId)
+    {
+        var payment = await _unitOfWork.Payments.GetByOrderCodeAsync(orderCode);
+        if (payment == null || payment.UserId != userId)
+            return false;
+
+        if (payment.StatusId != 1) // Only pending needs sync
+            return true;
+
+        try
+        {
+            var activePayOSClient = _payOSClient;
+            if (payment.FacilityConfigId.HasValue)
+            {
+                var context = _unitOfWork.Payments.GetContext();
+                var facilityConfig = await context.Set<FacilityPaymentConfig>()
+                    .FirstOrDefaultAsync(c => c.ConfigId == payment.FacilityConfigId.Value);
+
+                if (facilityConfig != null && !string.IsNullOrEmpty(facilityConfig.ApiKey))
+                {
+                    try
+                    {
+                        var keys = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(facilityConfig.ApiKey);
+                        if (keys != null)
+                        {
+                            var clientId = keys.GetValueOrDefault("ClientId");
+                            var apiKey = keys.GetValueOrDefault("ApiKey");
+                            var checksumKey = keys.GetValueOrDefault("ChecksumKey");
+
+                            if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(checksumKey))
+                            {
+                                activePayOSClient = new PayOSClient(new PayOSOptions
+                                {
+                                    ClientId = clientId,
+                                    ApiKey = apiKey,
+                                    ChecksumKey = checksumKey
+                                });
+                            }
+                        }
+                    }
+                    catch { /* Ignore */ }
+                }
+            }
+
+            var paymentInfo = await activePayOSClient.PaymentRequests.GetAsync((int)orderCode);
+            if (paymentInfo != null)
+            {
+                if (paymentInfo.Status.ToString() == "PAID")
+                {
+                    payment.StatusId = 2; // Paid
+                    payment.PaidAt = DateTime.Now;
+                    payment.GatewayTransactionId = paymentInfo.Id;
+                    await _unitOfWork.Payments.UpdateAsync(payment);
+
+                    var refIds = payment.ReferenceId.Contains(",")
+                        ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
+                        : new List<Guid> { Guid.Parse(payment.ReferenceId) };
+
+                    if (payment.PaymentType == "Booking")
+                    {
+                        foreach (var refId in refIds)
+                        {
+                            var booking = await _unitOfWork.Booking.GetDetailAsync(refId);
+                            if (booking != null && booking.StatusId == 1)
+                            {
+                                booking.StatusId = 2; // Confirmed
+                                await _unitOfWork.Booking.UpdateAsync(booking);
+                            }
+                        }
+                    }
+                    return true;
+                }
+                else if (paymentInfo.Status.ToString() == "CANCELLED")
+                {
+                    payment.StatusId = 3; // Cancelled
+                    await _unitOfWork.Payments.UpdateAsync(payment);
+                    return true;
+                }
+            }
+            return false; 
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error syncing payment from PayOS: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId)

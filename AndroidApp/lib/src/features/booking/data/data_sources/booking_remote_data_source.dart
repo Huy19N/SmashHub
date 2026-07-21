@@ -109,6 +109,19 @@ class BookingRemoteDataSource {
     }
   }
 
+  /// Đồng bộ trạng thái thanh toán từ PayOS
+  Future<ApiResponse<bool>> syncPaymentStatus(int orderCode) async {
+    try {
+      final response = await _apiClient.post('/api/payments/$orderCode/sync');
+      return ApiResponse<bool>.fromJson(
+        response.data,
+        (json) => json as bool,
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi đồng bộ thanh toán');
+    }
+  }
+
   /// Lấy danh sách sân theo cơ sở (Facility) - Public Endpoint.
   Future<ApiResponse<List<CourtResponse>>> getCourtsByFacility(int facilityId) async {
     try {

@@ -45,12 +45,18 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<ApiResponse<void>> cancelBooking(String bookingId) {
-    return _remoteDataSource.cancelBooking(bookingId);
+  Future<ApiResponse<void>> cancelBooking(String bookingId) async {
+    return await _remoteDataSource.cancelBooking(bookingId);
   }
 
   @override
-  Future<ApiResponse<List<CourtResponse>>> getCourtsByFacility(int facilityId) {
+  Future<bool> syncPaymentStatus(int orderCode) async {
+    final response = await _remoteDataSource.syncPaymentStatus(orderCode);
+    return response.data ?? false;
+  }
+
+  @override
+  Future<ApiResponse<List<CourtResponse>>> getCourtsByFacility(int facilityId) async {
     return _remoteDataSource.getCourtsByFacility(facilityId);
   }
 

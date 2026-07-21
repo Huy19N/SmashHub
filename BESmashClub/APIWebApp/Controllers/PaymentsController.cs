@@ -67,6 +67,25 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Đồng bộ trạng thái giao dịch từ PayOS thủ công.
+    /// </summary>
+    [HttpPost("{orderCode:long}/sync")]
+    [Authorize]
+    public async Task<IActionResult> SyncPaymentStatus(long orderCode)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var success = await _paymentService.SyncPaymentStatusAsync(orderCode, userId);
+            return Ok(ApiResponse<bool>.SuccessResponse(success, "Đã đồng bộ trạng thái thanh toán."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
     /// Hủy một giao dịch thanh toán (gọi từ frontend khi user bấm Hủy).
     /// </summary>
     [HttpPost("{orderCode:long}/cancel")]

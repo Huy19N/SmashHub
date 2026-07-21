@@ -63,7 +63,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url;
             if (_isSuccessUrl(url)) {
-              _handlePaymentSuccess();
+              _handlePaymentSuccess(url);
               return NavigationDecision.prevent;
             }
             if (_isCancelUrl(url)) {
@@ -91,14 +91,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _checkRedirect(String url) {
     if (_isSuccessUrl(url)) {
-      _handlePaymentSuccess();
+      _handlePaymentSuccess(url);
     } else if (_isCancelUrl(url)) {
       _handlePaymentCancelled();
     }
   }
 
-  void _handlePaymentSuccess() {
-    
+  void _handlePaymentSuccess(String url) async {
+    int? orderCode;
+    try {
+      final uri = Uri.parse(url);
+      final orderCodeStr = uri.queryParameters['orderCode'];
+      if (orderCodeStr != null) {
+        orderCode = int.tryParse(orderCodeStr);
+      }
+    } catch (_) {}
+
+    if (orderCode != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await _bookingRepository.syncPaymentStatus(orderCode);
+      } catch (e) {
+        debugPrint('Error syncing payment status: $e');
+      }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
