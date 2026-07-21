@@ -43,6 +43,31 @@ class _BookingScreenState extends State<BookingScreen> {
     return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} - ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
+  String _translateStatus(String? status) {
+    if (status == null) return 'Chờ xác nhận';
+    switch (status) {
+      case 'Pending':
+        return 'Chờ thanh toán';
+      case 'Confirmed':
+      case 'Completed':
+        return 'Thành công';
+      case 'Cancelled':
+      case 'Rejected':
+        return 'Đã huỷ';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    if (status == 'Confirmed' || status == 'Completed') {
+      return Colors.green;
+    } else if (status == 'Cancelled' || status == 'Rejected') {
+      return Colors.red;
+    }
+    return AppTheme.primaryColor;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -57,41 +82,61 @@ class _BookingScreenState extends State<BookingScreen> {
       body: _controller.isLoading
           ? const Center(child: CircularProgressIndicator())
           : _controller.errorMessage != null
-              ? Center(child: Text(_controller.errorMessage!))
-              : _controller.myBookings.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.calendar_today_rounded,
-                            size: 80,
-                            color: AppTheme.primaryColor.withValues(alpha: 0.5),
+          ? Center(child: Text(_controller.errorMessage!))
+          : RefreshIndicator(
+              onRefresh: () async {
+                await _controller.fetchMyBookings();
+              },
+              child: _controller.myBookings.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.7,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 80,
+                                color: AppTheme.primaryColor.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                'Chưa có lịch đặt sân',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Bạn chưa có lịch đặt sân nào. Hãy tạo lịch đặt sân ngay!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Chưa có lịch đặt sân',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Bạn chưa có lịch đặt sân nào. Hãy tạo lịch đặt sân ngay!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     )
                   : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(16),
                       itemCount: _controller.myBookings.length,
                       itemBuilder: (context, index) {
                         final booking = _controller.myBookings[index];
+                        final statusColor = _getStatusColor(booking.statusName);
+                        final translatedStatus = _translateStatus(
+                          booking.statusName,
+                        );
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: AppCard(
@@ -101,7 +146,8 @@ class _BookingScreenState extends State<BookingScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -114,21 +160,22 @@ class _BookingScreenState extends State<BookingScreen> {
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: booking.statusName == 'Completed'
-                                            ? Colors.green.withValues(alpha: 0.2)
-                                            : AppTheme.primaryColor.withValues(alpha: 0.2),
+                                        color: statusColor.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        booking.statusName ?? 'Chờ xác nhận',
+                                        translatedStatus,
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
-                                          color: booking.statusName == 'Completed'
-                                              ? Colors.green
-                                              : AppTheme.primaryColor,
+                                          color: statusColor,
                                         ),
                                       ),
                                     ),
@@ -139,17 +186,26 @@ class _BookingScreenState extends State<BookingScreen> {
                                   booking.courtName ?? 'Chưa rõ',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isDark ? Colors.white70 : Colors.black87,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87,
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
-                                    const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
+                                    const Icon(
+                                      Icons.access_time_rounded,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${_formatDateTime(booking.startTime)} đến ${_formatDateTime(booking.endTime)}',
-                                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -157,21 +213,29 @@ class _BookingScreenState extends State<BookingScreen> {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
+                                      const Icon(
+                                        Icons.payments_outlined,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
                                         '${booking.totalCost!.toStringAsFixed(0)} VND',
-                                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey,
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ]
+                                ],
                               ],
                             ),
                           ),
                         );
                       },
                     ),
+            ),
     );
   }
 }

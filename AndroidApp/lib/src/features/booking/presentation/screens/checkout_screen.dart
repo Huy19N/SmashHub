@@ -108,7 +108,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
             SizedBox(width: 8),
-            Text('Thanh toán thành công!'),
+            Expanded(child: Text('Thanh toán thành công!')),
           ],
         ),
         content: const Text('Lịch đặt sân của bạn đã hoàn tất và được thanh toán thành công.'),
