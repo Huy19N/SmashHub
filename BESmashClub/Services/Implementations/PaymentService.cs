@@ -858,7 +858,33 @@ public class PaymentService : IPaymentService
         if (payment == null || payment.UserId != userId)
             return false;
 
-        if (payment.StatusId != 1) // Only pending needs sync
+        // If payment is already paid, check if bookings need to be fixed
+        if (payment.StatusId == 2)
+        {
+            // Payment is paid but bookings might still be pending (webhook partial failure)
+            if (payment.PaymentType == "Booking")
+            {
+                var refIds = payment.ReferenceId.Contains(",")
+                    ? payment.ReferenceId.Split(',').Select(Guid.Parse).ToList()
+                    : new List<Guid> { Guid.Parse(payment.ReferenceId) };
+
+                bool anyFixed = false;
+                foreach (var refId in refIds)
+                {
+                    var booking = await _unitOfWork.Booking.GetDetailAsync(refId);
+                    if (booking != null && booking.StatusId == 1)
+                    {
+                        booking.StatusId = 2; // Confirmed
+                        await _unitOfWork.Booking.UpdateAsync(booking);
+                        anyFixed = true;
+                        Console.WriteLine($"SyncPaymentStatus: Fixed booking {refId} from Pending to Confirmed (payment was already paid)");
+                    }
+                }
+            }
+            return true;
+        }
+
+        if (payment.StatusId != 1) // Only pending or paid-but-broken needs sync
             return true;
 
         try
@@ -943,12 +969,17 @@ public class PaymentService : IPaymentService
     public async Task<int> SyncPendingPaymentsAsync(Guid userId)
     {
         var context = _unitOfWork.Payments.GetContext();
-        var pendingPayments = await context.Set<Payment>()
-            .Where(p => p.UserId == userId && p.StatusId == 1 && p.OrderCode > 0)
+        
+        // Find payments that need syncing:
+        // 1. Payment is pending (StatusId == 1) - need to check PayOS
+        // 2. Payment is paid (StatusId == 2) but has Booking type - might have broken bookings
+        var paymentsToSync = await context.Set<Payment>()
+            .Where(p => p.UserId == userId && p.OrderCode > 0 &&
+                        (p.StatusId == 1 || (p.StatusId == 2 && p.PaymentType == "Booking")))
             .ToListAsync();
 
         int syncedCount = 0;
-        foreach (var payment in pendingPayments)
+        foreach (var payment in paymentsToSync)
         {
             var success = await SyncPaymentStatusAsync(payment.OrderCode, userId);
             if (success)
