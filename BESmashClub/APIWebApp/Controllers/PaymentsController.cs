@@ -86,6 +86,25 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Đồng bộ trạng thái toàn bộ các giao dịch đang chờ của user.
+    /// </summary>
+    [HttpPost("sync-pending")]
+    [Authorize]
+    public async Task<IActionResult> SyncPendingPayments()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var count = await _paymentService.SyncPendingPaymentsAsync(userId);
+            return Ok(ApiResponse<int>.SuccessResponse(count, $"Đã kiểm tra và đồng bộ {count} giao dịch."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
     /// Hủy một giao dịch thanh toán (gọi từ frontend khi user bấm Hủy).
     /// </summary>
     [HttpPost("{orderCode:long}/cancel")]

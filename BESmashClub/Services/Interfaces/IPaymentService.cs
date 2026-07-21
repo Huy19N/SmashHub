@@ -20,6 +20,7 @@ public interface IPaymentService
     // Cancel manually from frontend
     Task<bool> CancelPaymentAsync(long orderCode, Guid userId);
     Task<bool> SyncPaymentStatusAsync(long orderCode, Guid userId);
+    Task<int> SyncPendingPaymentsAsync(Guid userId);
 
     // Query
     Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId);

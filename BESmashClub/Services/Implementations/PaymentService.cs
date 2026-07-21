@@ -940,6 +940,25 @@ public class PaymentService : IPaymentService
         }
     }
 
+    public async Task<int> SyncPendingPaymentsAsync(Guid userId)
+    {
+        var context = _unitOfWork.Payments.GetContext();
+        var pendingPayments = await context.Set<Payment>()
+            .Where(p => p.UserId == userId && p.StatusId == 1 && p.OrderCode > 0)
+            .ToListAsync();
+
+        int syncedCount = 0;
+        foreach (var payment in pendingPayments)
+        {
+            var success = await SyncPaymentStatusAsync(payment.OrderCode, userId);
+            if (success)
+            {
+                syncedCount++;
+            }
+        }
+        return syncedCount;
+    }
+
     public async Task<PaymentResponse> GetPaymentByIdAsync(Guid paymentId)
     {
         var payment = await _unitOfWork.Payments.GetDetailAsync(paymentId);

@@ -34,4 +34,12 @@ class BookingController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> syncPendingPayments() async {
+    try {
+      await _bookingRepository.syncPendingPayments();
+    } catch (e) {
+      debugPrint('Error syncing pending payments: $e');
+    }
+  }
 }

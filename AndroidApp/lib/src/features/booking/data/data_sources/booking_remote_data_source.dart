@@ -122,6 +122,19 @@ class BookingRemoteDataSource {
     }
   }
 
+  /// Đồng bộ trạng thái toàn bộ các thanh toán đang chờ
+  Future<ApiResponse<int>> syncPendingPayments() async {
+    try {
+      final response = await _apiClient.post('/api/payments/sync-pending');
+      return ApiResponse<int>.fromJson(
+        response.data,
+        (json) => json as int,
+      );
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Lỗi đồng bộ thanh toán chờ');
+    }
+  }
+
   /// Lấy danh sách sân theo cơ sở (Facility) - Public Endpoint.
   Future<ApiResponse<List<CourtResponse>>> getCourtsByFacility(int facilityId) async {
     try {

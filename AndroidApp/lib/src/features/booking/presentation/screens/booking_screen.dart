@@ -25,7 +25,12 @@ class _BookingScreenState extends State<BookingScreen> {
     _controller = BookingController(bookingRepository: repository);
 
     _controller.addListener(_onControllerUpdate);
-    _controller.fetchMyBookings();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await _controller.syncPendingPayments();
+    await _controller.fetchMyBookings();
   }
 
   void _onControllerUpdate() {
@@ -85,7 +90,7 @@ class _BookingScreenState extends State<BookingScreen> {
           ? Center(child: Text(_controller.errorMessage!))
           : RefreshIndicator(
               onRefresh: () async {
-                await _controller.fetchMyBookings();
+                await _loadData();
               },
               child: _controller.myBookings.isEmpty
                   ? ListView(

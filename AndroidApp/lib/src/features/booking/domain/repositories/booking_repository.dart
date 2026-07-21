@@ -27,6 +27,9 @@ abstract class BookingRepository {
   /// Hủy bỏ lịch đặt sân.
   Future<ApiResponse<void>> cancelBooking(String bookingId);
 
+  /// Đồng bộ trạng thái toàn bộ các thanh toán đang chờ
+  Future<int> syncPendingPayments();
+
   /// Đồng bộ trạng thái thanh toán từ PayOS
   Future<bool> syncPaymentStatus(int orderCode);
 

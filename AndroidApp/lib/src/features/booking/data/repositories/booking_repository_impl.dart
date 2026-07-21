@@ -50,6 +50,12 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<int> syncPendingPayments() async {
+    final response = await _remoteDataSource.syncPendingPayments();
+    return response.data ?? 0;
+  }
+
+  @override
   Future<bool> syncPaymentStatus(int orderCode) async {
     final response = await _remoteDataSource.syncPaymentStatus(orderCode);
     return response.data ?? false;
