@@ -343,9 +343,37 @@ public class SocialService : ISocialService
                            .Take(pagination.PageSize)
                            .ToList();
 
+        var items = new List<object>();
+        foreach (var r in paged)
+        {
+            string content = "";
+            if (r.TargetType == 1) 
+            {
+                var p = await _postRepository.GetByIdAsync(r.TargetId);
+                content = p?.Content ?? "Bài viết đã bị xoá hoặc không tồn tại.";
+            }
+            else 
+            {
+                var c = await _postCommentRepository.GetByIdAsync(r.TargetId);
+                content = c?.Content ?? "Bình luận đã bị xoá hoặc không tồn tại.";
+            }
+            
+            items.Add(new {
+                r.Id,
+                r.PostId,
+                r.ReporterId,
+                r.Reason,
+                r.TargetType,
+                r.TargetId,
+                r.Status,
+                r.CreatedAt,
+                TargetContent = content
+            });
+        }
+
         return new
         {
-            Items = paged,
+            Items = items,
             TotalCount = reports.Count(),
             PageNumber = pagination.PageNumber,
             PageSize = pagination.PageSize
