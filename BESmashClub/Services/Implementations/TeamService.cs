@@ -223,7 +223,7 @@ public class TeamService : ITeamService
             InviteToken = Guid.NewGuid().ToString("N"),
             CreatedAt = DateTime.Now,
             ExpiredAt = DateTime.Now.AddHours(request.ExpirationHours),
-            MaxUses = request.MaxUses,
+            MaxUses = request.MaxUses ?? 0,
             CurrentUses = 0,
             IsActive = true
         };
@@ -241,7 +241,7 @@ public class TeamService : ITeamService
 
         var isValid = invite.IsActive == true
             && invite.ExpiredAt > DateTime.Now
-            && (invite.MaxUses == null || invite.CurrentUses < invite.MaxUses);
+            && (invite.MaxUses == null || invite.MaxUses <= 0 || invite.CurrentUses < invite.MaxUses);
 
         return new InviteInfoResponse
         {
@@ -266,7 +266,7 @@ public class TeamService : ITeamService
         if (invite.IsActive != true || invite.ExpiredAt < DateTime.Now)
             throw new InvalidOperationException("Lời mời đã hết hạn hoặc bị vô hiệu hóa.");
 
-        if (invite.MaxUses != null && invite.CurrentUses >= invite.MaxUses)
+        if (invite.MaxUses != null && invite.MaxUses > 0 && invite.CurrentUses >= invite.MaxUses)
             throw new InvalidOperationException("Lời mời đã đạt giới hạn sử dụng.");
 
         // Check if already a member
