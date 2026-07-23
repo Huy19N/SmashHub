@@ -83,6 +83,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1) // Pending
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -171,6 +172,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -283,6 +285,7 @@ public class PaymentService : IPaymentService
             if (existingPayment != null && existingPayment.StatusId == 1)
             {
                 existingPayment.StatusId = 3;
+                existingPayment.Status = null;
                 await _unitOfWork.Payments.UpdateAsync(existingPayment);
             }
 
@@ -408,6 +411,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -654,6 +658,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 2; // Confirmed
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
 
                         // 5. Tạo payout record cho facility owner nếu KHÔNG dùng BYOG
@@ -756,6 +761,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 3; // Cancelled
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                     }
                 }
@@ -825,6 +831,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 3; // Cancelled
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                     }
                 }
@@ -875,6 +882,7 @@ public class PaymentService : IPaymentService
                     if (booking != null && booking.StatusId == 1)
                     {
                         booking.StatusId = 2; // Confirmed
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                         anyFixed = true;
                         Console.WriteLine($"SyncPaymentStatus: Fixed booking {refId} from Pending to Confirmed (payment was already paid)");
@@ -928,6 +936,7 @@ public class PaymentService : IPaymentService
                 if (paymentInfo.Status.ToString() == "PAID")
                 {
                     payment.StatusId = 2; // Paid
+                    payment.Status = null;
                     payment.PaidAt = DateTime.Now;
                     payment.GatewayTransactionId = paymentInfo.Id;
                     await _unitOfWork.Payments.UpdateAsync(payment);
@@ -944,6 +953,7 @@ public class PaymentService : IPaymentService
                             if (booking != null && booking.StatusId == 1)
                             {
                                 booking.StatusId = 2; // Confirmed
+                                booking.Status = null;
                                 await _unitOfWork.Booking.UpdateAsync(booking);
                             }
                         }
@@ -953,6 +963,7 @@ public class PaymentService : IPaymentService
                 else if (paymentInfo.Status.ToString() == "CANCELLED")
                 {
                     payment.StatusId = 3; // Cancelled
+                    payment.Status = null;
                     await _unitOfWork.Payments.UpdateAsync(payment);
                     return true;
                 }
