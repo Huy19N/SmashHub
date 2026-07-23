@@ -11,6 +11,12 @@ import '../../../auth/presentation/controllers/profile_controller.dart';
 import '../../../auth/data/data_sources/profile_remote_data_source.dart';
 import '../../../auth/data/repositories/profile_repository_impl.dart';
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as dart_math;
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'video_call_screen.dart';
 import 'team_detail_screen.dart';
 import '../../../../shared/widgets/app_media_image.dart';
@@ -43,6 +49,9 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
   StreamSubscription<Map<String, dynamic>>? _callSubscription;
   late final ProfileRepositoryImpl _profileRepository;
   final Map<String, String?> _userAvatars = {};
+  
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -206,6 +215,83 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
     }
   }
 
+  Future<void> _pickAndSendMedia(bool isImage) async {
+    File? file;
+    int messageType = 0;
+
+    try {
+      if (isImage) {
+        final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+        if (image != null) {
+          file = File(image.path);
+          messageType = 1; // 1: Image
+        }
+      } else {
+        final FilePickerResult? result = await FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
+        );
+        if (result != null && result.files.single.path != null) {
+          file = File(result.files.single.path!);
+          messageType = 3; // 3: Document
+        }
+      }
+
+      if (file != null) {
+        setState(() {
+          _isUploading = true;
+        });
+
+        final apiClient = ApiClient();
+        final fileName = file.path.split('/').last;
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(file.path, filename: fileName),
+        });
+
+        final response = await apiClient.post(
+          '/api/files/upload?purpose=ChatMedia',
+          data: formData,
+          options: Options(
+            headers: {'Content-Type': 'multipart/form-data'},
+          ),
+        );
+
+        if (response.statusCode == 200 && response.data != null) {
+          final data = response.data['data'];
+          if (data != null && data['fileId'] != null) {
+            final String fileId = data['fileId'];
+            final String content = isImage ? '[Hình ảnh]' : fileName;
+            
+            final success = await _controller.sendMessage(content, messageType: messageType, mediaFileId: fileId);
+            if (!success && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Gửi tin nhắn thất bại')),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tải file lên thất bại')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi xảy ra khi tải file.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
   String _getInitials(String name) {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -299,11 +385,19 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                   const SnackBar(content: Text('Đang có cuộc gọi diễn ra trong nhóm')),
                 );
               } : () {
+                final random = dart_math.Random();
+                String hex(int value, int length) => value.toRadixString(16).padLeft(length, '0');
+                final newRoomId = '${hex(random.nextInt(0xFFFFFFFF), 8)}-'
+                    '${hex(random.nextInt(0xFFFF), 4)}-'
+                    '4${hex(random.nextInt(0xFFF), 3)}-'
+                    '${hex(random.nextInt(0x3FFF) | 0x8000, 4)}-'
+                    '${hex(random.nextInt(0xFFFFFFFF), 8)}${hex(random.nextInt(0xFFFF), 4)}';
+
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => VideoCallScreen(
                       teamId: widget.teamId,
-                      roomId: widget.teamId, // Thường roomId sẽ trùng với teamId trong chat nhóm
+                      roomId: newRoomId,
                       isInitiator: true,
                     ),
                   ),
@@ -440,34 +534,38 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                     width: 48,
                     height: 48,
                     child: IconButton(
-                      icon: const Icon(Icons.add_circle_outline, size: 24),
+                      icon: const Icon(Icons.attach_file_rounded, size: 24),
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tính năng đính kèm đang phát triển'),
+                      onPressed: _isUploading ? null : () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.image_outlined, color: Colors.blue),
+                                  title: const Text('Ảnh / Video'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _pickAndSendMedia(true);
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.insert_drive_file_outlined, color: Colors.orange),
+                                  title: const Text('Tài liệu'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _pickAndSendMedia(false);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
                     ),
                   ),
-                  // Nút gửi ảnh với touch target 48dp
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: IconButton(
-                      icon: const Icon(Icons.image_outlined, size: 24),
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tính năng gửi ảnh đang phát triển'),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 4),
                   // Ô nhập tin nhắn với viền outline và focus màu xanh lá thể thao
                   Expanded(
                     child: TextField(
@@ -519,7 +617,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: _controller.isSending
+                        icon: _controller.isSending || _isUploading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -647,24 +745,69 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: CachedNetworkImage(
-                              imageUrl: ApiConfig.getFileUrl(msg.mediaFileId!),
-                              width: 200,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                width: 200,
-                                height: 150,
-                                color: isDark ? Colors.grey[800] : Colors.grey[300],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
+                            child: GestureDetector(
+                              onTap: () {
+                                // Mở xem ảnh full màn hình có thể thêm sau, hiện tại chỉ hiển thị
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: ApiConfig.getFileUrl(msg.mediaFileId!),
+                                width: 220,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  width: 220,
+                                  height: 150,
+                                  color: isDark ? Colors.grey[800] : Colors.grey[300],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
                                 ),
+                                errorWidget: (context, url, error) => const Icon(Icons.error),
                               ),
-                              errorWidget: (context, url, error) => const Icon(Icons.error),
+                            ),
+                          ),
+                        ),
+                      // Hiển thị tài liệu đính kèm
+                      if (msg.messageType == 3 && msg.mediaFileId != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: GestureDetector(
+                            onTap: () async {
+                              final url = ApiConfig.getFileUrl(msg.mediaFileId!);
+                              if (await canLaunchUrl(Uri.parse(url))) {
+                                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            child: Container(
+                              width: 220,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.black26 : Colors.white54,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.insert_drive_file_rounded, color: Colors.orange, size: 36),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      msg.content,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       // Hiển thị nội dung văn bản
-                      if (msg.content.isNotEmpty && msg.content != '[Hình ảnh]') ...[
+                      if (msg.content.isNotEmpty && msg.content != '[Hình ảnh]' && msg.messageType != 3) ...[
                         () {
                           String displayText = msg.content;
                           bool isClosed = false;

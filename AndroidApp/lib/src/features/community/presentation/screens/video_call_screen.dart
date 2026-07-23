@@ -160,7 +160,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void> _onReceiveSignal(List<dynamic>? args) async {
     if (args == null || args.length < 2) return;
     final String fromConnId = args[0].toString();
-    final String signalDataRaw = args[1].toString();
+    final String signalDataRaw = args.length > 2 ? args[2].toString() : args[1].toString();
 
     final signal = jsonDecode(signalDataRaw);
     RTCPeerConnection? peer = _peers[fromConnId];
