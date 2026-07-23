@@ -355,6 +355,7 @@ public class TeamService : ITeamService
             TeamId = teamId.ToString(),
             Content = request.Content,
             MessageType = request.MessageType,
+            MediaFileId = request.MediaFileId,
             CreatedAt = DateTime.Now,
             IsDeleted = false
         };
@@ -371,6 +372,7 @@ public class TeamService : ITeamService
             SenderName = sender?.FullName ?? "Unknown",
             Content = message.Content,
             MessageType = request.MessageType,
+            MediaFileId = request.MediaFileId,
             SentAt = message.CreatedAt
         };
 
@@ -432,6 +434,7 @@ public class TeamService : ITeamService
                 SenderName = sender?.FullName ?? "Unknown",
                 Content = m.IsDeleted ? "Tin nhan da bi thu hoi" : content,
                 MessageType = m.MessageType,
+                MediaFileId = m.MediaFileId,
                 SentAt = m.CreatedAt,
                 RoomId = roomId,
                 IsEnded = isEnded
