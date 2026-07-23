@@ -3,12 +3,11 @@ import { getPlatformRevenueData, getUserGrowthData, getRoleDistributionData } fr
 import { PlatformRevenueChart } from './charts/PlatformRevenueChart';
 import { UserGrowthChart } from './charts/UserGrowthChart';
 import { RoleDistributionChart } from './charts/RoleDistributionChart';
-import { FeedbackRatingChart } from './charts/FeedbackRatingChart';
-import { Loader2, TrendingUp, Users, PieChart, MessageSquare } from 'lucide-react';
+import { Loader2, TrendingUp, Users, PieChart } from 'lucide-react';
 
 export default function AdminCharts({ stats }) {
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState({ revenue: [], growth: [], roles: [], feedbackRating: [] });
+  const [chartData, setChartData] = useState({ revenue: [], growth: [], roles: [] });
 
   useEffect(() => {
     async function loadData() {
@@ -36,6 +35,7 @@ export default function AdminCharts({ stats }) {
       const revenueSum = revenueData.reduce((sum, item) => sum + item.revenue, 0);
       const targetTotal = Number(stats?.totalRevenue || 1593000);
 
+      // If monthly array had 0s or sum is 0, construct progressive monthly trend ending at targetTotal
       if (revenueSum === 0 && targetTotal > 0) {
         const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'];
         const factors = [0.15, 0.32, 0.48, 0.65, 0.82, 1.0];
@@ -53,15 +53,7 @@ export default function AdminCharts({ stats }) {
         growth = await getUserGrowthData();
       }
 
-      // 4. Feedback Rating Distribution (matching 25 feedback items)
-      const feedbackRating = [
-        { rating: 'Rất tốt', count: 18, color: '#0BE860' },
-        { rating: 'Tốt', count: 5, color: '#3b82f6' },
-        { rating: 'Trung bình', count: 1, color: '#f59e0b' },
-        { rating: 'Kém', count: 1, color: '#ef4444' }
-      ];
-
-      setChartData({ revenue: revenueData, growth, roles, feedbackRating });
+      setChartData({ revenue: revenueData, growth, roles });
       setLoading(false);
     }
 
@@ -79,7 +71,6 @@ export default function AdminCharts({ stats }) {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Row 1: Platform Revenue & User Growth */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20 flex flex-col justify-between">
           <div className="mb-4">
@@ -104,29 +95,15 @@ export default function AdminCharts({ stats }) {
         </div>
       </div>
 
-      {/* Row 2: Role Distribution & Feedback Rating Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20 flex flex-col justify-between">
-          <div className="mb-4">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-purple-500" />
-              Phân bổ vai trò hệ thống (Dữ liệu thực)
-            </h3>
-            <p className="text-xs text-gray-500">Tỉ lệ thực tế các nhóm người dùng trên hệ thống SmashHub.</p>
-          </div>
-          <RoleDistributionChart data={chartData.roles} />
+      <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
+            <PieChart className="w-4 h-4 text-purple-500" />
+            Phân bổ vai trò hệ thống (Dữ liệu thực)
+          </h3>
+          <p className="text-xs text-gray-500">Tỉ lệ thực tế các nhóm người dùng trên hệ thống SmashHub.</p>
         </div>
-
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20 flex flex-col justify-between">
-          <div className="mb-4">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-pink-500" />
-              Kết quả đánh giá chất lượng dịch vụ SmashHub
-            </h3>
-            <p className="text-xs text-gray-500">Phân bố số lượng 25 đánh giá từ phản hồi khách hàng.</p>
-          </div>
-          <FeedbackRatingChart data={chartData.feedbackRating} />
-        </div>
+        <RoleDistributionChart data={chartData.roles} />
       </div>
     </div>
   );
