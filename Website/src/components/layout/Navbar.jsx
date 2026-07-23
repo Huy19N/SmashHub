@@ -14,6 +14,7 @@ import {
   LogOut,
   UsersRound,
   User,
+  Smartphone,
 } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
 import useAuth, { useGetUserId } from '../../features/Auth/hooks/useAuth';
@@ -42,6 +43,63 @@ export default function Navbar() {
   const isAdmin = roleId === '1';
 
   const isHomePage = location.pathname === PATHS.HOME;
+
+  const isItemActive = (item, navLinkActive) => {
+    if (!isHomePage) return navLinkActive;
+    const currentHash = location.hash;
+
+    if (item.name === 'Tải App') {
+      return currentHash === '#download-app' || currentHash === '#download-app-section';
+    }
+    if (item.name === 'Hội viên') {
+      return currentHash === '#premium' || currentHash === '#premium-section';
+    }
+    if (item.name === 'Bộ sưu tập') {
+      return currentHash === '#collections' || currentHash === '#collections-section';
+    }
+    if (item.name === 'Liên hệ') {
+      return currentHash === '#contact' || currentHash === '#contact-section';
+    }
+    if (item.name === 'Trang chủ') {
+      return !currentHash || currentHash === '#' || currentHash === '#top';
+    }
+    return navLinkActive;
+  };
+
+  const handleNavItemClick = (e, item, isMobile = false) => {
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
+
+    if (item.name === 'Trang chủ') {
+      if (isHomePage) {
+        e.preventDefault();
+        navigate('/');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    if (item.sectionId) {
+      e.preventDefault();
+      const targetHash = item.hash;
+      const scrollAction = () => {
+        document.getElementById(item.sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      if (isHomePage) {
+        navigate(`/${targetHash}`);
+        if (isMobile) {
+          setTimeout(scrollAction, 100);
+        } else {
+          scrollAction();
+        }
+      } else {
+        navigate(`/${targetHash}`);
+        setTimeout(scrollAction, 150);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!isHomePage) return; // Only need scroll detection on homepage for transparency
@@ -82,11 +140,11 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { name: 'Trang chủ', path: PATHS.HOME, icon: Home },
-    { name: 'Giới thiệu', path: PATHS.ABOUT, icon: Users },
-    { name: 'Liên hệ', path: PATHS.CONTACT, icon: Mail },
-    { name: 'Hội viên', path: PATHS.PREMIUM, icon: Crown },
-    { name: 'Bộ sưu tập', path: PATHS.COLLECTIONS, icon: Layers },
+    { name: 'Trang chủ', path: PATHS.HOME, sectionId: null, hash: '', icon: Home },
+    { name: 'Tải App', path: '/#download-app', sectionId: 'download-app-section', hash: '#download-app', icon: Smartphone },
+    { name: 'Liên hệ', path: '/#contact', sectionId: 'contact-section', hash: '#contact', icon: Mail },
+    { name: 'Hội viên', path: '/#premium', sectionId: 'premium-section', hash: '#premium', icon: Crown },
+    { name: 'Bộ sưu tập', path: '/#collections', sectionId: 'collections-section', hash: '#collections', icon: Layers },
   ];
 
   // Logic to determine background styling
@@ -116,24 +174,16 @@ export default function Navbar() {
               <NavLink
                 key={item.name}
                 to={item.path}
-                onClick={(e) => {
-                  if (item.path === PATHS.COLLECTIONS && isHomePage) {
-                    e.preventDefault();
-                    document.getElementById('collections-section')?.scrollIntoView({ behavior: 'smooth' });
-                  } else if (item.path === PATHS.PREMIUM && isHomePage) {
-                    e.preventDefault();
-                    document.getElementById('premium-section')?.scrollIntoView({ behavior: 'smooth' });
-                  } else if (item.path === PATHS.CONTACT && isHomePage) {
-                    e.preventDefault();
-                    document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }
+                onClick={(e) => handleNavItemClick(e, item, false)}
+                className={({ isActive }) => {
+                  const active = isItemActive(item, isActive);
+                  return `
+                    flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 active:scale-95 hover:scale-[1.03]
+                    ${active
+                      ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary border border-emerald-500/20 dark:border-primary/20 shadow-[0_0_15px_rgba(11,232,96,0.15)]'
+                      : 'text-slate-800 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-white hover:bg-emerald-500/5 dark:hover:bg-white/5 border border-transparent'}
+                  `;
                 }}
-                className={({ isActive }) => `
-                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 active:scale-95 hover:scale-[1.03]
-                  ${isActive
-                    ? 'bg-emerald-500/10 dark:bg-primary/10 text-emerald-700 dark:text-primary border border-emerald-500/20 dark:border-primary/20 shadow-[0_0_15px_rgba(11,232,96,0.15)]'
-                    : 'text-slate-800 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-white hover:bg-emerald-500/5 dark:hover:bg-white/5 border border-transparent'}
-                `}
               >
                 <item.icon className="h-4 w-4" />
                 {item.name}
@@ -391,35 +441,16 @@ export default function Navbar() {
               <NavLink
                 key={item.name}
                 to={item.path}
-                onClick={(e) => {
-                  if (item.path === PATHS.COLLECTIONS && isHomePage) {
-                    e.preventDefault();
-                    setMobileMenuOpen(false);
-                    setTimeout(() => {
-                      document.getElementById('collections-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                  } else if (item.path === PATHS.PREMIUM && isHomePage) {
-                    e.preventDefault();
-                    setMobileMenuOpen(false);
-                    setTimeout(() => {
-                      document.getElementById('premium-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                  } else if (item.path === PATHS.CONTACT && isHomePage) {
-                    e.preventDefault();
-                    setMobileMenuOpen(false);
-                    setTimeout(() => {
-                      document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                  } else {
-                    setMobileMenuOpen(false);
-                  }
+                onClick={(e) => handleNavItemClick(e, item, true)}
+                className={({ isActive }) => {
+                  const active = isItemActive(item, isActive);
+                  return `
+                    flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 active:scale-[0.98] hover:scale-[1.01]
+                    ${active
+                      ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(11,232,96,0.1)]'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'}
+                  `;
                 }}
-                className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 active:scale-[0.98] hover:scale-[1.01]
-                  ${isActive
-                    ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(11,232,96,0.1)]'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'}
-                `}
               >
                 <item.icon className="h-5 w-5 text-gray-400" />
                 {item.name}
