@@ -175,7 +175,6 @@ class CommunityRemoteDataSource {
       final response = await _apiClient.post(
         '/api/teams/$teamId/invites',
         data: {
-          'maxUses': 0, // 0 = unlimited
           'expiryHours': expiryHours,
         },
       );
