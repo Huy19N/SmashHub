@@ -1,5 +1,5 @@
 import { Smartphone, Download, ShieldCheck, Zap, Bell, Users, ExternalLink, CheckCircle2 } from 'lucide-react';
-import smartphoneImg from '../../../assets/smartphone-removebg-preview.png';
+import smartphoneImg from '../../../assets/phone.png';
 
 export default function DownloadAppSection() {
   const downloadLink = "https://apkpure.com/vn/smashhub/com.knowhope.smashhub#google_vignette";
@@ -118,16 +118,16 @@ export default function DownloadAppSection() {
 
             </div>
 
-            {/* Right Column / Transparent Smartphone Image (Enlarged & Balanced) */}
+            {/* Right Column / Transparent Smartphone Image */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center relative my-auto">
               {/* Glowing Ambient Background Orb */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/35 via-teal-400/20 to-emerald-400/25 rounded-full blur-3xl transform scale-110 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/30 via-teal-400/20 to-emerald-400/20 rounded-full blur-3xl transform scale-95 pointer-events-none" />
 
               <div className="relative z-10 w-full flex justify-center items-center">
                 <img
                   src={smartphoneImg}
                   alt="SmashHub Mobile App"
-                  className="w-full max-w-[440px] sm:max-w-[480px] lg:max-w-[1040px] max-h-[680px] lg:max-h-[750px] object-contain drop-shadow-[0_25px_50px_rgba(11,232,96,0.35)] hover:scale-105 transition-transform duration-500 ease-out transform lg:scale-110"
+                  className="w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[440px] max-h-[560px] lg:max-h-[620px] object-contain drop-shadow-[0_20px_40px_rgba(11,232,96,0.3)] hover:scale-105 transition-transform duration-500 ease-out"
                 />
               </div>
             </div>
