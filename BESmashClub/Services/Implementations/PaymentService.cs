@@ -83,6 +83,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1) // Pending
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -109,7 +110,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)plan.Price,
-            Description = TruncateDescription($"SmashClub {plan.Tier.TierName} {plan.DurationMonths}T"),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=subscription&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=subscription&orderId={payment.PaymentId}"
         };
@@ -171,6 +172,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -197,7 +199,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)booking.TotalCost.Value,
-            Description = $"BK {bookingId.ToString().Substring(0, 8).ToUpper()}",
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
@@ -283,6 +285,7 @@ public class PaymentService : IPaymentService
             if (existingPayment != null && existingPayment.StatusId == 1)
             {
                 existingPayment.StatusId = 3;
+                existingPayment.Status = null;
                 await _unitOfWork.Payments.UpdateAsync(existingPayment);
             }
 
@@ -306,7 +309,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)totalAmount,
-            Description = TruncateDescription(description),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
@@ -408,6 +411,7 @@ public class PaymentService : IPaymentService
         if (existingPayment != null && existingPayment.StatusId == 1)
         {
             existingPayment.StatusId = 3; // Cancelled
+            existingPayment.Status = null;
             await _unitOfWork.Payments.UpdateAsync(existingPayment);
         }
 
@@ -432,7 +436,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)splitAmount,
-            Description = TruncateDescription($"SmashGhep {booking.Court?.CourtName}"),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
@@ -654,6 +658,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 2; // Confirmed
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
 
                         // 5. Tạo payout record cho facility owner nếu KHÔNG dùng BYOG
@@ -756,6 +761,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 3; // Cancelled
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                     }
                 }
@@ -797,7 +803,7 @@ public class PaymentService : IPaymentService
 
         try
         {
-            await _payOSClient.PaymentRequests.CancelAsync((int)orderCode, "Người dùng tự hủy");
+            await _payOSClient.PaymentRequests.CancelAsync(orderCode, "Người dùng tự hủy");
         }
         catch (Exception ex)
         {
@@ -825,6 +831,7 @@ public class PaymentService : IPaymentService
                     if (booking.StatusId == 1)
                     {
                         booking.StatusId = 3; // Cancelled
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                     }
                 }
@@ -875,6 +882,7 @@ public class PaymentService : IPaymentService
                     if (booking != null && booking.StatusId == 1)
                     {
                         booking.StatusId = 2; // Confirmed
+                        booking.Status = null;
                         await _unitOfWork.Booking.UpdateAsync(booking);
                         anyFixed = true;
                         Console.WriteLine($"SyncPaymentStatus: Fixed booking {refId} from Pending to Confirmed (payment was already paid)");
@@ -922,12 +930,13 @@ public class PaymentService : IPaymentService
                 }
             }
 
-            var paymentInfo = await activePayOSClient.PaymentRequests.GetAsync((int)orderCode);
+            var paymentInfo = await activePayOSClient.PaymentRequests.GetAsync(orderCode);
             if (paymentInfo != null)
             {
                 if (paymentInfo.Status.ToString() == "PAID")
                 {
                     payment.StatusId = 2; // Paid
+                    payment.Status = null;
                     payment.PaidAt = DateTime.Now;
                     payment.GatewayTransactionId = paymentInfo.Id;
                     await _unitOfWork.Payments.UpdateAsync(payment);
@@ -944,6 +953,7 @@ public class PaymentService : IPaymentService
                             if (booking != null && booking.StatusId == 1)
                             {
                                 booking.StatusId = 2; // Confirmed
+                                booking.Status = null;
                                 await _unitOfWork.Booking.UpdateAsync(booking);
                             }
                         }
@@ -953,6 +963,7 @@ public class PaymentService : IPaymentService
                 else if (paymentInfo.Status.ToString() == "CANCELLED")
                 {
                     payment.StatusId = 3; // Cancelled
+                    payment.Status = null;
                     await _unitOfWork.Payments.UpdateAsync(payment);
                     return true;
                 }
