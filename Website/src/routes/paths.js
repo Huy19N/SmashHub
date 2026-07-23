@@ -4,7 +4,6 @@
  */
 export const PATHS = {
   HOME: '/',
-  ABOUT: '/about',
   CONTACT: '/contact',
   PREMIUM: '/premium',
   COLLECTIONS: '/collections',

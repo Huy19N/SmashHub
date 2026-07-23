@@ -16,6 +16,7 @@ import videoBg from '../../../assets/video_smash_club.mp4';
 import CollectionsSection from '../components/CollectionsSection';
 import PremiumSection from '../components/PremiumSection';
 import ContactSection from '../components/ContactSection';
+import DownloadAppSection from '../components/DownloadAppSection';
 import { useTheme } from '../../../contexts/ThemeContext';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -111,6 +112,19 @@ export default function HomePage() {
         offset: 80,
         delay: 0,
       });
+    }
+  }, [showHomepage]);
+
+  // Handle hash scrolling on page load
+  useEffect(() => {
+    if (showHomepage && window.location.hash) {
+      const hash = window.location.hash.replace('#', '');
+      const targetElement = document.getElementById(hash) || document.getElementById(`${hash}-section`);
+      if (targetElement) {
+        setTimeout(() => {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
+      }
     }
   }, [showHomepage]);
 
@@ -500,6 +514,9 @@ export default function HomePage() {
           </section>
 
         </main>
+
+        {/* ---------------- DOWNLOAD APP SECTION ---------------- */}
+        <DownloadAppSection />
 
         {/* ---------------- PREMIUM SECTION ---------------- */}
         <PremiumSection />
