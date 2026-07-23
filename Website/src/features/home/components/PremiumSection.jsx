@@ -14,7 +14,7 @@ const plans = [
   },
   {
     name: 'Basic',
-    price: '200k',
+    price: '49k',
     currency: 'VND',
     period: '/tháng',
     features: [
@@ -27,7 +27,7 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '500k',
+    price: '99k',
     currency: 'VND',
     period: '/tháng',
     features: [
@@ -92,8 +92,8 @@ export default function PremiumSection() {
 
               <button
                 className={`w-full font-extrabold py-4 px-4 rounded-full transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer text-sm tracking-wider uppercase
-                  ${plan.isPopular 
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-[#052e14] dark:text-white shadow-lg shadow-emerald-500/20' 
+                  ${plan.isPopular
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-[#052e14] dark:text-white shadow-lg shadow-emerald-500/20'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10'
                   }
                 `}
