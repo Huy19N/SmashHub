@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/network/api_client.dart';
@@ -117,15 +118,33 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
             children: [
               const Text('Chia sẻ mã này cho bạn bè để họ tham gia nhóm:'),
               const SizedBox(height: 16),
-              SelectableText(
-                inviteToken,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                  color: AppTheme.primaryColor,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: SelectableText(
+                      inviteToken,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                        color: AppTheme.primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.copy, color: AppTheme.primaryColor),
+                    tooltip: 'Sao chép',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: inviteToken));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đã sao chép mã!')),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

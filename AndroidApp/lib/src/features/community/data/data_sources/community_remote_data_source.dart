@@ -187,4 +187,14 @@ class CommunityRemoteDataSource {
       return ApiResponse.error(e.message ?? 'Lỗi tạo link mời');
     }
   }
+
+  /// Tham gia câu lạc bộ bằng mã mời.
+  Future<ApiResponse<void>> joinTeam(String inviteToken) async {
+    try {
+      final response = await _apiClient.post('/api/invites/$inviteToken/accept');
+      return ApiResponse.fromJson(response.data, (_) {});
+    } on DioException catch (e) {
+      return ApiResponse.error(e.message ?? 'Mã mời không hợp lệ hoặc đã hết hạn');
+    }
+  }
 }

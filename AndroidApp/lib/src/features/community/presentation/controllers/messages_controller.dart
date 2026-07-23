@@ -34,4 +34,26 @@ class MessagesController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> joinTeam(String inviteToken) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _communityRepository.joinTeam(inviteToken);
+      if (response.success) {
+        await fetchTeams();
+        return true;
+      } else {
+        _errorMessage = response.message ?? 'Mã mời không hợp lệ hoặc đã hết hạn';
+      }
+    } catch (e) {
+      _errorMessage = 'Đã có lỗi xảy ra';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return false;
+  }
 }

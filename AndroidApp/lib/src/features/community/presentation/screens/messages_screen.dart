@@ -49,6 +49,50 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (mounted) setState(() {});
   }
 
+  void _showJoinTeamDialog() {
+    final TextEditingController _codeController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tham gia bằng mã'),
+        content: TextField(
+          controller: _codeController,
+          decoration: const InputDecoration(
+            hintText: 'Nhập mã tham gia',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final code = _codeController.text.trim();
+              if (code.isNotEmpty) {
+                Navigator.pop(context); // Đóng dialog trước
+                final success = await _controller.joinTeam(code);
+                if (mounted) {
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tham gia câu lạc bộ thành công!')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(_controller.errorMessage ?? 'Có lỗi xảy ra')),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Tham gia'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _messageSubscription?.cancel();
@@ -69,6 +113,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
           'NHÓM',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.group_add),
+            tooltip: 'Tham gia bằng mã',
+            onPressed: _showJoinTeamDialog,
+          ),
+        ],
       ),
       body: _controller.isLoading
           ? const Center(child: CircularProgressIndicator())

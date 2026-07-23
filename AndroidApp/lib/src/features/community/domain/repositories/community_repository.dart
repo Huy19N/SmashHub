@@ -47,4 +47,7 @@ abstract class CommunityRepository {
 
   /// Tạo mã mời tham gia nhóm.
   Future<ApiResponse<Map<String, dynamic>>> createInvite(String teamId, {int expiryHours = 24});
+
+  /// Tham gia câu lạc bộ bằng mã mời.
+  Future<ApiResponse<void>> joinTeam(String inviteToken);
 }

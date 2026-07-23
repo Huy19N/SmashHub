@@ -82,4 +82,9 @@ class CommunityRepositoryImpl implements CommunityRepository {
   Future<ApiResponse<Map<String, dynamic>>> createInvite(String teamId, {int expiryHours = 24}) {
     return _remoteDataSource.createInvite(teamId, expiryHours: expiryHours);
   }
+
+  @override
+  Future<ApiResponse<void>> joinTeam(String inviteToken) {
+    return _remoteDataSource.joinTeam(inviteToken);
+  }
 }
