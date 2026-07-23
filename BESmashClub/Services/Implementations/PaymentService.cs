@@ -109,7 +109,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)plan.Price,
-            Description = TruncateDescription($"SmashClub {plan.Tier.TierName} {plan.DurationMonths}T"),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=subscription&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=subscription&orderId={payment.PaymentId}"
         };
@@ -197,7 +197,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)booking.TotalCost.Value,
-            Description = $"BK {bookingId.ToString().Substring(0, 8).ToUpper()}",
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
@@ -306,7 +306,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)totalAmount,
-            Description = TruncateDescription(description),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
@@ -432,7 +432,7 @@ public class PaymentService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)splitAmount,
-            Description = TruncateDescription($"SmashGhep {booking.Court?.CourtName}"),
+            Description = orderCode.ToString(),
             ReturnUrl = $"{_payOSSettings.ReturnUrl}?type=booking&orderId={payment.PaymentId}",
             CancelUrl = $"{_payOSSettings.CancelUrl}?type=booking&orderId={payment.PaymentId}"
         };
