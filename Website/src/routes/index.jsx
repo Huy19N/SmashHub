@@ -42,6 +42,7 @@ const PaymentSettings = lazy(() => import('../features/admin/pages/PaymentSettin
 const PayoutManagement = lazy(() => import('../features/admin/pages/PayoutManagement'));
 const AdminProfile = lazy(() => import('../features/admin/pages/AdminProfile'));
 const RevenueManagement = lazy(() => import('../features/admin/pages/RevenueManagement'));
+const FeedbackManagement = lazy(() => import('../features/admin/pages/FeedbackManagement'));
 const PostManagement = lazy(() => import('../features/admin/pages/PostManagement'));
 const ReportManagement = lazy(() => import('../features/admin/pages/ReportManagement'));
 
@@ -151,6 +152,7 @@ export const router = createBrowserRouter([
       { path: 'facilities', element: <AdminFacilities /> },
       { path: 'payouts', element: <PayoutManagement /> },
       { path: 'revenue', element: <RevenueManagement /> },
+      { path: 'feedback', element: <FeedbackManagement /> },
       { path: 'posts', element: <PostManagement /> },
       { path: 'reports', element: <ReportManagement /> },
       { path: 'system-settings', element: <AdminSettings /> },

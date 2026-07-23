@@ -24,7 +24,6 @@ import MediaImage from '../../../components/ui/MediaImage';
 import toast from 'react-hot-toast';
 import { usePresenceSignalR } from '../../../hooks/usePresenceSignalR';
 import BlockedUsersCard from '../components/BlockedUsersCard';
-import PlayerDashboard from '../components/PlayerDashboard';
 
 export default function ProfilePage() {
   const { theme } = useTheme();
@@ -904,9 +903,6 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-
-                {/* Player Dashboard Charts */}
-                <PlayerDashboard />
               </div>
 
             </div>

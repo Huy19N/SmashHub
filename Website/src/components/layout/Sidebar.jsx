@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGetUserId, useLogout } from '../../features/Auth/hooks/useAuth';
@@ -50,6 +51,7 @@ export default function Sidebar({ onCreateGroup, activeMenu = 'teams' }) {
     { id: 'payouts', label: 'Yêu cầu rút tiền', shortLabel: 'Rút tiền', icon: DollarSign, path: '/admin/payouts' },
     { id: 'payment-settings', label: 'Cấu hình Thanh toán', shortLabel: 'Thanh toán', icon: CreditCard, path: '/admin/payment-settings' },
     { id: 'revenue', label: 'Quản lý doanh thu', shortLabel: 'Doanh thu', icon: Percent, path: '/admin/revenue' },
+    { id: 'feedback', label: 'Phản hồi khách hàng', shortLabel: 'Phản hồi', icon: MessageSquare, path: '/admin/feedback' },
     { id: 'posts', label: 'Duyệt bài cộng đồng', shortLabel: 'Bài đăng', icon: ShieldCheck, path: '/admin/posts' },
     { id: 'reports', label: 'Quản lý Báo cáo', shortLabel: 'Báo cáo', icon: ShieldAlert, path: '/admin/reports' },
     { id: 'system-settings', label: 'Cài đặt hệ thống', shortLabel: 'Cài đặt', icon: Settings, path: '/admin/system-settings' },

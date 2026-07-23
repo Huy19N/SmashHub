@@ -11,6 +11,7 @@ import LeaderStats from '../components/LeaderStats';
 import MemberStats from '../components/MemberStats';
 import FacilityOwnerStats from '../components/FacilityOwnerStats';
 import OwnerDashboard from '../components/OwnerDashboard';
+import PlayerDashboard from '../../profiles/components/PlayerDashboard';
 
 export default function DashboardPage() {
   const { theme } = useTheme();
@@ -169,15 +170,18 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {/* Section 2: Leader Stats */}
-                {data.isLeader && (
-                  <LeaderStats stats={data.leaderStats} />
-                )}
+                  {/* Section 2: Leader Stats */}
+                  {data.isLeader && (
+                    <LeaderStats stats={data.leaderStats} />
+                  )}
 
-                {/* Section 3: Member Stats */}
-                {data.isMember && (
-                  <MemberStats stats={data.memberStats} />
-                )}
+                  {/* Section 3: Member Stats */}
+                  {data.isMember && (
+                    <MemberStats stats={data.memberStats} />
+                  )}
+
+                  {/* Section 4: Detailed Player Progress & Analytics Charts */}
+                  <PlayerDashboard statistics={data} />
 
                 {/* Optional welcome placeholder if user has no groups/roles yet */}
                 {!data.isLeader && !data.isMember && (

@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { ChartTooltip } from '../../../../components/ui/ChartTooltip';
 import { useState } from 'react';
 
-export function OpponentPieChart({ data }) {
+export function OpponentPieChart({ data = [] }) {
   const [activeIndex, setActiveIndex] = useState(null);
 
   const onPieEnter = (_, index) => {
@@ -11,6 +11,8 @@ export function OpponentPieChart({ data }) {
   const onPieLeave = () => {
     setActiveIndex(null);
   };
+
+  const defaultColors = ['#0BE860', '#ef4444', '#f59e0b'];
 
   return (
     <div className="h-[300px] w-full flex items-center justify-center">
@@ -33,13 +35,13 @@ export function OpponentPieChart({ data }) {
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={entry.color} 
+                fill={entry.color && !entry.color.includes('var') ? entry.color : defaultColors[index % defaultColors.length]} 
                 opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
                 className="transition-opacity duration-300 cursor-pointer hover:drop-shadow-lg"
               />
             ))}
           </Pie>
-          <Legend verticalAlign="bottom" height={36} iconType="circle" />
+          <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: '#94a3b8', fontSize: '12px' }} />
         </PieChart>
       </ResponsiveContainer>
     </div>
