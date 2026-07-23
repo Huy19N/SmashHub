@@ -5,7 +5,8 @@ import {
   CalendarCheck,
   CircleDollarSign,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import { useAdminDashboard } from '../hooks/useAdmin';
 import AdminCharts from '../components/AdminCharts';
@@ -66,20 +67,15 @@ export default function AdminDashboard() {
       sub: 'Thanh toán thành công',
       icon: CircleDollarSign,
       color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+    },
+    {
+      title: 'Phản hồi khách hàng',
+      value: 25,
+      sub: '25 lượt phản hồi & đánh giá',
+      icon: MessageSquare,
+      color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20'
     }
   ];
-
-  const maxRevenue = Math.max(...(stats.monthlyRevenue || []).map(m => m.revenue), 1000000);
-  const chartHeight = 160;
-  const chartWidth = 500;
-  const points = (stats.monthlyRevenue || []).map((m, idx) => {
-    const x = (idx / ((stats.monthlyRevenue?.length || 1) - 1)) * (chartWidth - 60) + 30;
-    const y = chartHeight - (m.revenue / maxRevenue) * (chartHeight - 40) - 20;
-    return { x, y, label: m.label, revenue: m.revenue };
-  });
-
-  const linePath = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaPath = points.length > 0 ? `${linePath} L ${points[points.length - 1].x} ${chartHeight - 20} L ${points[0].x} ${chartHeight - 20} Z` : '';
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -94,22 +90,22 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi, idx) => (
-          <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-[#0b0f19]/60 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between glass-panel">
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider font-label">{kpi.title}</span>
-              <h2 className="text-2xl font-extrabold font-display leading-none dark:text-white">{kpi.value}</h2>
-              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 font-label">{kpi.sub}</p>
+          <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-[#0b0f19]/60 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between glass-panel">
+            <div className="space-y-1.5 min-w-0">
+              <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider font-label truncate block">{kpi.title}</span>
+              <h2 className="text-xl font-extrabold font-display leading-none dark:text-white">{kpi.value}</h2>
+              <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 font-label truncate">{kpi.sub}</p>
             </div>
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border ${kpi.color}`}>
-              <kpi.icon className="w-6 h-6" />
+            <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border ${kpi.color}`}>
+              <kpi.icon className="w-5 h-5" />
             </div>
           </div>
         ))}
       </div>
 
-      <AdminCharts />
+      <AdminCharts stats={stats} />
       <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
         <div className="mb-6">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1">

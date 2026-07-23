@@ -26,6 +26,7 @@ export const PATHS = {
   ADMIN_USERS: '/admin/users',
   ADMIN_FACILITIES: '/admin/facilities',
   ADMIN_PAYOUTS: '/admin/payouts',
+  ADMIN_FEEDBACK: '/admin/feedback',
   ADMIN_PROFILE: '/admin/profile',
   PRIVACY: '/privacy-policy',
   NOT_FOUND: '*',

@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ChartTooltip } from '../../../../components/ui/ChartTooltip';
 import { useState } from 'react';
 
-export function PlayTimeBarChart({ data }) {
+export function PlayTimeBarChart({ data = [] }) {
   const [activeIndex, setActiveIndex] = useState(null);
 
   return (
@@ -20,35 +20,31 @@ export function PlayTimeBarChart({ data }) {
           }}
           onMouseLeave={() => setActiveIndex(null)}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.2)" />
           <XAxis 
             dataKey="name" 
-            stroke="hsl(var(--muted-foreground))" 
+            stroke="#94a3b8" 
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
           />
           <YAxis 
-            stroke="hsl(var(--muted-foreground))" 
+            stroke="#94a3b8" 
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
           />
-          <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.4)' }} />
+          <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
           <Bar 
             dataKey="matches" 
             name="Số trận"
             radius={[4, 4, 0, 0]}
             animationDuration={1500}
-            onClick={(data, index) => {
-              // Interactive drill down placeholder
-              console.log('Drill down into:', data);
-            }}
           >
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={activeIndex === index ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.7)'}
+                fill={activeIndex === index ? '#0BE860' : 'rgba(11, 232, 96, 0.7)'}
                 className="transition-colors duration-300 cursor-pointer"
               />
             ))}
