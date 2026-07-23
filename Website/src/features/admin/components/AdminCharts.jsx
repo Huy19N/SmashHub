@@ -3,11 +3,12 @@ import { getPlatformRevenueData, getUserGrowthData, getRoleDistributionData } fr
 import { PlatformRevenueChart } from './charts/PlatformRevenueChart';
 import { UserGrowthChart } from './charts/UserGrowthChart';
 import { RoleDistributionChart } from './charts/RoleDistributionChart';
-import { Loader2, TrendingUp, Users, PieChart } from 'lucide-react';
+import { FeedbackRatingChart } from './charts/FeedbackRatingChart';
+import { Loader2, TrendingUp, Users, PieChart, MessageSquare } from 'lucide-react';
 
 export default function AdminCharts({ stats }) {
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState({ revenue: [], growth: [], roles: [] });
+  const [chartData, setChartData] = useState({ revenue: [], growth: [], roles: [], feedback: [] });
 
   useEffect(() => {
     async function loadData() {
@@ -53,7 +54,15 @@ export default function AdminCharts({ stats }) {
         growth = await getUserGrowthData();
       }
 
-      setChartData({ revenue: revenueData, growth, roles });
+      // 4. Feedback rating distribution data
+      const feedback = [
+        { name: 'Rất tốt', value: 18, color: '#0BE860' },
+        { name: 'Tốt', value: 5, color: '#3b82f6' },
+        { name: 'Trung bình', value: 2, color: '#f59e0b' },
+        { name: 'Kém', value: 0, color: '#ef4444' },
+      ];
+
+      setChartData({ revenue: revenueData, growth, roles, feedback });
       setLoading(false);
     }
 
@@ -95,15 +104,28 @@ export default function AdminCharts({ stats }) {
         </div>
       </div>
 
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
-        <div className="mb-4">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-purple-500" />
-            Phân bổ vai trò hệ thống (Dữ liệu thực)
-          </h3>
-          <p className="text-xs text-gray-500">Tỉ lệ thực tế các nhóm người dùng trên hệ thống SmashHub.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-purple-500" />
+              Phân bổ vai trò hệ thống (Dữ liệu thực)
+            </h3>
+            <p className="text-xs text-gray-500">Tỉ lệ thực tế các nhóm người dùng trên hệ thống SmashHub.</p>
+          </div>
+          <RoleDistributionChart data={chartData.roles} />
         </div>
-        <RoleDistributionChart data={chartData.roles} />
+
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-white/20">
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider font-display mb-1 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-pink-500" />
+              Kết quả đánh giá chất lượng dịch vụ SmashHub
+            </h3>
+            <p className="text-xs text-gray-500">Phân bố số lượng phản hồi theo mức độ hài lòng của khách hàng.</p>
+          </div>
+          <FeedbackRatingChart data={chartData.feedback} />
+        </div>
       </div>
     </div>
   );
