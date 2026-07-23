@@ -797,7 +797,7 @@ public class PaymentService : IPaymentService
 
         try
         {
-            await _payOSClient.PaymentRequests.CancelAsync((int)orderCode, "Người dùng tự hủy");
+            await _payOSClient.PaymentRequests.CancelAsync(orderCode, "Người dùng tự hủy");
         }
         catch (Exception ex)
         {
@@ -922,7 +922,7 @@ public class PaymentService : IPaymentService
                 }
             }
 
-            var paymentInfo = await activePayOSClient.PaymentRequests.GetAsync((int)orderCode);
+            var paymentInfo = await activePayOSClient.PaymentRequests.GetAsync(orderCode);
             if (paymentInfo != null)
             {
                 if (paymentInfo.Status.ToString() == "PAID")
