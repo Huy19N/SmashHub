@@ -9,6 +9,7 @@ GO
  
 USE SmashHub;
 GO
+
  
 -- ==========================================
 -- 1. SYSTEM & USER MODULE
